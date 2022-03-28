@@ -1,0 +1,210 @@
+// Copyright 2022 Google LLC. This solution, including any related sample code or data, is made available on an “as is,” “as available,” and “with all faults” basis, solely for illustrative purposes, and without warranty or representation of any kind. This solution is experimental, unsupported and provided solely for your convenience. Your use of it is subject to your agreements with Google, as applicable, and may constitute a beta feature as defined under those agreements.  To the extent that you make any data available to Google in connection with your use of the solution, you represent and warrant that you have all necessary and appropriate rights, consents and permissions to permit Google to use and process that data.  By using any portion of this solution, you acknowledge, assume and accept all risks, known and unknown, associated with its usage, including with respect to your deployment of any portion of this solution in your systems, or usage in connection with your business, if at all.*
+
+/**
+ * @name Spamming Placements
+ *
+ * @overview Alerts about placements (YT channels) which underperform.
+ *
+ * @author eladb@
+ * 2022/03/20
+ * 
+ */
+
+
+//USER_TODO: Fill in
+var SPREADSHEET_URL = "---";
+var EMAILS = "---";
+
+var spreadsheet;
+var GO_BACK_DAYS_EARLY = -2;
+var GO_BACK_DAYS_LATE = 0;
+var EMAIL_SUBJECT;
+var fromDate;
+var toDate;
+var accountDict = {};
+var urlDict = {};
+var isFirstTimer = true;
+
+var CONSTS_GAds = {
+  OUTPUT: 'Output'
+}
+
+//USER_TODO: Rename to "main" if you run on CID only. Rename to "main_cid" otherwise
+function main_cid() {
+  spreadsheet = SpreadsheetApp.openByUrl(SPREADSHEET_URL);
+  spreadsheet.setSpreadsheetTimeZone(AdsApp.currentAccount().getTimeZone());
+  fromDate = getDateStringForMinusDays(GO_BACK_DAYS_EARLY);
+  toDate = getDateStringForMinusDays(GO_BACK_DAYS_LATE);
+  //USER_TODO: Edit the email subject as you wish
+  EMAIL_SUBJECT = 'Placements Blacklist (cpm>100) 2d. Account: ' + AdsApp.currentAccount().getCustomerId() + ' dates: ' + fromDate.sheet_date + ' - ' + toDate.sheet_date;
+  urlDict = getReportResults();
+
+  if (Object.keys(accountDict).length > 0) {
+    writeDataToGoogleSheet(accountDict, spreadsheet.getSheetByName(CONSTS_GAds.OUTPUT));
+  }
+  sendEmail(urlDict);
+}
+
+function getDateStringForMinusDays(numDays) {
+  var expectedDate = new Date(new Date().setDate(new Date().getDate() + numDays));
+  return { 'query_date': getDateStringInTimeZone('yyyy-MM-dd', expectedDate), 'sheet_date': getDateStringInTimeZone('dd/MM/YY', expectedDate) };
+}
+
+/**
+ * Produces a formatted string representing a given date in a given time zone.
+ *
+ * @param {string} format A format specifier for the string to be produced.
+ * @param {date} date A date object. Defaults to the current date.
+ * @param {string} timeZone A time zone. Defaults to the account's time zone.
+ * @return {string} A formatted string of the given date in the given time zone.
+ */
+function getDateStringInTimeZone(format, date, timeZone) {
+  date = date || new Date();
+  timeZone = timeZone || AdsApp.currentAccount().getTimeZone();
+  return Utilities.formatDate(date, timeZone, format);
+}
+
+function getReportResults() {
+  //YT channel
+  //https://developers.google.com/google-ads/api/fields/v10/group_placement_view
+  //USER_TODO: Change filter if needed
+  var query = 'SELECT \
+    customer.id,\
+    customer.descriptive_name,\
+    group_placement_view.placement_type,\
+    group_placement_view.display_name,\
+    group_placement_view.placement,\
+    group_placement_view.target_url,\
+    metrics.impressions,\
+    metrics.cost_micros,\
+    metrics.conversions,\
+    metrics.video_views,\
+    metrics.video_view_rate,\
+    metrics.clicks,\
+    metrics.average_cpm\
+ FROM group_placement_view\
+ WHERE\
+    group_placement_view.placement_type IN ("YOUTUBE_CHANNEL")\
+    AND campaign.advertising_channel_type = "VIDEO"\
+    AND segments.date BETWEEN "'+ fromDate.query_date + '" AND "' + toDate.query_date + '"\
+    AND metrics.impressions >= 500\
+    AND metrics.average_cpm > 300000'
+
+  var report = AdsApp.report(query);
+  Logger.log("Report available at " + spreadsheet.getUrl());
+  var rows = report.rows();
+  populateStatsDict(urlDict, accountDict, rows);
+  return urlDict;
+}
+
+
+function populateStatsDict(urlDict, accountDict, rows) {
+  while (rows.hasNext()) {
+    var row = rows.next();
+    var url = row['group_placement_view.target_url'];
+    var name = row['group_placement_view.display_name'];
+    if (!urlDict.hasOwnProperty(url)) {
+      urlDict[url] = [name];
+    }
+
+    var url = row["group_placement_view.target_url"];
+    if (!accountDict.hasOwnProperty(url)) {
+      accountDict[url] = {
+        "group_placement_view.placement_type": row["group_placement_view.placement_type"],
+        "group_placement_view.display_name": row["group_placement_view.display_name"],
+        "group_placement_view.placement": row["group_placement_view.placement"],
+        "group_placement_view.target_url": row["group_placement_view.target_url"],
+        "metrics.impressions": 0, "metrics.cost_micros": 0, "metrics.conversions": 0, "metrics.video_views": 0, 'metrics.video_view_rate': 0, 'metrics.clicks': 0, 'metrics.average_cpm': 0
+      };
+    }
+    accumulateReportRow(row, accountDict[url]);
+  }
+}
+
+function accumulateReportRow(row, acc) {
+  acc["metrics.impressions"] += toFloat(row['metrics.impressions']);
+  acc["metrics.cost_micros"] += toFloat(row['metrics.cost_micros']) / 1000;
+  acc["metrics.conversions"] += toFloat(row['metrics.conversions']);
+  acc["metrics.video_views"] += toFloat(row['metrics.video_views']);
+  acc['metrics.video_view_rate'] += toFloat(row['metrics.video_view_rate']);
+  acc['metrics.clicks'] += toFloat(row['metrics.clicks']);
+  acc['metrics.average_cpm'] += toFloat(row['metrics.average_cpm']);
+}
+
+
+function toFloat(value) {
+  if (!value) return 0;
+  value = value.toString().replace(/,/g, '');
+  return parseFloat(value);
+}
+
+
+function sendEmail(urlDict) {
+  //Logger.log("JSON.stringify(urls) = "+JSON.stringify(results));
+  var urls = Object.keys(urlDict);
+
+  if (urls.length == 0) {
+    Logger.log('No alerts triggered. No email being sent.');
+    return;
+  }
+  if (urls.length > 200) {
+    Logger.log('Sending Email with a link to spreadsheet');
+    MailApp.sendEmail(
+      {
+        to: EMAILS,
+        subject: EMAIL_SUBJECT,
+        htmlBody:
+          "<h1> Full spreadsheet: </h1><br>" +
+          SPREADSHEET_URL
+      });
+  }
+  else if (urls.length > 0) {
+    var urlsAndNames = urls.map(function (key) { return key + " " + urlDict[key]; }).join("<br>");
+    Logger.log('Sending Email');
+    MailApp.sendEmail(
+      {
+        to: EMAILS,
+        subject: EMAIL_SUBJECT,
+        htmlBody:
+          "<h1> Channels to exclude: </h1><br>" +
+          urlsAndNames + "<br>" +
+          "<h1>Copy these urls to the exclusion list: </h1><br>" +
+          urls.join("<br>") + "<br><br>" +
+          'Full report:' +
+          SPREADSHEET_URL
+      });
+  }
+}
+
+function writeDataToGoogleSheet(data, sheet) {
+  if (isFirstTimer) {
+    sheet.clear();
+  }
+  var matrix = [];
+  var headers = ["None"];
+  for (var i in data) {
+    var item = data[i];
+    headers = Object.keys(item);
+    break;
+  }
+  for (var i in data) {
+    var item = data[i];
+    matrix[i] = Object.keys(item).map(function (key) {
+      return [JSON.stringify(item[key])];
+    });
+  }
+  var range = sheet.getRange(1, 1, 1, 1);
+  range.setValue(EMAIL_SUBJECT);
+
+  if (isFirstTimer) {
+    range = sheet.getRange(2, 1, 1, headers.length);
+    range.setValues([headers]);
+    isFirstTimer == false;
+  }
+
+  var newStartingRow = sheet.getLastRow() + 1;
+  if (Object.keys(matrix).length > 0) {
+    range = sheet.getRange(newStartingRow, 1, Object.keys(matrix).length, Object.values(matrix)[0].length);
+    range.setValues(Object.values(matrix));
+  }
+}
