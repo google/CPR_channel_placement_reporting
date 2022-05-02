@@ -5,8 +5,8 @@
  *
  * @overview Alerts about placements (YT channels) which underperform.
  *
- * @author eladb@
- * 2022/03/20
+ * @author eladb@, xingj@
+ * 2022/04/28
  * 
  */
 
@@ -16,31 +16,54 @@ var SPREADSHEET_URL = "---";
 var EMAILS = "---";
 
 var spreadsheet;
-var GO_BACK_DAYS_EARLY = -2;
-var GO_BACK_DAYS_LATE = 0;
+var currentCustomerId;
+var GO_BACK_DAYS_EARLY;
+var GO_BACK_DAYS_LATE;
+
 var EMAIL_SUBJECT;
 var fromDate;
 var toDate;
 var accountDict = {};
 var urlDict = {};
-var isFirstTimer = true;
 
 var CONSTS_GAds = {
-  OUTPUT: 'Output'
+  OUTPUT: 'Output',
+  TRIGGER_CELL: 'TRIGGER_CELL',
+  METRICS_FILTERS: 'METRICS_FILTERS',
+  CHANNEL_IDS_COL: 'CHANNEL_IDS',
+  HEADERS: 'HEADERS',
+  YOUTUBE_TIMESTAMP_COL: 'YOUTUBE_TIMESTAMP',
+  GO_BACK_DAYS_EARLY: 'GO_BACK_DAYS_EARLY',
+  GO_BACK_DAYS_LATE: 'GO_BACK_DAYS_LATE'
 }
 
 //USER_TODO: Rename to "main" if you run on CID only. Rename to "main_cid" otherwise
 function main_cid() {
   spreadsheet = SpreadsheetApp.openByUrl(SPREADSHEET_URL);
+  currentCustomerId = AdsApp.currentAccount().getCustomerId().replaceAll('-','');
+
+  //Check if tab with this account ID exists, if not: exit and reminder to create tab with account ID
+  if (!spreadsheet.getSheetByName(currentCustomerId)) {
+    Logger.log("Please create tab in spreadsheet with this account ID as its name.");
+    return;
+  }
+
   spreadsheet.setSpreadsheetTimeZone(AdsApp.currentAccount().getTimeZone());
-  fromDate = getDateStringForMinusDays(GO_BACK_DAYS_EARLY);
+  GO_BACK_DAYS_EARLY = (spreadsheet.getRangeByName(currentCustomerId + '!' + CONSTS_GAds.GO_BACK_DAYS_EARLY)).getValue();
+  GO_BACK_DAYS_LATE = (spreadsheet.getRangeByName(currentCustomerId + '!' + CONSTS_GAds.GO_BACK_DAYS_LATE)).getValue();
+  fromDate = getDateStringForMinusDays(-1*GO_BACK_DAYS_EARLY);
   toDate = getDateStringForMinusDays(GO_BACK_DAYS_LATE);
   //USER_TODO: Edit the email subject as you wish
-  EMAIL_SUBJECT = 'Placements Blacklist (cpm>100) 2d. Account: ' + AdsApp.currentAccount().getCustomerId() + ' dates: ' + fromDate.sheet_date + ' - ' + toDate.sheet_date;
-  urlDict = getReportResults();
+  EMAIL_SUBJECT = 'Placements Blacklist for last ' + GO_BACK_DAYS_EARLY + ' days. Account: ' + AdsApp.currentAccount().getCustomerId() + ' dates: ' + fromDate.sheet_date + ' - ' + toDate.sheet_date;
+
+  // Run queries for each of the queries entered in the spreadsheet
+  var userConditions = createMetricsFilters();
+  for (let i = 0; i < userConditions.length; i++) {
+    storeReportResults(userConditions[i]);
+  }
 
   if (Object.keys(accountDict).length > 0) {
-    writeDataToGoogleSheet(accountDict, spreadsheet.getSheetByName(CONSTS_GAds.OUTPUT));
+    writeDataToGoogleSheet(accountDict, spreadsheet.getSheetByName(currentCustomerId));
   }
   sendEmail(urlDict);
 }
@@ -64,10 +87,23 @@ function getDateStringInTimeZone(format, date, timeZone) {
   return Utilities.formatDate(date, timeZone, format);
 }
 
-function getReportResults() {
-  //YT channel
-  //https://developers.google.com/google-ads/api/fields/v10/group_placement_view
-  //USER_TODO: Change filter if needed
+function createMetricsFilters() {
+  //Get values for metrics filters 
+  var metricsFiltersQuery = [];
+  var metricsFiltersValues = (spreadsheet.getRangeByName(currentCustomerId + '!' + CONSTS_GAds.METRICS_FILTERS)).getValues().filter(String);
+
+  for (let i = 0; i < metricsFiltersValues.length; i++) {
+    metricsFiltersQuery.push(metricsFiltersValues[i]);
+  }
+  return metricsFiltersQuery;
+}
+    
+function storeReportResults(conditionRow) { 
+  //YT channel  
+  //https://developers.google.com/google-ads/api/fields/v10/group_placement_view  
+
+  var conditionRow = conditionRow;
+
   var query = 'SELECT \
     customer.id,\
     customer.descriptive_name,\
@@ -81,56 +117,60 @@ function getReportResults() {
     metrics.video_views,\
     metrics.video_view_rate,\
     metrics.clicks,\
-    metrics.average_cpm\
+    metrics.average_cpm,\
+    metrics.ctr\
  FROM group_placement_view\
  WHERE\
     group_placement_view.placement_type IN ("YOUTUBE_CHANNEL")\
     AND campaign.advertising_channel_type = "VIDEO"\
-    AND segments.date BETWEEN "'+ fromDate.query_date + '" AND "' + toDate.query_date + '"\
-    AND metrics.impressions >= 500\
-    AND metrics.average_cpm > 300000'
-
-  var report = AdsApp.report(query);
-  Logger.log("Report available at " + spreadsheet.getUrl());
-  var rows = report.rows();
-  populateStatsDict(urlDict, accountDict, rows);
-  return urlDict;
+    AND segments.date BETWEEN "'+ fromDate.query_date + '" AND "' + toDate.query_date + '" AND ' + conditionRow
+  var report = AdsApp.report(query);  
+  Logger.log("Report available at " + spreadsheet.getUrl());  
+  var rows = report.rows(); 
+  populateStatsDict(urlDict, accountDict, rows);  
 }
 
-
-function populateStatsDict(urlDict, accountDict, rows) {
-  while (rows.hasNext()) {
-    var row = rows.next();
-    var url = row['group_placement_view.target_url'];
-    var name = row['group_placement_view.display_name'];
-    if (!urlDict.hasOwnProperty(url)) {
-      urlDict[url] = [name];
-    }
-
-    var url = row["group_placement_view.target_url"];
-    if (!accountDict.hasOwnProperty(url)) {
-      accountDict[url] = {
-        "group_placement_view.placement_type": row["group_placement_view.placement_type"],
-        "group_placement_view.display_name": row["group_placement_view.display_name"],
-        "group_placement_view.placement": row["group_placement_view.placement"],
-        "group_placement_view.target_url": row["group_placement_view.target_url"],
-        "metrics.impressions": 0, "metrics.cost_micros": 0, "metrics.conversions": 0, "metrics.video_views": 0, 'metrics.video_view_rate': 0, 'metrics.clicks': 0, 'metrics.average_cpm': 0
-      };
-    }
-    accumulateReportRow(row, accountDict[url]);
-  }
+function populateStatsDict(urlDict, accountDict, rows) {  
+  while (rows.hasNext()) {  
+    var row = rows.next();  
+    var url = row['group_placement_view.target_url']; 
+    var name = row['group_placement_view.display_name'];  
+    if (!urlDict.hasOwnProperty(url)) { 
+      urlDict[url] = [name];  
+    } 
+      
+    var url = row["group_placement_view.target_url"]; 
+    if (!accountDict.hasOwnProperty(url)) { 
+      accountDict[url] = {  
+        "group_placement_view.placement_type": row["group_placement_view.placement_type"],  
+        "group_placement_view.display_name": row["group_placement_view.display_name"],  
+        "group_placement_view.placement": row["group_placement_view.placement"],  
+        "group_placement_view.target_url": row["group_placement_view.target_url"],  
+        "metrics.impressions": 0, 
+        "metrics.cost_micros": 0, 
+        "metrics.conversions": 0, 
+        "metrics.video_views": 0,
+        'metrics.video_view_rate': 0, 
+        'metrics.clicks': 0, 
+        'metrics.average_cpm': 0, 
+        'metrics.ctr' : 0 
+      };  
+      accumulateReportRow(row, accountDict[url]); 
+    } 
+    
+  } 
 }
 
-function accumulateReportRow(row, acc) {
-  acc["metrics.impressions"] += toFloat(row['metrics.impressions']);
-  acc["metrics.cost_micros"] += toFloat(row['metrics.cost_micros']) / 1000;
-  acc["metrics.conversions"] += toFloat(row['metrics.conversions']);
-  acc["metrics.video_views"] += toFloat(row['metrics.video_views']);
-  acc['metrics.video_view_rate'] += toFloat(row['metrics.video_view_rate']);
-  acc['metrics.clicks'] += toFloat(row['metrics.clicks']);
-  acc['metrics.average_cpm'] += toFloat(row['metrics.average_cpm']);
+function accumulateReportRow(row, acc) {  
+  acc["metrics.impressions"] += toFloat(row['metrics.impressions']);  
+  acc["metrics.cost_micros"] += toFloat(row['metrics.cost_micros']) / 10000; 
+  acc["metrics.conversions"] += toFloat(row['metrics.conversions']);  
+  acc["metrics.video_views"] += toFloat(row['metrics.video_views']);  
+  acc['metrics.video_view_rate'] += toFloat(row['metrics.video_view_rate']);  
+  acc['metrics.clicks'] += toFloat(row['metrics.clicks']);  
+  acc['metrics.average_cpm'] += toFloat(row['metrics.average_cpm']);  
+  acc['metrics.ctr'] += toFloat(row['metrics.ctr']);  
 }
-
 
 function toFloat(value) {
   if (!value) return 0;
@@ -177,10 +217,7 @@ function sendEmail(urlDict) {
 }
 
 function writeDataToGoogleSheet(data, sheet) {
-  if (isFirstTimer) {
-    sheet.clear();
-  }
-  var matrix = [];
+  var newDataRows = [];
   var headers = ["None"];
   for (var i in data) {
     var item = data[i];
@@ -189,22 +226,45 @@ function writeDataToGoogleSheet(data, sheet) {
   }
   for (var i in data) {
     var item = data[i];
-    matrix[i] = Object.keys(item).map(function (key) {
-      return [JSON.stringify(item[key])];
+    newDataRows[i] = Object.keys(item).map(function (key) {
+      return item[key];
     });
   }
-  var range = sheet.getRange(1, 1, 1, 1);
+  var range = sheet.getRange(1, 1, 1, 1); 
   range.setValue(EMAIL_SUBJECT);
 
-  if (isFirstTimer) {
-    range = sheet.getRange(2, 1, 1, headers.length);
-    range.setValues([headers]);
-    isFirstTimer == false;
-  }
+  //Set headers
+  headersRange = spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.HEADERS);
+  range = sheet.getRange(headersRange.getRow(), headersRange.getColumn(), 1, headers.length);
+  range.setValues([headers]);
 
   var newStartingRow = sheet.getLastRow() + 1;
-  if (Object.keys(matrix).length > 0) {
-    range = sheet.getRange(newStartingRow, 1, Object.keys(matrix).length, Object.values(matrix)[0].length);
-    range.setValues(Object.values(matrix));
+
+  if (Object.keys(newDataRows).length > 0) {
+    //Get Channel IDs of channels already in the output table
+    var previousChannelIds = spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.CHANNEL_IDS_COL).getValues().filter(String).flat();
+    var deduplicatedChannelIds = [];
+    //Only add Channel IDs that aren't already in the output table
+    for (let i = 0; i < Object.keys(newDataRows).length; i++) {
+      if (!(previousChannelIds.includes((Object.entries(newDataRows)[i][1][headers.indexOf('group_placement_view.placement')])))) {
+        deduplicatedChannelIds.push(Object.values(newDataRows)[i]);
+      }
+      else {
+        //Reset YT Data timestamp for this channel already in output table so that we'll fetch YT Data for this reappearing channel again
+        //J is position within CHANNEL_IDS named range, need to add number of rows above it to get cell location of YT Data timestamp to be cleared
+        var previousChannelColumn = spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.CHANNEL_IDS_COL).getValues();
+        var channelIdsFirstRow = spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.CHANNEL_IDS_COL).getRow();
+        for (var j = 0; j < previousChannelColumn.length; j++){
+          if (previousChannelColumn[j][0] === (Object.entries(newDataRows)[i][1][headers.indexOf('group_placement_view.placement')])) {
+            sheet.getRange(j+channelIdsFirstRow,spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.YOUTUBE_TIMESTAMP_COL).getColumn(),1,1).clear();
+          }
+        }
+      }
+    }
+    var triggerCellRange = spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.TRIGGER_CELL)
+    triggerCellRange.setValue("");
+    range = sheet.getRange(newStartingRow, headersRange.getColumn(), deduplicatedChannelIds.length, Object.values(newDataRows)[0].length);
+    range.setValues(deduplicatedChannelIds);    
+    triggerCellRange.setValue("GAds added new data!");
   }
 }
