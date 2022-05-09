@@ -6,14 +6,14 @@
  * @overview Alerts about placements (YT channels) which underperform.
  *
  * @author eladb@, xingj@
- * 2022/04/28
+ * 2022/04/25
  * 
  */
 
 
 //USER_TODO: Fill in
 var SPREADSHEET_URL = "---";
-var EMAILS = "---";
+var emails;
 
 var spreadsheet;
 var currentCustomerId;
@@ -28,14 +28,66 @@ var urlDict = {};
 
 var CONSTS_GAds = {
   OUTPUT: 'Output',
-  TRIGGER_CELL: 'TRIGGER_CELL',
+  ADS_DATA_STATUS: 'ADS_DATA_STATUS',
   METRICS_FILTERS: 'METRICS_FILTERS',
   CHANNEL_IDS_COL: 'CHANNEL_IDS',
   HEADERS: 'HEADERS',
   YOUTUBE_TIMESTAMP_COL: 'YOUTUBE_TIMESTAMP',
   GO_BACK_DAYS_EARLY: 'GO_BACK_DAYS_EARLY',
-  GO_BACK_DAYS_LATE: 'GO_BACK_DAYS_LATE'
-}
+  GO_BACK_DAYS_LATE: 'GO_BACK_DAYS_LATE',
+  EMAIL_SUBJECT: 'EMAIL_SUBJECT',
+  EMAILS: 'EMAILS',
+  CHANNEL_IDS_HEADER: 'CHANNEL_IDS_HEADER'
+};
+
+const METRICS_DICTIONARY = {
+  display_name: "Display Name",
+  placement: "Placement",
+  placement_type: "Placement Type",
+  resource_name: "Resource Name",
+  target_url: "Target URL",
+  active_view_cpm: "Active View CPM",
+  active_view_ctr: "Active View CTR",
+  active_view_impressions: "Active View Impressions",
+  active_view_measurability: "Active View Measurability",
+  active_view_measurable_cost_micros: "Active View Measurable Cost (micros)",
+  active_view_measurable_impressions: "Active View Measurable Impressions",
+  active_view_viewability: "Active View Viewability",
+  all_conversions: "All Conversions",
+  all_conversions_from_interactions_rate: "All Conversions From Interactions Rate",
+  all_conversions_value: "All Conversions Value",
+  all_conversions_value_per_cost: "All Conversions Value Per Cost",
+  average_cost: "Average Cost",
+  average_cpc: "Average CPC",
+  average_cpe: "Average CPE",
+  average_cpm: "Average CPM",
+  average_cpv: "Average CPV",
+  clicks: "Clicks",
+  conversions: "Conversions",
+  conversions_from_interactions_rate: "Conversions from Interactions Rate",
+  conversions_value: "Conversions Value",
+  cost_micros: "Cost (micros)",
+  cost_per_all_conversions: "Cost Per All Conversions",
+  cost_per_conversion: "Cost Per Conversions",
+  cross_device_conversions: "Cross Device Conversions",
+  ctr: "CTR",
+  engagement_rate: "Engagement Rate",
+  engagements: "Engagements",
+  impressions: "Impressions",
+  interaction_event_types: "Interaction Event Types",
+  interaction_rate: "Interaction Rate",
+  interactions: "Interactions",
+  value_per_all_conversions: "Value Per All Conversions",
+  value_per_conversion: "Value Per Conversions",
+  video_view_rate: "Video View Rate",
+  video_views: "Video Views",
+  view_through_conversions: "View Through Conversions"
+};
+
+const readableDictionary = {};
+Object.keys(METRICS_DICTIONARY).forEach(key => {
+    readableDictionary[METRICS_DICTIONARY[key].toLowerCase()] = "metrics." + key;
+});
 
 //USER_TODO: Rename to "main" if you run on CID only. Rename to "main_cid" otherwise
 function main_cid() {
@@ -53,8 +105,7 @@ function main_cid() {
   GO_BACK_DAYS_LATE = (spreadsheet.getRangeByName(currentCustomerId + '!' + CONSTS_GAds.GO_BACK_DAYS_LATE)).getValue();
   fromDate = getDateStringForMinusDays(-1*GO_BACK_DAYS_EARLY);
   toDate = getDateStringForMinusDays(GO_BACK_DAYS_LATE);
-  //USER_TODO: Edit the email subject as you wish
-  EMAIL_SUBJECT = 'Placements Blacklist for last ' + GO_BACK_DAYS_EARLY + ' days. Account: ' + AdsApp.currentAccount().getCustomerId() + ' dates: ' + fromDate.sheet_date + ' - ' + toDate.sheet_date;
+  EMAIL_SUBJECT = (spreadsheet.getRangeByName(currentCustomerId + '!' + CONSTS_GAds.EMAIL_SUBJECT)).getValue();
 
   // Run queries for each of the queries entered in the spreadsheet
   var userConditions = createMetricsFilters();
@@ -87,13 +138,20 @@ function getDateStringInTimeZone(format, date, timeZone) {
   return Utilities.formatDate(date, timeZone, format);
 }
 
+//Changing human readable query terms to API readable query terms
+function translateHumanToApiSyntax(text) {
+  const reg = new RegExp(Object.keys(readableDictionary).join("|"), "gi");
+  return text.toString().replace(reg, (matched) => readableDictionary[matched.toLowerCase()]);
+}
+
+
 function createMetricsFilters() {
   //Get values for metrics filters 
   var metricsFiltersQuery = [];
   var metricsFiltersValues = (spreadsheet.getRangeByName(currentCustomerId + '!' + CONSTS_GAds.METRICS_FILTERS)).getValues().filter(String);
 
   for (let i = 0; i < metricsFiltersValues.length; i++) {
-    metricsFiltersQuery.push(metricsFiltersValues[i]);
+    metricsFiltersQuery.push(translateHumanToApiSyntax(metricsFiltersValues[i]));
   }
   return metricsFiltersQuery;
 }
@@ -180,6 +238,7 @@ function toFloat(value) {
 
 
 function sendEmail(urlDict) {
+  emails = (spreadsheet.getRangeByName(currentCustomerId + '!' + CONSTS_GAds.EMAILS)).getValue();
   //Logger.log("JSON.stringify(urls) = "+JSON.stringify(results));
   var urls = Object.keys(urlDict);
 
@@ -191,7 +250,7 @@ function sendEmail(urlDict) {
     Logger.log('Sending Email with a link to spreadsheet');
     MailApp.sendEmail(
       {
-        to: EMAILS,
+        to: emails,
         subject: EMAIL_SUBJECT,
         htmlBody:
           "<h1> Full spreadsheet: </h1><br>" +
@@ -203,7 +262,7 @@ function sendEmail(urlDict) {
     Logger.log('Sending Email');
     MailApp.sendEmail(
       {
-        to: EMAILS,
+        to: emails,
         subject: EMAIL_SUBJECT,
         htmlBody:
           "<h1> Channels to exclude: </h1><br>" +
@@ -230,11 +289,12 @@ function writeDataToGoogleSheet(data, sheet) {
       return item[key];
     });
   }
-  var range = sheet.getRange(1, 1, 1, 1); 
-  range.setValue(EMAIL_SUBJECT);
 
-  //Set headers
+  // Set headers
+  // Translate API syntax to human syntax for headers
+  headers = headers.map(x => METRICS_DICTIONARY[x.split(".").pop()]);
   headersRange = spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.HEADERS);
+  channelIdsHeader = spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.CHANNEL_IDS_HEADER);
   range = sheet.getRange(headersRange.getRow(), headersRange.getColumn(), 1, headers.length);
   range.setValues([headers]);
 
@@ -244,27 +304,32 @@ function writeDataToGoogleSheet(data, sheet) {
     //Get Channel IDs of channels already in the output table
     var previousChannelIds = spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.CHANNEL_IDS_COL).getValues().filter(String).flat();
     var deduplicatedChannelIds = [];
+    var adsDataStatusRange = spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.ADS_DATA_STATUS)
+    adsDataStatusRange.setValue("");
     //Only add Channel IDs that aren't already in the output table
     for (let i = 0; i < Object.keys(newDataRows).length; i++) {
-      if (!(previousChannelIds.includes((Object.entries(newDataRows)[i][1][headers.indexOf('group_placement_view.placement')])))) {
+      if (!(previousChannelIds.includes((Object.entries(newDataRows)[i][1][headers.indexOf(channelIdsHeader.getValue())])))) {
         deduplicatedChannelIds.push(Object.values(newDataRows)[i]);
       }
       else {
         //Reset YT Data timestamp for this channel already in output table so that we'll fetch YT Data for this reappearing channel again
         //J is position within CHANNEL_IDS named range, need to add number of rows above it to get cell location of YT Data timestamp to be cleared
-        var previousChannelColumn = spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.CHANNEL_IDS_COL).getValues();
+        var previousChannelColumn = spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.CHANNEL_IDS_COL).getValues().filter(String);
         var channelIdsFirstRow = spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.CHANNEL_IDS_COL).getRow();
         for (var j = 0; j < previousChannelColumn.length; j++){
-          if (previousChannelColumn[j][0] === (Object.entries(newDataRows)[i][1][headers.indexOf('group_placement_view.placement')])) {
+          if (previousChannelColumn[j][0] === (Object.entries(newDataRows)[i][1][headers.indexOf(channelIdsHeader.getValue())])) {
             sheet.getRange(j+channelIdsFirstRow,spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.YOUTUBE_TIMESTAMP_COL).getColumn(),1,1).clear();
           }
         }
+        //There were no new channels added but there reappearing channels that new YT metadata should be added to
+        adsDataStatusRange.setValue("GAds added new data!");
       }
     }
-    var triggerCellRange = spreadsheet.getRangeByName(currentCustomerId + "!" + CONSTS_GAds.TRIGGER_CELL)
-    triggerCellRange.setValue("");
+    //If there were new channels added, append to the end of the output results table in spreadsheet
+    if (deduplicatedChannelIds.length > 0) {
     range = sheet.getRange(newStartingRow, headersRange.getColumn(), deduplicatedChannelIds.length, Object.values(newDataRows)[0].length);
-    range.setValues(deduplicatedChannelIds);    
-    triggerCellRange.setValue("GAds added new data!");
+    range.setValues(deduplicatedChannelIds);
+    adsDataStatusRange.setValue("GAds added new data!");
+    }    
   }
 }
