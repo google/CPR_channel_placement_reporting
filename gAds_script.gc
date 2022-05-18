@@ -1,15 +1,3 @@
-/*
-Copyright 2022 Google LLC
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
@@ -20,7 +8,7 @@ Copyright 2022 Google LLC. This solution, including any related sample code or d
  * @overview Alerts about placements (YT channels) which underperform.
  *
  * @author eladb@, xingj@
- * 2022/04/25
+ * 2022/05/18
  * 
  */
 
@@ -64,7 +52,7 @@ const METRICS_DICTIONARY = {
   active_view_ctr: "Active View CTR",
   active_view_impressions: "Active View Impressions",
   active_view_measurability: "Active View Measurability",
-  active_view_measurable_cost_micros: "Active View Measurable Cost (micros)",
+  active_view_measurable_cost_micros: "Active View Measurable Cost",
   active_view_measurable_impressions: "Active View Measurable Impressions",
   active_view_viewability: "Active View Viewability",
   all_conversions: "All Conversions",
@@ -80,7 +68,7 @@ const METRICS_DICTIONARY = {
   conversions: "Conversions",
   conversions_from_interactions_rate: "Conversions from Interactions Rate",
   conversions_value: "Conversions Value",
-  cost_micros: "Cost (micros)",
+  cost_micros: "Cost",
   cost_per_all_conversions: "Cost Per All Conversions",
   cost_per_conversion: "Cost Per Conversions",
   cross_device_conversions: "Cross Device Conversions",
@@ -97,6 +85,22 @@ const METRICS_DICTIONARY = {
   video_views: "Video Views",
   view_through_conversions: "View Through Conversions"
 };
+
+const METRICS_MICROS = [
+  "metrics.active_view_cpm",
+  "metrics.active_view_measurable_cost_micros",
+  "metrics.all_conversions_value_per_cost",
+  "metrics.average_cost",
+  "metrics.average_cpc",
+  "metrics.average_cpe",
+  "metrics.average_cpm",
+  "metrics.average_cpv",
+  "metrics.cost_micros",
+  "metrics.cost_per_all_conversions",
+  "metrics.cost_per_conversion",
+  "metrics.value_per_all_conversions",
+  "metrics.value_per_conversion",
+];
 
 const readableDictionary = {};
 Object.keys(METRICS_DICTIONARY).forEach(key => {
@@ -158,6 +162,33 @@ function translateHumanToApiSyntax(text) {
   return text.toString().replace(reg, (matched) => readableDictionary[matched.toLowerCase()]);
 }
 
+//Changing human readable cost digits to API readable micros
+function microsToCurrency(query) {
+  var query = query.toLowerCase();
+  const regMicros = new RegExp(METRICS_MICROS.join('|'));
+  //Multiple metrics joined by AND
+  if (query.includes("and")) {
+    var individualQueriesArray = query.split(" and ");
+    for (let i = 0; i < individualQueriesArray.length; i++) {
+      if (regMicros.test(individualQueriesArray[i])) {
+        individualQueriesArray[i] = queryToMicros(individualQueriesArray[i]);
+      }
+    }
+    microsQuery = individualQueriesArray.join(" AND ");
+  }
+  //1 metric being filtered
+  else if (regMicros.test(query)) {
+    var microsQuery = queryToMicros(query);
+  }
+  return microsQuery;
+}
+
+function queryToMicros(query) {
+  var individualQueryWordArray = query.split(" ");
+  individualQueryWordArray[2] = individualQueryWordArray[2]*1000000;
+  var microsQuery = individualQueryWordArray.join(" ");
+  return microsQuery;
+}
 
 function createMetricsFilters() {
   //Get values for metrics filters 
@@ -165,7 +196,7 @@ function createMetricsFilters() {
   var metricsFiltersValues = (spreadsheet.getRangeByName(currentCustomerId + '!' + CONSTS_GAds.METRICS_FILTERS)).getValues().filter(String);
 
   for (let i = 0; i < metricsFiltersValues.length; i++) {
-    metricsFiltersQuery.push(translateHumanToApiSyntax(metricsFiltersValues[i]));
+    metricsFiltersQuery.push(microsToCurrency(translateHumanToApiSyntax(metricsFiltersValues[i])));
   }
   return metricsFiltersQuery;
 }
@@ -233,14 +264,15 @@ function populateStatsDict(urlDict, accountDict, rows) {
   } 
 }
 
-function accumulateReportRow(row, acc) {  
+function accumulateReportRow(row, acc) { 
+  //https://developers.google.com/adwords/api/docs/guides/reporting Fields of type Money are returned in micro currency units (micros) For example, WHERE AverageCpc > 1000000 will return rows where the AverageCpc is greater than 1 (one unit of the account currency). 
   acc["metrics.impressions"] += toFloat(row['metrics.impressions']);  
-  acc["metrics.cost_micros"] += toFloat(row['metrics.cost_micros']) / 10000; 
+  acc["metrics.cost_micros"] += toFloat(row['metrics.cost_micros']) / 1000000; 
   acc["metrics.conversions"] += toFloat(row['metrics.conversions']);  
   acc["metrics.video_views"] += toFloat(row['metrics.video_views']);  
   acc['metrics.video_view_rate'] += toFloat(row['metrics.video_view_rate']);  
   acc['metrics.clicks'] += toFloat(row['metrics.clicks']);  
-  acc['metrics.average_cpm'] += toFloat(row['metrics.average_cpm']);  
+  acc['metrics.average_cpm'] += toFloat(row['metrics.average_cpm']) / 1000000;  
   acc['metrics.ctr'] += toFloat(row['metrics.ctr']);  
 }
 
@@ -253,7 +285,6 @@ function toFloat(value) {
 
 function sendEmail(urlDict) {
   emails = (spreadsheet.getRangeByName(currentCustomerId + '!' + CONSTS_GAds.EMAILS)).getValue();
-  //Logger.log("JSON.stringify(urls) = "+JSON.stringify(results));
   var urls = Object.keys(urlDict);
 
   if (urls.length == 0) {
