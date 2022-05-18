@@ -17,10 +17,8 @@ Copyright 2022 Google LLC. This solution, including any related sample code or d
 
  * Spamming channels
  * Author: eladb@, xingj@
- * 2022/05/16
+ * 2022/05/18
  */
- 
- 
 //For calling Google Ads API for placement exclusions
 const API_VERSION = "v10";
 // Do not change the values below
@@ -159,9 +157,9 @@ function isOnlyNumber(str) {
   return /^[0-9]+$/.test(str);
 }
 
-function isEnglishCharacters(str) {
+function isNotEnglishCharacters(str) {
   const regex = /^[~`!@#$%^&*()_+=[\]\{}|;':",.\/<>?a-zA-Z0-9- ]+$/;
-  return (regex.test(str));
+  return !(regex.test(str));
 };
 
 function filterYtMetadata(leftValue, rightValue, operator) {
@@ -238,7 +236,7 @@ function callChannelAPI(channelIdToRowId, currentPage, sheetName) {
   (filterYtMetadata(item.statistics.videoCount, videoCountFilter, videoCountOperator)) &&
   (filterYtMetadata(item.snippet.publishedAt, publishedDateFilter, publishedDateOperator)) &&
   (filterYtMetadata(item.snippet.country, countryFilter, countryOperator))) &&
-  (languageEnFilter == false || item.snippet.title == null || item.snippet.title == "" || isEnglishCharacters(item.snippet.title)));
+  (languageEnFilter != false || item.snippet.title == null || item.snippet.title == "" || isNotEnglishCharacters(item.snippet.title)));
 
   setYtMetadataHeaders(currentSheetName);
   
@@ -274,7 +272,7 @@ function setYtMetadataValues(currentSheetName, position, channel) {
   metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.VIDEO_COUNT).offset(position, 0).setValue(channel.statistics.videoCount);
   metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.PUBLISHED_DATE).offset(position, 0).setValue(channel.snippet.publishedAt);
   metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.COUNTRY).offset(position, 0).setValue(channel.snippet.country);
-  metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.LANGUAGE_EN_TITLE).offset(position, 0).setValue(isEnglishCharacters(channel.snippet.title) + ": " + channel.snippet.title);
+  metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.LANGUAGE_EN_TITLE).offset(position, 0).setValue(isNotEnglishCharacters(channel.snippet.title) + ": " + channel.snippet.title);
 }
 
 //Video exclusion enablement
