@@ -15,7 +15,7 @@ limitations under the License.
 
 Copyright 2022 Google LLC. This solution, including any related sample code or data, is made available on an “as is,” “as available,” and “with all faults” basis, solely for illustrative purposes, and without warranty or representation of any kind. This solution is experimental, unsupported and provided solely for your convenience. Your use of it is subject to your agreements with Google, as applicable, and may constitute a beta feature as defined under those agreements.  To the extent that you make any data available to Google in connection with your use of the solution, you represent and warrant that you have all necessary and appropriate rights, consents and permissions to permit Google to use and process that data.  By using any portion of this solution, you acknowledge, assume and accept all risks, known and unknown, associated with its usage, including with respect to your deployment of any portion of this solution in your systems, or usage in connection with your business, if at all.*
 
- * Spamming channels
+* Spamming channels
  * Author: eladb@, xingj@
  * 2022/05/18
  */
@@ -26,12 +26,9 @@ const API_VERSION = "v10";
 const OAUTH_TOKEN = ScriptApp.getOAuthToken();
 const DEVELOPER_TOKEN = PropertiesService.getScriptProperties().getProperty("dev_token");
 // ---
-
 var metadataSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-
 var inputSheet = metadataSpreadsheet.getSheetByName("Input");
 var cacheSheet = metadataSpreadsheet.getSheetByName("Cache");
-
 var operators = {
         '===': function (a, b) { return a === b; },
         '==': function (a, b) { return a == b; },
@@ -41,7 +38,6 @@ var operators = {
         '>': function (a, b) { return a > b; },
         '!=': function(a, b) {return a != b;}
     };
-
 var startTime;
 var row;
 var runtimeDuration;
@@ -53,8 +49,6 @@ const MAX_RUNNING_TIME = 4 * 60 * 1000;
 const REASONABLE_TIME_TO_WAIT = 3 * 60 * 1000;
 const MAX_TRIGGERS = 30;
 const MAX_CHANNEL_IDS = 50; //Do not change to above 50, YouTube.Videos.List allows max of 50 ids
-
-
 var CONSTS = {
   CHANNEL_IDS: 'CHANNEL_IDS',
   ADS_DATA_STATUS: 'ADS_DATA_STATUS',
@@ -89,7 +83,6 @@ var CONSTS = {
   YOUTUBE_DATA_FILTERS: 'YOUTUBE_DATA_FILTERS',
   SCRIPT_STATUS: 'SCRIPT_STATUS'
   }
-
 //Creates menu item that client clicks once to authorize and then 5 min trigger is set 
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
@@ -97,36 +90,30 @@ function onOpen() {
   .addItem("Activate script", 'createTrigger')
   .addToUi();
 }
-
 function createTrigger() {
   var triggers = ScriptApp.getProjectTriggers();
   if (triggers.length == 0) {
     ScriptApp.newTrigger('excludeChannelsBasedOnYTmetadata').timeBased().everyMinutes(5).create(); 
   }
 }
-
 function excludeChannelsBasedOnYTmetadata() {
   var currentSheetName;
   for (var i= 0; i< allSheets.length; i++){
     if (isOnlyNumber(allSheets[i].getSheetName())){
       currentSheetName = (allSheets[i].getSheetName());
-
       const adsDataStatusRange = metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.ADS_DATA_STATUS);
       if (adsDataStatusRange.getValue() != "" || null) {
         SpreadsheetApp.getActiveSpreadsheet().toast('⏰ New 5 min script is running, calling YT metadata and adding exclusions', 'Notice', 60);
         metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.SCRIPT_STATUS).setValue("Script running");
         var channelIdToRowId = addChannelsMetaData(currentSheetName);
         var idsToExclude = Object.keys(channelIdToRowId);
-
         var currentSheetChannelIdsLength = metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.CHANNEL_IDS).getValues().filter(String).length;
         metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.CURRENT_PAGE_INDEX).setValue(currentPage+1);
         currentPage = parseInt(metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.CURRENT_PAGE_INDEX).getValue());
-
         //If there were channels to exclude in current 50 channel chunk, exclude them
         if (idsToExclude.length != 0) {
           excludeChannelsAccount(createPayload(idsToExclude), currentSheetName, channelIdToRowId);
         }
-
         //If there are more channels to exclude than in current 50 channel chunk, create trigger to continue OR
         //If there were no channels to exclude in current 50 channel chunk, move on to next
         if ((currentPage * MAX_CHANNEL_IDS) < currentSheetChannelIdsLength) {
@@ -152,23 +139,19 @@ function excludeChannelsBasedOnYTmetadata() {
     }
   }
 }
-
 function isOnlyNumber(str) {
   return /^[0-9]+$/.test(str);
 }
-
 function isNotEnglishCharacters(str) {
   const regex = /^[~`!@#$%^&*()_+=[\]\{}|;':",.\/<>?a-zA-Z0-9- ]+$/;
   return !(regex.test(str));
 };
-
 function filterYtMetadata(leftValue, rightValue, operator) {
   if (typeof(rightValue) == "string" && typeof(leftValue) == "string") {
     return (leftValue == null || operators[operator](leftValue.toLowerCase(), rightValue.toLowerCase()) || rightValue == "");
   } 
   return (leftValue == null || operators[operator](leftValue, rightValue) || rightValue == "");
 }
-
 //Once all pages are done, reset Ads Data Status and Current Page Index 
 function clearAll(sheetName) {
   var currentSheetName = sheetName;
@@ -177,7 +160,6 @@ function clearAll(sheetName) {
   metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.SCRIPT_STATUS).setValue("Script finished");
   SpreadsheetApp.getActiveSpreadsheet().toast("Script finished");
 };
-
 function addChannelsMetaData(sheetName) {
   var channelIdToRowId = {};
   var currentSheetName = sheetName;
@@ -186,7 +168,6 @@ function addChannelsMetaData(sheetName) {
   var currentSheetChannelIdsColumn = metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.CHANNEL_IDS).getColumn();
   var currentSheetYtTimestampRange = metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.YOUTUBE_TIMESTAMP_COL);
   startTime = (new Date()).getTime();
-
   //Only channel IDs that have channel ID data and blank YT timestamp in chunks of 50 channel IDs
   for (let i = (currentSheetChannelIdsFirstRow + (currentPage * MAX_CHANNEL_IDS)); i < (currentSheetChannelIdsFirstRow + ((currentPage+1) * MAX_CHANNEL_IDS)); i++){
     if (metadataSpreadsheet.getSheetByName(currentSheetName).getRange(i,currentSheetYtTimestampRange.getColumn()).isBlank() && !metadataSpreadsheet.getSheetByName(currentSheetName).getRange(i,currentSheetChannelIdsColumn).isBlank()){
@@ -196,7 +177,6 @@ function addChannelsMetaData(sheetName) {
   Logger.log("Calling channel API");
   return callChannelAPI(channelIdToRowId, currentPage, currentSheetName);
 }
-
 /**
  *  https://developers.google.com/youtube/v3/docs/channels
  */
@@ -205,7 +185,6 @@ function callChannelAPI(channelIdToRowId, currentPage, sheetName) {
   var channelIds = Object.keys(channelIdToRowId);
   var idsToExclude = [];
   currentPage = parseInt(currentPage);
-
   var subCountFilter = metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.SUB_COUNT_FILTER).getValue();
   var subCountOperator = metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.SUB_COUNT_OPERATOR).getValue();
   var viewCountFilter = metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.VIEW_COUNT_FILTER).getValue();
@@ -219,12 +198,10 @@ function callChannelAPI(channelIdToRowId, currentPage, sheetName) {
   var countryFilter = metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.COUNTRY_FILTER).getValue();
   var countryOperator = metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.COUNTRY_OPERATOR).getValue();
   var languageEnFilter = metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.LANGUAGE_EN_FILTER).getValue();
-
   if (channelIds.length == 0) {
     Logger.log("All items have no channel");
     return channelIdToRowId;
   }
-
   var currentPageMetadata = YouTube.Channels.list('id, snippet, statistics, brandingSettings', {
     id: channelIds.join()
   }).getItems();
@@ -237,7 +214,6 @@ function callChannelAPI(channelIdToRowId, currentPage, sheetName) {
   (filterYtMetadata(item.snippet.publishedAt, publishedDateFilter, publishedDateOperator)) &&
   (filterYtMetadata(item.snippet.country, countryFilter, countryOperator))) &&
   (languageEnFilter != false || item.snippet.title == null || item.snippet.title == "" || isNotEnglishCharacters(item.snippet.title)));
-
   setYtMetadataHeaders(currentSheetName);
   
   for (var j in currentPageMetadata) {
@@ -246,11 +222,9 @@ function callChannelAPI(channelIdToRowId, currentPage, sheetName) {
     setYtMetadataValues(currentSheetName, position, channel);
     idsToExclude.push(channel.id);
   }
-
   channelIdToRowId = Object.fromEntries(Object.entries(channelIdToRowId).filter(([key, value]) => idsToExclude.includes(key)));
   return channelIdToRowId;
 }
-
 function setYtMetadataHeaders(currentSheetName) {
   // Set YT Metadata headers
   metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.SUB_COUNT).offset(-1, 0).setValue(CONSTS.SUB_COUNT);
@@ -262,7 +236,6 @@ function setYtMetadataHeaders(currentSheetName) {
   metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.COUNTRY).offset(-1, 0).setValue(CONSTS.COUNTRY);
   metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.LANGUAGE_EN_TITLE).offset(-1, 0).setValue(CONSTS.LANGUAGE_EN_TITLE);
 }
-
 function setYtMetadataValues(currentSheetName, position, channel) {
   metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.YOUTUBE_TIMESTAMP).offset(position, 0).setValue(Utilities.formatDate(new Date(), "GMT+2", "yyyy-MM-dd'T'HH:mm:ss'Z'"));
   metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.ID_AGAIN).offset(position, 0).setValue(channel.id);
@@ -274,9 +247,7 @@ function setYtMetadataValues(currentSheetName, position, channel) {
   metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.COUNTRY).offset(position, 0).setValue(channel.snippet.country);
   metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.LANGUAGE_EN_TITLE).offset(position, 0).setValue(isNotEnglishCharacters(channel.snippet.title) + ": " + channel.snippet.title);
 }
-
 //Video exclusion enablement
-
 //Generating all the create exclusion statements for each channel ID
 function createPayload(idsToExclude){
   var payload = {
@@ -295,7 +266,6 @@ function createPayload(idsToExclude){
   }
   return payload
 }
-
 //Excludes channels at the Account level for channel IDs that have been selected 
 function excludeChannelsAccount(createdPayload, sheetName, channelIdToRowId) {
   var currentSheetName = sheetName;
@@ -315,9 +285,7 @@ function excludeChannelsAccount(createdPayload, sheetName, channelIdToRowId) {
   if ((metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.MCC_ID).getValue()).toString().trim().length != 0) {
     request.headers["login-customer-id"] = metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.MCC_ID).getValue().toString();
   }
-
   var response = UrlFetchApp.fetch(SEARCH_URL, request);
-
   var reportResult = JSON.parse(response.getContentText());
   if (reportResult.hasOwnProperty('error')) {
     Logger.log("Error: ")
