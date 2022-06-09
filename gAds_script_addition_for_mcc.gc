@@ -1,0 +1,103 @@
+/*
+Copyright 2022 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Copyright 2022 Google LLC. This solution, including any related sample code or data, is made available on an “as is,” “as available,” and “with all faults” basis, solely for illustrative purposes, and without warranty or representation of any kind. This solution is experimental, unsupported and provided solely for your convenience. Your use of it is subject to your agreements with Google, as applicable, and may constitute a beta feature as defined under those agreements.  To the extent that you make any data available to Google in connection with your use of the solution, you represent and warrant that you have all necessary and appropriate rights, consents and permissions to permit Google to use and process that data.  By using any portion of this solution, you acknowledge, assume and accept all risks, known and unknown, associated with its usage, including with respect to your deployment of any portion of this solution in your systems, or usage in connection with your business, if at all.*
+
+
+ * @name Spamming Placements
+ *
+ * @overview Alerts about placements (YT channels) which underperform.
+ *
+ * @author eladb@
+ * 2022/03/20
+ * 
+ */
+
+
+
+//USER_TODO: Rename to "main" if you run on mcc. Rename to "main_mcc" otherwise
+function main_mcc() {
+  spreadsheet = SpreadsheetApp.openByUrl(SPREADSHEET_URL);
+  mccManager = mccManager();
+  var allSubAccountsObj = mccManager.getAllSubAccounts();
+  for (var index in allSubAccountsObj) {
+    var currentAccount = allSubAccountsObj[index];
+    Logger.log('Processing account ' + currentAccount.getCustomerId());
+    AdsManagerApp.select(currentAccount)
+    main_cid();
+  }
+}
+
+
+/**
+ * Module that deals with fetching and iterating through multiple accounts.
+ *
+ * @return {object} callable functions corresponding to the available
+ * actions. Specifically, it currently supports next, current, mccAccount.
+ */
+var mccManager = function () {
+  var mccAccount;
+  var currentAccount;
+
+  //Private one-time init function.
+  var init = function () {
+    mccAccount = AdsApp.currentAccount(); // save the mccAccount
+    currentAccount = AdsApp.currentAccount();
+  };
+
+  var getAllSubAccounts = function () {
+    var accounts = [];
+    accountIterator = AdsManagerApp.accounts().get();
+    while (accountIterator.hasNext()) {
+      currentAccount = accountIterator.next();
+      accounts.push(currentAccount);
+    }
+    Logger.log("accounts length = " + accounts.length);
+    return accounts;
+  };
+
+  var getAccountsForLabels = function (labels) {
+    var accounts = [];
+    labels = labels.split(",");
+    //Logger.log("labels: " + labels)
+    for (i in labels) {
+      var accountIterator = AdsManagerApp.accounts().withCondition("LabelNames CONTAINS '" + labels[i] + "'").get();
+      while (accountIterator.hasNext()) {
+        currentAccount = accountIterator.next();
+        accounts.push(currentAccount);
+      }
+    }
+    return accounts;
+  };
+
+  /**
+   * Returns the original MCC account.
+   *
+   * @return {AdsApp.Account} The original account that was selected.
+   */
+  var getMccAccount = function () {
+    return mccAccount;
+  };
+
+  // Set up internal variables; called only once, here.
+  init();
+
+  // Expose the external interface.
+  return {
+    mccAccount: getMccAccount,
+    getAccountsForLabels: getAccountsForLabels,
+    getAllSubAccounts: getAllSubAccounts
+  };
+};
