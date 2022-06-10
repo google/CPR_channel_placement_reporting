@@ -34,21 +34,21 @@ Copyright 2021 Google LLC. This solution, including any related sample code or d
 
 </br>
 
-* [User Guide] (https://docs.google.com/document/d/1NJWg1qfvxRiELdXGURPBgYUyPwdk26Nuxnxjf4k1EkY/edit?usp=sharing)
+* [User Guide](https://docs.google.com/document/d/1NJWg1qfvxRiELdXGURPBgYUyPwdk26Nuxnxjf4k1EkY/edit?usp=sharing)
 
 </br>
 
 
 
 ## Create a containing document
-Create a copy of the spreadsheet [spreadsheet] (https://docs.google.com/spreadsheets/d/1LOIr41kw7oSCRTLanWK6rb5cguHFWzns4pIP3ix32EE/copy)
+Create a copy of the spreadsheet [spreadsheet](https://docs.google.com/spreadsheets/d/1LOIr41kw7oSCRTLanWK6rb5cguHFWzns4pIP3ix32EE/copy)
 
 
 
 ## Secure the Ads API Dev Token
-You'll need a Dev token for calling the Ads API. Follow the directions [here] (https://developers.google.com/google-ads/api/docs/first-call/dev-token).
+You'll need a Dev token for calling the Ads API. Follow the directions [here](https://developers.google.com/google-ads/api/docs/first-call/dev-token).
 Create a Cloud Project
-If you already have a GCP console for Ads API, you can use it.  Otherwise, create a new one following the directions [at] (https://developers.google.com/google-ads/api/docs/first-call/oauth-cloud-project).
+If you already have a GCP console for Ads API, you can use it.  Otherwise, create a new one following the directions [at](https://developers.google.com/google-ads/api/docs/first-call/oauth-cloud-project).
 
 </br>
 </br>
