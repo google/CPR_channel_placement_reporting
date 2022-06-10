@@ -56,29 +56,29 @@ If you already have a GCP console for Ads API, you can use it.  Otherwise, creat
 
 Once you have a project, enable the OAuth consent screen:
 
-[spreadsheet](src/2022-05-16_23-53.png)
+[spreadsheet](/src/2022-05-16_23-53.png)
 
 
 Enable Google Ads API:
 
-[spreadsheet](src/2022-05-16_23-54.png)
+[spreadsheet](/src/2022-05-16_23-54.png)
 
 Associate the Cloud Project with the Google Apps Script Project
 Open the Apps Script editor:
 
 
-[spreadsheet](src/2022-05-16_23-54_1.png)
+[spreadsheet](/src/2022-05-16_23-54_1.png)
 
 
 Scroll down to Script Properties and set dev token by entering “dev_token” for Property and then pasting the value and click Save script properties: 
 
-[spreadsheet](src/2022-05-16_23-55.png)
+[spreadsheet](/src/2022-05-16_23-55.png)
 
 Set up spreadsheet
 Duplicate the template tab and rename it to your 10 digit child account ID (no dashes). 
 In the menu bar, click Activate script > Activate script:
 
-[spreadsheet](src/2022-05-16_23-57.png)
+[spreadsheet](/src/2022-05-16_23-57.png)
 
 
 We are aware of the fact that the script might notify the same placements day after day until their activity won't be included within the look back window- this is something we will try to address soon. Meanwhile you may adjust the lookback window and frequency so it won't spam too much (e.g 3 days & daily frequency) . 
@@ -89,9 +89,9 @@ Note: Do not make changes (adding/deleting rows) to the output table when the sc
 Fill it with a placement-id list in the dedicated column (by running the GAds script above). 
 
 
-[spreadsheet](src/2022-05-16_23-56_2.png)
+[spreadsheet](/src/2022-05-16_23-56_2.png)
 
-[spreadsheet](src/2022-05-16_23-56_1.png)
+[spreadsheet](/src/2022-05-16_23-56_1.png)
 
 
 
