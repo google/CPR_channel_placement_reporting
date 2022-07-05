@@ -153,7 +153,7 @@ function excludeChannelsBasedOnGAdsAndYT() {
         getGoogleAdsData(currentSheet);
         //If there are more Gads data to be added after this chunk, trigger created to run again and do not continue on to add YT metadata until Gads data is finished being added
         if (isGadChannelIdsOverChunkSize(currentSheetName)) {
-          createWorkSplitTrigger("excludeChannelsBasedOnGAdsAndYT");
+          createWorkSplitTrigger("excludeChannelsBasedOnGAdsAndYT", currentSheetName);
           return;
         }
       }
@@ -190,7 +190,7 @@ function channelIdsOverMax(currentSheetName) {
   currentPageRange.setValue(currentPage + 1);
   currentPage = parseInt(currentPageRange.getValue());
   if ((currentPage * MAX_CHANNEL_IDS) < currentSheetChannelIdsLength) {
-    createWorkSplitTrigger("excludeChannelsBasedOnGAdsAndYT");
+    createWorkSplitTrigger("excludeChannelsBasedOnGAdsAndYT", currentSheetName);
     return true;
   }
   else {
@@ -201,7 +201,7 @@ function channelIdsOverMax(currentSheetName) {
 }
 
 
-function createWorkSplitTrigger(functionName) {
+function createWorkSplitTrigger(functionName, currentSheetName) {
   var currTime = (new Date()).getTime();
   SpreadsheetApp.getActiveSpreadsheet().toast('💡 Closing script before 5 min timeout. New Trigger at time ' + JSON.stringify(new Date(currTime + REASONABLE_TIME_TO_WAIT)));
   metadataSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.USER_FACEING_STATUS).setValue("Work split. Run continues at " + JSON.stringify(new Date(currTime + REASONABLE_TIME_TO_WAIT)));
