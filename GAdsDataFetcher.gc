@@ -8,7 +8,7 @@ Copyright 2022 Google LLC. This solution, including any related sample code or d
  * @overview Alerts about placements (YT channels) which underperform.
  *
  * @author eladb@, xingj@
- * 2022/07/12
+ * 2022/07/13
  * 
  */
 
@@ -25,29 +25,6 @@ var toDate;
 
 const MAX_GADS_IDS = 500;
 const MICROS_CONVERSION = 1000000;
-
-var CONSTS_GAds = {
-  OUTPUT: 'Output',
-  METRICS_FILTERS: 'METRICS_FILTERS',
-  CHANNEL_IDS_COL: 'CHANNEL_IDS',
-  HEADERS: 'HEADERS',
-  YOUTUBE_TIMESTAMP_COL: 'YOUTUBE_TIMESTAMP',
-  GO_BACK_DAYS_EARLY: 'GO_BACK_DAYS_EARLY',
-  GO_BACK_DAYS_LATE: 'GO_BACK_DAYS_LATE',
-  EMAIL_SUBJECT: 'EMAIL_SUBJECT',
-  EMAILS: 'EMAILS',
-  CHANNEL_IDS_HEADER: 'CHANNEL_IDS_HEADER',
-  CID: 'CID',
-
-  GADS_NEXT_PAGE_TOKEN: 'GADS_NEXT_PAGE_TOKEN',
-  GADS_EXCLUSION_PAGE_INDEX: 'GADS_EXCLUSION_PAGE_INDEX',
-
-  YT_TARGET_URL_COL: 'YT_TARGET_URL_COL',
-  DISPLAY_NAME_COL: 'DISPLAY_NAME_COL',
-  GADS_TOTAL_OR: 'GADS_TOTAL_OR',
-  GADS_CURRENT_OR: 'GADS_CURRENT_OR',
-  GADS_ORS: 'GADS_ORS'
-};
 
 const METRICS_API_ENGLISH = {
   display_name: "Display Name",
@@ -123,15 +100,16 @@ Object.keys(METRICS_API_ENGLISH).forEach(api => {
 
 //Get Google Ads data in MAX_GADS_IDS# of chunks, then run the gadschannelidsovermax to see if it needs to continue 
 function getGAdsData(currentSheetName) {
+  wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.RUNNING);
   currentCustomerId = currentSheetName.substring(0, currentSheetName.indexOf('_'));
-  GO_BACK_DAYS_EARLY = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.GO_BACK_DAYS_EARLY)).getValue();
-  GO_BACK_DAYS_LATE = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.GO_BACK_DAYS_LATE)).getValue();
+  GO_BACK_DAYS_EARLY = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GO_BACK_DAYS_EARLY)).getValue();
+  GO_BACK_DAYS_LATE = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GO_BACK_DAYS_LATE)).getValue();
   fromDate = getDateStringForMinusDays(-1 * GO_BACK_DAYS_EARLY);
   toDate = getDateStringForMinusDays(GO_BACK_DAYS_LATE);
-  EMAIL_SUBJECT = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.EMAIL_SUBJECT)).getValue();
+  EMAIL_SUBJECT = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.EMAIL_SUBJECT)).getValue();
 
   // Run queries for each of the queries entered in the spreadsheet if queries entered
-  var gadsOrClauses = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.METRICS_FILTERS)).getValues().filter(String);
+  var gadsOrClauses = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.METRICS_FILTERS)).getValues().filter(String);
   var currentGadsFilter = "";
   if (gadsOrClauses.length != 0) {
     //one by one. Call the API. Fetch the results in chuncks. When finised reading all chunks for current filer-row, incrememnt the GAds filter row.
@@ -152,15 +130,13 @@ function getGAdsData(currentSheetName) {
 function isGadsWorkSplitNeeded(currentSheetName) {
   //If there is a next page token, there are more channels to get GAds data for than in current channel chunk, create trigger to continue in 5 min and avoid timeout
   //If gadsQueryNumber is not 0, there are more queries to run after this one, create trigger to continue in 5 min and run the next query
-  var nextPageToken = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.GADS_NEXT_PAGE_TOKEN).getValue()).toString().trim();
-  var gadsOrClauses = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.GADS_TOTAL_OR).getValue();
-  var gadsCurrentOr = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.GADS_CURRENT_OR).getValue();
-  if (nextPageToken.length > 0 || (gadsOrClauses > gadsCurrentOr)) {
-    return true;
-  }
-  else {
-    return false;
-  }
+  var nextPageToken = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_NEXT_PAGE_TOKEN).getValue()).toString().trim();
+  var gadsOrClauses = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_TOTAL_OR).getValue();
+  var gadsCurrentOr = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_CURRENT_OR).getValue();
+
+  var hasMoreChunksForCurrentOr = nextPageToken.length > 0;
+  var hasMoreOrClauses = (gadsOrClauses > gadsCurrentOr);
+  return hasMoreOrClauses || hasMoreChunksForCurrentOr;
 }
 
 function getDateStringForMinusDays(numDays) {
@@ -226,11 +202,11 @@ function queryToMicros(query) {
 function translateNextGadsFilter(currentSheetName, gadsOrClauses) {
   //Get values for metrics filters 
 
-  var currentGAdsOrClauseIndex = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.GADS_CURRENT_OR).getValue());
+  var currentGAdsOrClauseIndex = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_CURRENT_OR).getValue());
   Logger.log("Currently on GAds " + currentGAdsOrClauseIndex + " OR clause out of " + (gadsOrClauses.length - 1));
   var metricsFiltersQuery = microsToCurrency(translateEnglishToApi(gadsOrClauses[currentGAdsOrClauseIndex]));
-  
-  wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.GADS_CURRENT_OR).setValue(currentGAdsOrClauseIndex + 1);
+
+  wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_CURRENT_OR).setValue(currentGAdsOrClauseIndex + 1);
   return metricsFiltersQuery;
 }
 
@@ -317,49 +293,6 @@ function toFloat(value) {
   return parseFloat(value);
 }
 
-
-function sendEmail(urlToRowInGroupPlacementView, currentSheetName) {
-  var urlDict = {};
-  for (var url in urlToRowInGroupPlacementView) {
-    var row = urlToRowInGroupPlacementView[url];
-    urlDict[row["groupPlacementView.targetUrl"]] = row["groupPlacementView.display_name"];
-  }
-  emails = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.EMAILS)).getValue();
-  var urls = Object.keys(urlDict);
-
-  if (urls.length == 0) {
-    Logger.log('No alerts triggered. No email being sent.');
-    return;
-  }
-  if (urls.length > 200) {
-    Logger.log('Sending Email with a link to spreadsheet');
-    MailApp.sendEmail(
-      {
-        to: emails,
-        subject: EMAIL_SUBJECT,
-        htmlBody:
-          "<h1> Full spreadsheet: </h1><br>" +
-          SPREADSHEET_URL
-      });
-  }
-  else if (urls.length > 0) {
-    var urlsAndNames = urls.map(function (key) { return key + " " + urlDict[key]; }).join("<br>");
-    Logger.log('Sending Email');
-    MailApp.sendEmail(
-      {
-        to: emails,
-        subject: EMAIL_SUBJECT,
-        htmlBody:
-          "<h1> Channels to exclude based on GAds filters only: </h1><br>" +
-          urlsAndNames + "<br>" +
-          "<h1>Copy these urls to the exclusion list: </h1><br>" +
-          urls.join("<br>") + "<br><br>" +
-          'Full report:' +
-          SPREADSHEET_URL
-      });
-  }
-}
-
 function writeDataToGoogleSheet(urlToRowInGroupPlacementView) {
   var currentSheetName = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).getValue();
   var currentSheet = wholeSpreadsheet.getSheetByName(currentSheetName);
@@ -384,8 +317,8 @@ function writeDataToGoogleSheet(urlToRowInGroupPlacementView) {
   // Set headers
   // Translate API syntax to human syntax for headers
   headers = headers.map(x => METRICS_API_ENGLISH[x.split(".").pop()]);
-  headersRange = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS_GAds.HEADERS);
-  channelIdsHeader = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS_GAds.CHANNEL_IDS_HEADER);
+  headersRange = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS.HEADERS);
+  channelIdsHeader = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS.CHANNEL_IDS_HEADER);
   var range = currentSheet.getRange(headersRange.getRow(), headersRange.getColumn(), 1, headers.length);
   range.setValues([headers]);
 
@@ -394,11 +327,11 @@ function writeDataToGoogleSheet(urlToRowInGroupPlacementView) {
 
   if (Object.keys(newChannelRow).length > 0) {
     //Get current channel IDs before adding new ones so that we only exclude new IDs
-    var channelsAlreadyInTheTrix1 = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS_GAds.CHANNEL_IDS_COL).getValues().filter(String);
-    var channelsAlreadyInTheTrix = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS_GAds.CHANNEL_IDS_COL).getValues().filter(String).map(function (arr) { return arr[0] });
+    var channelsAlreadyInTheTrix1 = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS.CHANNEL_IDS_COL).getValues().filter(String);
+    var channelsAlreadyInTheTrix = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS.CHANNEL_IDS_COL).getValues().filter(String).map(function (arr) { return arr[0] });
     var deduplicatedChannelIds = [];
     //GAds splits by tokens
-    var nextPageToken = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.GADS_NEXT_PAGE_TOKEN).getValue()).toString().trim().length;
+    var nextPageToken = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_NEXT_PAGE_TOKEN).getValue()).toString().trim().length;
     //Only add Channel IDs that aren't already in the output table
     for (let i = 0; i < Object.keys(newChannelRow).length; i++) {
       if (!(channelsAlreadyInTheTrix.includes((Object.entries(newChannelRow)[i][1][headers.indexOf(channelIdsHeader.getValue())])))) {
@@ -408,16 +341,16 @@ function writeDataToGoogleSheet(urlToRowInGroupPlacementView) {
         //Reset YT Data timestamp for this channel already in output table so that we'll fetch YT Data for this reappearing channel again
         //J is position within CHANNEL_IDS named range, need to add number of rows above it to get cell location of YT Data timestamp to be cleared
         var exclusionStatusColValues = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS.EXCLUSION_STATUS).getValues();
-        var channelIdsFirstRow = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS_GAds.CHANNEL_IDS_COL).getRow();
+        var channelIdsFirstRow = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS.CHANNEL_IDS_COL).getRow();
         for (var j = 0; j < channelsAlreadyInTheTrix.length; j++) {
           if ((channelsAlreadyInTheTrix[j][0] === (Object.entries(newChannelRow)[i][1][headers.indexOf(channelIdsHeader.getValue())])) &&
             ((exclusionStatusColValues[0] != EXCLUSION_STATUS_VALUES.EXCLUDED) ||
               (exclusionStatusColValues[j][0] != EXCLUSION_STATUS_VALUES.EXCLUDED))) {
-            currentSheet.getRange(j + channelIdsFirstRow, wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS_GAds.YOUTUBE_TIMESTAMP_COL).getColumn(), 1, 1).clear();
+            currentSheet.getRange(j + channelIdsFirstRow, wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS.YOUTUBE_TIMESTAMP_COL).getColumn(), 1, 1).clear();
           }
         }
         //There were no new channels added but there were reappearing channels that new YT metadata should be added to && this is the last page of results for this query
-        var gadsTotalOrs = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.GADS_TOTAL_OR).getValue());
+        var gadsTotalOrs = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_TOTAL_OR).getValue());
         if (!(nextPageToken.length > 0) && gadsTotalOrs == 0) {
           adsDataStatusRange.setValue(SCRIPT_STATUS_VALUES.DONE);
         }
@@ -432,7 +365,6 @@ function writeDataToGoogleSheet(urlToRowInGroupPlacementView) {
       if (!(nextPageToken.length > 0) && gadsTotalOrs == 0) {
         adsDataStatusRange.setValue(SCRIPT_STATUS_VALUES.DONE);
       }
-      sendEmail(urlToRowInGroupPlacementView, currentSheetName);
     }
   }
 }
@@ -455,7 +387,7 @@ function runGAdsReport(query, currentSheetName) {
   };
 
   //If retrieving next page of results, get page token
-  var nextPageToken = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.GADS_NEXT_PAGE_TOKEN).getValue().toString().trim();
+  var nextPageToken = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_NEXT_PAGE_TOKEN).getValue().toString().trim();
   if (nextPageToken.length != 0 && nextPageToken > 0) {
     payload['pageToken'] = nextPageToken;
   }
@@ -484,7 +416,8 @@ function runGAdsReport(query, currentSheetName) {
     Logger.log("reportResult = " + JSON.stringify(reportResult));
   }
   if (reportResult.results == null) {
-    SpreadsheetApp.getActiveSpreadsheet().toast('💡 Warning! no GAds results');
+    SpreadsheetApp.getActiveSpreadsheet().toast('No Google-Ads filters', "💡 Warning!",);
+
     return metricsArray;
   }
 
@@ -492,7 +425,7 @@ function runGAdsReport(query, currentSheetName) {
   var data = generateTrixTable(reportResult.results, reportResult.fieldMask);
 
   //If there's another page of results after this one, store it in spreadsheet, call the method to add Google Ads data again with this page token to get next page of results
-  var nextPageTokenCell = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.GADS_NEXT_PAGE_TOKEN);
+  var nextPageTokenCell = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_NEXT_PAGE_TOKEN);
   if (reportResult.nextPageToken != null) {
     nextPageToken = reportResult.nextPageToken;
     Logger.log("Setting next page token " + nextPageToken);
@@ -503,13 +436,13 @@ function runGAdsReport(query, currentSheetName) {
     nextPageTokenCell.setValue("");
 
     //Check if there are more queries to run after current one
-    var gadsCurrentOrRange = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.GADS_CURRENT_OR);
+    var gadsCurrentOrRange = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_CURRENT_OR);
     var gadsCurrentOr = gadsCurrentOrRange.getValue();
-    var gadsTotalOrs = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS_GAds.GADS_CURRENT_OR).getValue();
+    var gadsTotalOrs = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_CURRENT_OR).getValue();
 
     //If this is the only/last query to run, reset gads query number
     if (gadsTotalOrs == 0 || gadsCurrentOr == (gadsTotalOrs - 1)) {
-      Logger.log("No more queries, resetting gadsCurrentOr to 0");
+      Logger.log("No more queries, resetting 'gAds current OR' line to 0");
       gadsCurrentOrRange.setValue(0);
       wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.DONE);
     }
