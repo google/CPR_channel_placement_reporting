@@ -100,7 +100,7 @@ Object.keys(METRICS_API_ENGLISH).forEach(api => {
 
 //Get Google Ads data in MAX_GADS_IDS# of chunks, then run the gadschannelidsovermax to see if it needs to continue 
 function getGAdsData(currentSheetName) {
-  wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.RUNNING);
+  var adsDataStatusRange = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.RUNNING);
   currentCustomerId = currentSheetName.substring(0, currentSheetName.indexOf('_'));
   GO_BACK_DAYS_EARLY = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GO_BACK_DAYS_EARLY)).getValue();
   GO_BACK_DAYS_LATE = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GO_BACK_DAYS_LATE)).getValue();
@@ -116,7 +116,7 @@ function getGAdsData(currentSheetName) {
     currentGadsFilter = translateNextGadsFilter(currentSheetName, gadsOrClauses);
   }
   else {
-    SpreadsheetApp.getActiveSpreadsheet().toast('💡 Warning! no G-Ads filters');
+    SpreadsheetApp.getActiveSpreadsheet().toast('No G-Ads filters','💡 Warning!');
   }
   var urlToRowInGroupPlacementView = {};
   //Query for results
@@ -124,6 +124,9 @@ function getGAdsData(currentSheetName) {
   //Write results to sheet and send email of results
   if (Object.keys(urlToRowInGroupPlacementView).length > 0) {
     writeDataToGoogleSheet(urlToRowInGroupPlacementView);
+  }
+  else{
+    adsDataStatusRange.setValue(SCRIPT_STATUS_VALUES.DONE);
   }
 }
 
@@ -134,7 +137,7 @@ function isGadsWorkSplitNeeded(currentSheetName) {
   var gadsOrClauses = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_TOTAL_OR).getValue();
   var gadsCurrentOr = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_CURRENT_OR).getValue();
 
-  var hasMoreChunksForCurrentOr = nextPageToken.length > 0;
+  var hasMoreChunksForCurrentOr = nextPageToken.length > 1;
   var hasMoreOrClauses = (gadsOrClauses > gadsCurrentOr);
   return hasMoreOrClauses || hasMoreChunksForCurrentOr;
 }
@@ -243,7 +246,7 @@ function callApiToFillDict(urlToRowInGroupPlacementView, conditionRow, currentSh
   //If query did not return any results, return empty accountDict
   if (reportRows.length == 0) {
     Logger.log("GAds returned no results");
-    SpreadsheetApp.getActiveSpreadsheet().toast('GAds returned no results', '⏰ GAds fetch data', TOAST_DISPALY_TIME);
+    SpreadsheetApp.getActiveSpreadsheet().toast('No G-Ads results','💡 Warning!',TOAST_DISPALY_TIME);
     return urlToRowInGroupPlacementView;
   }
   return populateStatsDict(urlToRowInGroupPlacementView, reportRows);
@@ -317,14 +320,12 @@ function writeDataToGoogleSheet(urlToRowInGroupPlacementView) {
   // Set headers
   // Translate API syntax to human syntax for headers
   headers = headers.map(x => METRICS_API_ENGLISH[x.split(".").pop()]);
-  headersRange = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS.HEADERS);
-  channelIdsHeader = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS.CHANNEL_IDS_HEADER);
+  headersRange = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS.HEADERS);  
   var range = currentSheet.getRange(headersRange.getRow(), headersRange.getColumn(), 1, headers.length);
   range.setValues([headers]);
 
   var currentSheet = wholeSpreadsheet.getSheetByName(currentSheetName);
   var newStartingRow = currentSheet.getLastRow() + 1;
-
   if (Object.keys(newChannelRow).length > 0) {
     //Get current channel IDs before adding new ones so that we only exclude new IDs
     var channelsAlreadyInTheTrix1 = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS.CHANNEL_IDS_COL).getValues().filter(String);
@@ -332,6 +333,9 @@ function writeDataToGoogleSheet(urlToRowInGroupPlacementView) {
     var deduplicatedChannelIds = [];
     //GAds splits by tokens
     var nextPageToken = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_NEXT_PAGE_TOKEN).getValue()).toString().trim().length;
+
+
+  channelIdsHeader = wholeSpreadsheet.getRangeByName(currentSheetName + "!" + CONSTS.CHANNEL_IDS_HEADER);
     //Only add Channel IDs that aren't already in the output table
     for (let i = 0; i < Object.keys(newChannelRow).length; i++) {
       if (!(channelsAlreadyInTheTrix.includes((Object.entries(newChannelRow)[i][1][headers.indexOf(channelIdsHeader.getValue())])))) {
@@ -356,6 +360,9 @@ function writeDataToGoogleSheet(urlToRowInGroupPlacementView) {
         }
       }
     }
+
+
+
     //If there were new channels added, append to the end of the output results table in spreadsheet
     if (deduplicatedChannelIds.length > 0) {
       verifyEnoughRows(wholeSpreadsheet.getActiveSheet(), deduplicatedChannelIds.length);
@@ -416,8 +423,6 @@ function runGAdsReport(query, currentSheetName) {
     Logger.log("reportResult = " + JSON.stringify(reportResult));
   }
   if (reportResult.results == null) {
-    SpreadsheetApp.getActiveSpreadsheet().toast('No Google-Ads filters', "💡 Warning!",);
-
     return metricsArray;
   }
 
