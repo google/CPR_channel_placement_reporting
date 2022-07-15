@@ -134,7 +134,7 @@ function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('Channel Excluder')
     .addItem("Scan all automatic sheets", 'restart')
-    .addItem("Stop", 'removeAllTriggers')
+    .addItem("Non-immediate Stop", 'removeAllTriggers')
     .addToUi();
 }
 
