@@ -113,7 +113,11 @@ function getGAdsData(currentSheetName) {
   var currentGadsFilter = "";
   if (gadsOrClauses.length != 0) {
     //one by one. Call the API. Fetch the results in chuncks. When finised reading all chunks for current filer-row, incrememnt the GAds filter row.
-    currentGadsFilter = translateNextGadsFilter(currentSheetName, gadsOrClauses);
+    var currentGAdsOrClauseIndex = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_CURRENT_OR).getValue());
+    var totalGAdsOrClauseIndex = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_TOTAL_OR).getValue());
+    if (currentGAdsOrClauseIndex <= totalGAdsOrClauseIndex) {
+      currentGadsFilter = translateNextGadsFilter(currentSheetName, gadsOrClauses);
+    }
   }
   else {
     SpreadsheetApp.getActiveSpreadsheet().toast('No G-Ads filters','💡 Warning!');
@@ -207,9 +211,10 @@ function translateNextGadsFilter(currentSheetName, gadsOrClauses) {
 
   var currentGAdsOrClauseIndex = (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_CURRENT_OR).getValue());
   Logger.log("Currently on GAds " + currentGAdsOrClauseIndex + " OR clause out of " + (gadsOrClauses.length - 1));
+
   var metricsFiltersQuery = microsToCurrency(translateEnglishToApi(gadsOrClauses[currentGAdsOrClauseIndex]));
 
-  wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_CURRENT_OR).setValue(currentGAdsOrClauseIndex + 1);
+  //wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_CURRENT_OR).setValue(currentGAdsOrClauseIndex + 1);
   return metricsFiltersQuery;
 }
 
@@ -443,12 +448,12 @@ function runGAdsReport(query, currentSheetName) {
     //Check if there are more queries to run after current one
     var gadsCurrentOrRange = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_CURRENT_OR);
     var gadsCurrentOr = gadsCurrentOrRange.getValue();
-    var gadsTotalOrs = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_CURRENT_OR).getValue();
+    var gadsTotalOrs = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_TOTAL_OR).getValue();
 
     //If this is the only/last query to run, reset gads query number
-    if (gadsTotalOrs == 0 || gadsCurrentOr == (gadsTotalOrs - 1)) {
+    if (gadsTotalOrs == 0 || gadsCurrentOr == gadsTotalOrs) {
       Logger.log("No more queries, resetting 'gAds current OR' line to 0");
-      gadsCurrentOrRange.setValue(0);
+      //gadsCurrentOrRange.setValue(0);
       wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.DONE);
     }
     //If there are more queries to run after this one, increase GAds query number 

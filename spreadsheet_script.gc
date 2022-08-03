@@ -17,7 +17,7 @@ Copyright 2022 Google LLC. This solution, including any related sample code or d
 
  * Spamming channels
  * Author: eladb@, xingj@
- * 2022/07/13
+ * 2022/07/28
  */
 //For calling Google Ads API for placement exclusions
 const API_VERSION = "v10";
@@ -99,6 +99,7 @@ var CONSTS = {
 
   CACHED_SHEET_NAME: 'CACHED_SHEET_NAME',
   CACHED_SHEET_INDEX: 'CACHED_SHEET_INDEX',
+  CACHED_INTERRUPT: 'CACHED_INTERRUPT',
 
   IS_YT_NEW: 'IS_YT_NEW',
   IS_EXCLUSION_NEW: 'IS_EXCLUSION_NEW',
@@ -133,38 +134,66 @@ var CONSTS = {
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('Channel Excluder')
-    .addItem("Scan all automatic sheets", 'restart')
-    .addItem("Non-immediate Stop", 'removeAllTriggers')
+    .addSubMenu(ui.createMenu('Automatic Options')
+      .addItem("Start Automatic Running", 'restart')
+      .addItem("Stop Automatic After This Run", 'stop'))
+    .addSeparator()
+    .addSubMenu(ui.createMenu('Manual Options')
+      .addItem('(1) Fetch Google Ads Data', 'runManualGadsPart')
+      .addItem('(2) Fetch YouTube Data', 'runManualYtPart')
+      .addItem('(3) Exclude Selected Channels', 'runManualExclusionPart')
+      .addSeparator()
+      .addItem('Clear Sheet Data', 'manualClearSheetData'))
     .addToUi();
 }
 
 function restart() {
+  wholeSpreadsheet.getRangeByName(CONSTS.CACHED_INTERRUPT).setValue("false");
   clearAll();
+  wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).setValue("");
+  wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_INDEX).setValue("");
   scanNextSheet();
 }
 
+function stop(){
+  wholeSpreadsheet.getRangeByName(CONSTS.CACHED_INTERRUPT).setValue("true");
+  SpreadsheetApp.getUi().alert("Automatic Process will attempt to cancel... press OK and wait for another popup confirming it has stopped. This can take some time.");
+}
+
+function cancelledNotice()
+{
+  removeAllTriggers();
+  SpreadsheetApp.getUi().alert("Automatic Process has now stopped! Please manually clear data from each _automatic sheet if you wish to change your filter settings (do not delete rows, just clear the data)");
+}
+
 function scanNextSheet() {
-  var cachedSheetIndexCell = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_INDEX);
-  var cachedSheetIndex = cachedSheetIndexCell.getValue();
+  var shouldStop = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_INTERRUPT).getValue();
+  if(!shouldStop) {
+    var cachedSheetIndexCell = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_INDEX);
+    var cachedSheetIndex = cachedSheetIndexCell.getValue();
 
-  var allSheets = wholeSpreadsheet.getSheets();
-  var currentSheetIndex = (cachedSheetIndex == undefined || "") ? 0 : (cachedSheetIndex + 1) % allSheets.length;
-  for (; currentSheetIndex < allSheets.length && !isAutomaticTab(allSheets[currentSheetIndex].getSheetName()); currentSheetIndex++) {
-    //loop till the end of the list
-  }
+    var allSheets = wholeSpreadsheet.getSheets();
+    var currentSheetIndex = (cachedSheetIndex == undefined || "") ? 0 : (cachedSheetIndex + 1) % allSheets.length;
+    for (; currentSheetIndex < allSheets.length && !isAutomaticTab(allSheets[currentSheetIndex].getSheetName()); currentSheetIndex++) {
+      //loop till the end of the list
+    }
 
-  if (currentSheetIndex < allSheets.length) { // finished because we've found the first automatic tab
-    cachedSheetIndexCell.setValue(currentSheetIndex);
-    var currentSheetName = allSheets[currentSheetIndex].getSheetName();
-    wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).setValue(allSheets[currentSheetIndex].getSheetName());
-    WAIT_BETWEEN_LOOPS = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.WAIT_BETWEEN_LOOPS).getValue() * 1000;
-    scanSheet();
+    if (currentSheetIndex < allSheets.length) { // finished because we've found the first automatic tab
+      cachedSheetIndexCell.setValue(currentSheetIndex);
+      var currentSheetName = allSheets[currentSheetIndex].getSheetName();
+      wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).setValue(currentSheetName);
+      WAIT_BETWEEN_LOOPS = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.WAIT_BETWEEN_LOOPS).getValue() * 1000;
+      scanSheet();
+    }
+    else { //reached the list's end
+      cachedSheetIndexCell.setValue(undefined);
+      wholeSpreadsheet.getRangeByName("");
+      //Sleeps before re-starting the sheet loop
+    createTrigger("scanNextSheet", "Moving to next tab in a few minutes", "Finished all tabs🏁", 0);
+    }
   }
-  else { //reached the list's end
-    cachedSheetIndexCell.setValue(undefined);
-    wholeSpreadsheet.getRangeByName("");
-    //Sleeps before re-starting the sheet loop
-  createTrigger("scanNextSheet", "Moving to next tab in a few minutes", "Finished all tabs🏁", 0);
+  else{
+    cancelledNotice();
   }
 }
 
@@ -178,35 +207,92 @@ function scanSheet() {
   runGAdsPart();
 }
 
+function manualClearSheetData() {
+  if(isActiveSheetManual()) {
+    var confirm = Browser.msgBox('Are you sure you want to clear all the data below?', Browser.Buttons.YES_NO); 
+    if(confirm!='yes'){return}
+    setUpForManual();
+    var currentSheetName = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).getValue();
+    var currentSheet = wholeSpreadsheet.getSheetByName(currentSheetName);
+    var lastRowId = currentSheet.getLastRow();
+    wholeSpreadsheet.getRange(currentSheetName + '!A20:W' + lastRowId).clear();
+    wholeSpreadsheet.getRange(currentSheetName + '!A20:' + lastRowId).removeCheckboxes();
+  }
+}
 
 function setUpForManual() {
   wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).setValue(wholeSpreadsheet.getActiveSheet().getSheetName());
 }
 
+function isActiveSheetManual() {
+  var activeSheetName = wholeSpreadsheet.getActiveSheet().getSheetName().includes("_manual");
+
+  if(activeSheetName == false) {
+    wholeSpreadsheet.toast('', '📣 Cannot Run Manual Options on Automatic Sheets', TOAST_DISPALY_TIME);
+  }
+  return activeSheetName;
+}
+
+function runManualGadsPart() {
+  if(isActiveSheetManual()) {
+    setUpForManual();
+    clearAll();
+    wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).setValue("");
+    setUpForManual();
+    runGAdsPart();
+  }
+}
+
+function runManualYtPart() {
+  if(isActiveSheetManual()) {
+    setUpForManual();
+    runYtPart();
+  }
+}
+
+function runManualExclusionPart() {
+  if(isActiveSheetManual()) {
+    setUpForManual();
+    runExclusionPart();
+  }
+}
 /**
  *  (1) Fetching G-Ads historic data
  */
 function runGAdsPart() {
-  var currentSheetName = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).getValue();
-  removeAllTriggers();
-
-  wholeSpreadsheet.toast('', '📣 Google-Ads', TOAST_DISPALY_TIME);
-  getGAdsData(currentSheetName);
-  if (isGadsWorkSplitNeeded(currentSheetName)) {
-    createTrigger("runGAdsPart", "Re-work. Wait 0.5 min ♻️", "📣 Google-Ads", 0);    
-  } else {
-    wholeSpreadsheet.toast('Please wait', '📣 Google-Ads', TOAST_DISPALY_TIME);
-
-    //A is done
-    wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_NEXT_PAGE_TOKEN).setValue(0);
-    wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.DONE);
-    //remove triggers
+  var shouldStop = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_INTERRUPT).getValue();
+  if(!shouldStop) {
+    var currentSheetName = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).getValue();
     removeAllTriggers();
 
-    if (isAutomaticTab(currentSheetName)) {
-      //Next
-      runYtPart();
+    var gadsCurrentOrRange = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_CURRENT_OR);
+    var gadsCurrentOr = gadsCurrentOrRange.getValue();
+    var gadsTotalOrs = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_TOTAL_OR).getValue();
+    if(gadsCurrentOr == gadsTotalOrs) {
+        gadsCurrentOrRange.setValue(0);
+      }
+
+    wholeSpreadsheet.toast('', '📣 Google-Ads', TOAST_DISPALY_TIME);
+    getGAdsData(currentSheetName);
+    if (isGadsWorkSplitNeeded(currentSheetName)) {
+      createTrigger("runGAdsPart", "Re-work. Wait 0.5 min ♻️", "📣 Google-Ads", 0);    
+    } else {
+      wholeSpreadsheet.toast('Please wait', '📣 Google-Ads', TOAST_DISPALY_TIME);
+
+      //A is done
+      wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_NEXT_PAGE_TOKEN).setValue(0);
+      wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.DONE);
+      //remove triggers
+      removeAllTriggers();
+
+      if (isAutomaticTab(currentSheetName)) {
+        //Next
+        runYtPart();
+      }
     }
+  }
+  else{
+    cancelledNotice();
   }
 }
 
@@ -214,34 +300,40 @@ function runGAdsPart() {
  *  (2) Fetching YT historic data
  */
 function runYtPart() {
-  var currentSheetName = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).getValue();
-  removeAllTriggers();
-
-
-  wholeSpreadsheet.toast('', '🎞 YouTube', TOAST_DISPALY_TIME);
-  var currentSheetName = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).getValue();
-  refreshYtDataToRelevantChannels(currentSheetName);
-
-  if (isYtWorkSplitNeeded(currentSheetName)) {
-    createTrigger("runYtPart", "Re-work. Wait 0.5 min ♻️", "🎞 YouTube", 0);
-  } else {
-    if (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.IS_YT_NEW).getValue() != CONSTS.NEW) {
-      sendEmail(currentSheetName);
-    }
-
-    wholeSpreadsheet.toast('Please wait', '🎞 YouTube', TOAST_DISPALY_TIME);
-
-    //B is done
-    wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.YT_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.DONE);
-    wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.YT_PAGE_INDEX).setValue(0);
-    wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.IS_YT_NEW).setValue("");
-    //remove triggers    
+  var shouldStop = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_INTERRUPT).getValue();
+  if(!shouldStop) {
+    var currentSheetName = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).getValue();
     removeAllTriggers();
 
-    if (isAutomaticTab(currentSheetName)) {
-      //Next
-      runExclusionPart();
+
+    wholeSpreadsheet.toast('', '🎞 YouTube', TOAST_DISPALY_TIME);
+    var currentSheetName = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).getValue();
+    refreshYtDataToRelevantChannels(currentSheetName);
+
+    if (isYtWorkSplitNeeded(currentSheetName)) {
+      createTrigger("runYtPart", "Re-work. Wait 0.5 min ♻️", "🎞 YouTube", 0);
+    } else {
+      if (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.IS_YT_NEW).getValue() != CONSTS.NEW) {
+        sendEmail(currentSheetName);
+      }
+
+      wholeSpreadsheet.toast('Please wait', '🎞 YouTube', TOAST_DISPALY_TIME);
+
+      //B is done
+      wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.YT_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.DONE);
+      wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.YT_PAGE_INDEX).setValue(0);
+      wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.IS_YT_NEW).setValue("");
+      //remove triggers    
+      removeAllTriggers();
+
+      if (isAutomaticTab(currentSheetName)) {
+        //Next
+        runExclusionPart();
+      }
     }
+  }
+  else{
+    cancelledNotice();
   }
 }
 
@@ -276,32 +368,44 @@ function createTrigger(functionName, toastBody, toastHeader, delay) {
  *  (3) G-Ads exclude API
  */
 function runExclusionPart() {
-  var currentSheetName = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).getValue();
-  wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_EXCLUSION_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.RUNNING);
+  var shouldStop = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_INTERRUPT).getValue();
+  if(!shouldStop) {
+    var currentSheetName = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).getValue();
+    wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_EXCLUSION_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.RUNNING);
 
-  //pre C
-  var isGAdsExclusionEnabled = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.USER_EXCLUSION_CHECKBOX);
-  removeAllTriggers();
-  if (!isGAdsExclusionEnabled) {
-    if (isAutomaticTab(currentSheetName)) {
-      finishedCurrentTab(currentSheetName);
+    //pre C
+    var isGAdsExclusionEnabled = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.USER_EXCLUSION_CHECKBOX);
+    removeAllTriggers();
+    if (!isGAdsExclusionEnabled) {
+      if (isAutomaticTab(currentSheetName)) {
+        finishedCurrentTab(currentSheetName);
+      }
+      //Manual - no triggers
+      return;
     }
-    //Manual - no triggers
-    return;
-  }
 
-  wholeSpreadsheet.toast('', '⛔️ Exclusion', TOAST_DISPALY_TIME);
-  //Do C
-  var idsToRowIdToBeExcluded = getUserSelectedChannels();
-  if (Object.keys(idsToRowIdToBeExcluded).length != 0) {
-    callExcludeApi(createPayload(Object.keys(idsToRowIdToBeExcluded)), currentSheetName, idsToRowIdToBeExcluded);
-  }
-  if (isExcludingWorkSplitNeeded(currentSheetName)) {
-    createTrigger("runExclusionPart", "Re-work. Wait 0.5 min ♻️", "⛔️ Exclusion", 0);
-  }  else {
-    if (isAutomaticTab(currentSheetName)) {
-      finishedCurrentTab(currentSheetName);
+    wholeSpreadsheet.toast('', '⛔️ Exclusion', TOAST_DISPALY_TIME);
+    //Do C
+    var idsToRowIdToBeExcluded = getUserSelectedChannels();
+    if (Object.keys(idsToRowIdToBeExcluded).length != 0) {
+      callExcludeApi(createPayload(Object.keys(idsToRowIdToBeExcluded)), currentSheetName, idsToRowIdToBeExcluded);
     }
+    if (isExcludingWorkSplitNeeded(currentSheetName)) {
+      createTrigger("runExclusionPart", "Re-work. Wait 0.5 min ♻️", "⛔️ Exclusion", 0);
+    }  else {
+      if (isAutomaticTab(currentSheetName)) {
+        finishedCurrentTab(currentSheetName);
+      }
+      else {
+        wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_EXCLUSION_PAGE_INDEX).setValue(0);
+        wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_EXCLUSION_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.DONE);
+
+        removeAllTriggers();
+      }
+    }
+  }
+  else{
+    cancelledNotice();
   }
 }
 
@@ -311,7 +415,13 @@ function finishedCurrentTab(currentSheetName) {
   wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_EXCLUSION_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.DONE);
 
   removeAllTriggers();
-  createTrigger("scanNextSheet", "Moving to next tab in a few minutes", "Finished 🏁", WAIT_BETWEEN_LOOPS);
+  var shouldStop = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_INTERRUPT).getValue();
+  if(!shouldStop) {
+    createTrigger("scanNextSheet", "Moving to next tab in a few minutes", "Finished 🏁", WAIT_BETWEEN_LOOPS);
+  }
+  else{
+    cancelledNotice();
+  }
 }
 
 function getUserSelectedChannels() {
@@ -477,7 +587,7 @@ function callYtChannelAPI(channelIdToRowId, currentSheetName) {
       (filterYtMetadata(item.statistics.videoCount, videoCountFilter, videoCountOperator)) &&
       (filterYtMetadata(item.snippet.publishedAt, publishedDateFilter, publishedDateOperator)) &&
       (filterYtMetadata(item.snippet.country, countryFilter, countryOperator))) &&
-    (languageEnFilter != false || item.snippet.title == null || item.snippet.title == "" || isNotEnglishCharacters(item.snippet.title)));
+      (languageEnFilter != false || item.snippet.title == null || item.snippet.title == "" || isNotEnglishCharacters(item.snippet.title)));
 
   setYtMetadataHeaders(currentSheetName);
   var checkboxRange = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.USER_EXCLUSION_CHECKBOX);
@@ -512,8 +622,8 @@ function setYtMetadataHeaders(currentSheetName) {
 function fillTableWithYyData(currentSheetName, checkboxRange, position, channel) {
 
   checkboxRange.offset(position, 0).insertCheckboxes();
-  checkboxRange.offset(position, 0).setValue(isAutomaticTab(currentSheetName) ? true : false);
-
+  //checkboxRange.offset(position, 0).setValue(isAutomaticTab(currentSheetName) ? true : false);
+  checkboxRange.offset(position, 0).setValue(true);
   wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.YOUTUBE_TIMESTAMP).offset(position, 0).setValue(Utilities.formatDate(new Date(), SpreadsheetApp.getActive().getSpreadsheetTimeZone(), "yyyy-MM-dd HH:mm"));
   wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.IS_YT_NEW).getValue();
   wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.YT_ID_DEBUG).offset(position, 0).setValue(channel.id);
