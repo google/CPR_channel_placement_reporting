@@ -1,6 +1,19 @@
+# coding=utf-8
+# Copyright 2022 Google LLC..
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from inspect import _void
-import json
-import logging
 import string
 from tokenize import String
 from typing import List
@@ -67,27 +80,21 @@ date_from: str, date_to: str, conditions: str) -> dict:
 
 
 def get_youtube_data(credentials, channel_ids: list) -> list:
+    '''Takes credentials and a list of YouTube channel IDs and
+    returns a list of YouTube statistics for each channel ID
+    '''
     ids_to_pass = ""
     yt_limit = 40 #can be put up to 50
-    yt_start = 0
-    yt_continue = True
     channel_ids_length = len(channel_ids)
     yt_items = []
 
-    while yt_continue:
-        if yt_start + yt_limit > channel_ids_length:
-                yt_limit = channel_ids_length - yt_start
-                yt_continue = False
-        for i in range(yt_start, yt_start+yt_limit):
-            ids_to_pass = ids_to_pass + channel_ids[i]+","
-
-        ids_to_pass = ids_to_pass[:-1]
-        
+    for i in range(int(channel_ids_length/yt_limit +1)):
+        ids_to_pass = ','.join(channel_ids[i*yt_limit:(i+1)*yt_limit])
+            
         youtube = googleapiclient.discovery.build(
             api_service_name, api_version, credentials=credentials)
 
         request = youtube.channels().list(
-            #part="id, snippet, statistics",
             part="id, statistics, brandingSettings",
             id=ids_to_pass
         )
@@ -95,7 +102,6 @@ def get_youtube_data(credentials, channel_ids: list) -> list:
         
         for item in response['items']:
             yt_items.append(item)
-        yt_start += yt_limit
         ids_to_pass = ""
 
     return yt_items
@@ -122,7 +128,7 @@ def exclude_youtube_channels(client, customer_id: str, channelsToRemove: list) -
 
 
 def get_youtube_channel_id_list(full_data_set: dict) -> dict:
-    ytList = [d.get('group_placement_view_placement') for d in full_data_set.values() if d.get('excludeFromYt') == 'True']
+    ytList = [d.get('group_placement_view_placement') for d in full_data_set.values() if d.get('excludeFromYt') == 'true']
     return ytList
 
 
@@ -141,55 +147,62 @@ def append_youtube_data(
             It also checks the filters for YouTube as it itterates through the records at
             the same time and if all provided criteria match, it is flagged as 'exclude'
         """
-        
-    for i in range(len(yt_data)):
+
+    for entry in yt_data:
         filter_count = 0
         matches_count = 0
-        if yt_data[i]['statistics'].get('viewCount'):
-            full_data_set[yt_data[i]['id']].update({'viewCount': yt_data[i]['statistics']['viewCount']})
+        if entry['statistics'].get('viewCount'):
+            full_data_set[entry['id']].update({'viewCount': entry['statistics']['viewCount']})
             if ytf_view_count:
                 filter_count += 1
-                if eval(yt_data[i]['statistics']['viewCount'] + " " + ytf_view_count):
+                if eval(entry['statistics']['viewCount'] + " " + ytf_view_count): 
                     matches_count += 1
 
-        if yt_data[i]['statistics'].get('subscriberCount'):
-            full_data_set[yt_data[i]['id']].update({'subscriberCount': yt_data[i]['statistics']['subscriberCount']})
+        if entry['statistics'].get('subscriberCount'):
+            full_data_set[entry['id']].update({'subscriberCount': entry['statistics']['subscriberCount']})
             if ytf_sub_count:
                 filter_count += 1
-                if eval(yt_data[i]['statistics']['subscriberCount'] + " " + ytf_sub_count):
+                if eval(entry['statistics']['subscriberCount'] + " " + ytf_sub_count):
                     matches_count += 1
 
-        if yt_data[i]['statistics'].get('videoCount'):
-            full_data_set[yt_data[i]['id']].update({'videoCount': yt_data[i]['statistics']['videoCount']})
+        if entry['statistics'].get('videoCount'):
+            full_data_set[entry['id']].update({'videoCount': entry['statistics']['videoCount']})
             if ytf_video_count:
                 filter_count += 1
-                if eval(yt_data[i]['statistics']['videoCount'] + " " + ytf_video_count):
+                if eval(entry['statistics']['videoCount'] + " " + ytf_video_count):
                     matches_count += 1
         
-        if yt_data[i]['brandingSettings']['channel'].get('country'):
-            full_data_set[yt_data[i]['id']].update({'country': yt_data[i]['brandingSettings']['channel']['country']})
-            if ytf_country:
-                filter_count += 1
-                if eval(yt_data[i]['brandingSettings']['channel']['country'] + " " + ytf_country):
-                    matches_count += 1
 
-        if yt_data[i]['brandingSettings']['channel'].get('defaultLanguage'):
-            full_data_set[yt_data[i]['id']].update({'language': yt_data[i]['brandingSettings']['channel']['defaultLanguage']})
-            if ytf_language:
-                filter_count += 1
-                if eval(yt_data[i]['brandingSettings']['channel']['defaultLanguage'] + " " + ytf_language):
-                    matches_count += 1
 
-        full_data_set[yt_data[i]['id']].update({'asciiTitle': is_ascii_title(yt_data[i]['brandingSettings']['channel']['title'])})
+        if entry['brandingSettings']['channel'].get('country'):
+            full_data_set[entry['id']].update({'country': entry['brandingSettings']['channel']['country']})
+        else:
+            full_data_set[entry['id']].update({'country': '-'})
+        if ytf_country:
+            filter_count += 1
+            if eval(f"'{full_data_set[entry['id']].get('country')}'{ytf_country}"):
+                matches_count += 1
+
+        if entry['brandingSettings']['channel'].get('defaultLanguage'):
+            full_data_set[entry['id']].update({'language': entry['brandingSettings']['channel']['defaultLanguage']})
+        else:
+            full_data_set[entry['id']].update({'language': '-'})
+        if ytf_language:
+            filter_count += 1
+            if eval(f"'{full_data_set[entry['id']].get('language')}'{ytf_language}"):
+                matches_count += 1
+
+
+        full_data_set[entry['id']].update({'asciiTitle': is_ascii_title(entry['brandingSettings']['channel']['title'])})
         if ytf_isAscii:
                 filter_count += 1
-                if eval(is_ascii_title(yt_data[i]['brandingSettings']['channel']['title']) + " " + ytf_isAscii):
+                if eval(is_ascii_title(entry['brandingSettings']['channel']['title']) + ytf_isAscii):
                     matches_count += 1
 
         if(filter_count == matches_count):
-            full_data_set[yt_data[i]['id']].update({'excludeFromYt': 'True'})
+            full_data_set[entry['id']].update({'excludeFromYt': 'true'})
         else:
-            full_data_set[yt_data[i]['id']].update({'excludeFromYt': 'False'})
+            full_data_set[entry['id']].update({'excludeFromYt': 'false'})
    
     return full_data_set
 
