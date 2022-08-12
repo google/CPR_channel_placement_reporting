@@ -1,0 +1,227 @@
+<form [formGroup]="gadsForm">
+    <div>
+        <div class="label-input-block">
+            <label for="taskName">Task Name</label><br>
+            <input type="text" class="inputElement" formControlName="taskName" name="taskName">
+        </div>
+
+        <div class="label-input-block">
+            <label for="gadsCustomerId">Customer ID <span class="error_text" [hidden]=!customer_id_error>Needs a valid CID</span></label><br>
+            <input type="text" [className]="customer_id_error ? 'errorElement' : 'inputElement'" formControlName="gadsCustomerId" name="gadsCustomerId">
+        </div>
+
+        <div class="label-input-block">
+            <label for="daysAgo">Report period</label><br>
+            <select name="daysAgo" class="inputElement" formControlName="daysAgo" id="daysAgo">
+                <option *ngFor="let item of reportDaysArray" [value]=item[0]>{{ item[1] }}</option>
+            </select>
+        </div>
+
+        <div class="label-input-block">
+            <label for="schedule">Schedule</label><br>
+            <select name="schedule" class="inputElement" formControlName="schedule" id="schedule">
+                <option *ngFor="let item of scheduleArray" [value]=item[0]>{{ item[1] }}</option>
+            </select>
+        </div>
+    </div>
+    <!-- Google Filters -->
+    <div class="filterBorder">
+        <b>Google Ads Filters</b><br>
+        <div class="label-input-block">
+            <label for="gadsField">Field</label><br>
+            <select name="gadsField" formControlName="gadsField" class="inputElement" id="gadsField">
+                <option *ngFor="let item of gadsFieldsArray" [value]=item[0]>{{ item[1] }}</option>
+            </select>
+        </div>
+        <div class="label-input-block">
+            <label for="gadsOperator">Operator</label><br>
+            <select name="gadsOperator" formControlName="gadsOperator" class="inputElement" id="gadsOperator">
+                <option *ngFor="let item of gadsOperatorsArray" [value]=item[0]>{{ item[1] }}</option>
+            </select>
+        </div>
+        <div class="label-input-block">
+            <label for="gadsValue">Value <span class="error_text" [hidden]=!gads_error>Needs to be a number</span></label><br>
+            <input type="text" [className]="gads_error ? 'errorElement' : 'inputElement'" formControlName="gadsValue" name="gadsValue">
+        </div>
+        <div class="label-input-block">
+            <button type="button" id="gadsAddToFilters" class="focusButton" (click)="gadsAddFilter()"
+                [disabled]=!conditionEnabled>+ Add</button>
+        </div>
+        <div class="label-input-block">
+            <button type="button" id="gadsAddAnd" class="focusButton" (click)="gadsAddOrAnd('AND')"
+                [disabled]=!orAndEnabled>AND</button>
+        </div>
+        <div class="label-input-block">
+            <button type="button" id="gadsAddOr" class="focusButton" (click)="gadsAddOrAnd('OR')"
+                [disabled]=!orAndEnabled>OR</button>
+        </div>
+        <div>
+            <div class="label-input-block">
+                &nbsp; &nbsp; &nbsp;<mat-icon class="bigicon">subdirectory_arrow_right</mat-icon>
+                &nbsp;<input class="inputElement extrawide" type="text" formControlName="gadsFinalFilters"
+                    name="gadsFinalFilters" value="{{finalGadsFilter}}" readonly>
+            </div>
+            <div class="label-input-block">
+                <button type="button" id="clearGadsFilter" class="deleteButton"
+                    (click)="clearFilter()">
+                    <mat-icon>delete_forever</mat-icon> Clear
+                </button></div>
+        </div>
+    </div>
+    <br>
+    <!-- YouTube Filters-->
+    <div class="filterBorder">
+        <b>YouTube Exclusion Rules (AND only)</b><br>
+        <div>
+            <div class="label-input-block yt-label">
+                Subscriber Count
+            </div>
+            <div class="label-input-block">
+                <label for="ytSubscriberOperator">Operator</label><br>
+                <select name="ytSubscriberOperator" formControlName="ytSubscriberOperator" class="inputElement"
+                    id="ytSubscriberOperator">
+                    <option *ngFor="let item of ytMetricOperatorsArray" [value]=item[0]>{{ item[1] }}</option>
+                </select>
+            </div>
+            <div class="label-input-block">
+                <label for="ytSubscriberValue">Value</label><br>
+                <input type="text" [className]="yt_subscribers_error ? 'errorElement' : 'inputElement'" formControlName="ytSubscriberValue" name="ytSubscriberValue">
+                <span class="error_text" [hidden]=!yt_subscribers_error>Needs to be a number</span>
+            </div>
+        </div>
+        <div>
+            <div class="label-input-block yt-label">
+                View Count
+            </div>
+            <div class="label-input-block">
+                <select name="ytViewOperator" formControlName="ytViewOperator" class="inputElement" id="ytViewOperator">
+                    <option *ngFor="let item of ytMetricOperatorsArray" [value]=item[0]>{{ item[1] }}</option>
+                </select>
+            </div>
+            <div class="label-input-block">
+                <input type="text" [className]="yt_view_error ? 'errorElement' : 'inputElement'" formControlName="ytViewValue" name="ytViewValue">
+                <span class="error_text" [hidden]=!yt_view_error>Needs to be a number</span>
+            </div>
+        </div>
+        <div>
+            <div class="label-input-block yt-label">
+                Video Count
+            </div>
+            <div class="label-input-block">
+                <select name="ytVideoOperator" formControlName="ytVideoOperator" class="inputElement"
+                    id="ytVideoOperator">
+                    <option *ngFor="let item of ytMetricOperatorsArray" [value]=item[0]>{{ item[1] }}</option>
+                </select>
+            </div>
+            <div class="label-input-block">
+                <input type="text" [className]="yt_video_error ? 'errorElement' : 'inputElement'" formControlName="ytVideoValue" name="ytVideoValue">
+                <span class="error_text" [hidden]=!yt_video_error>Needs to be a number</span>
+            </div>
+        </div>
+        <div>
+            <div class="label-input-block yt-label">
+                Language
+            </div>
+            <div class="label-input-block">
+                <select name="ytLanguageOperator" formControlName="ytLanguageOperator" class="inputElement"
+                    id="ytLanguageOperator">
+                    <option *ngFor="let item of ytTextOperatorsArray" [value]=item[0]>{{ item[1] }}</option>
+                </select>
+            </div>
+            <div class="label-input-block">
+                <input type="text" [className]="yt_language_error ? 'errorElement' : 'inputElement'" formControlName="ytLanguageValue" name="ytLanguageValue">
+                <span class="error_text" [hidden]=!yt_language_error>Needs to be a 2 character code (eg. en)</span>
+            </div>
+        </div>
+        <div>
+            <div class="label-input-block yt-label">
+                Country
+            </div>
+            <div class="label-input-block">
+                <select name="ytCountryOperator" formControlName="ytCountryOperator" class="inputElement"
+                    id="ytCountryOperator">
+                    <option *ngFor="let item of ytTextOperatorsArray" [value]=item[0]>{{ item[1] }}</option>
+                </select>
+            </div>
+            <div class="label-input-block">
+                <input type="text" [className]="yt_country_error ? 'errorElement' : 'inputElement'" formControlName="ytCountryValue" name="ytCountryValue">
+                <span class="error_text" [hidden]=!yt_country_error>Needs to be a 2 chracter country code (eg. UK)</span>
+            </div>
+        </div>
+        <div>
+            <div class="label-input-block yt-label">
+                Standard Title Characters
+            </div>
+            <div class="label-input-block">
+                <select name="ytStandardCharValue" formControlName="ytStandardCharValue" class="inputElement"
+                    id="ytStandardCharValue">
+                    <option *ngFor="let item of ytYesNoOperatorsArray" [value]=item[0]>{{ item[1] }}</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form End -->
+    <br>
+    <div class="label-input-block formSubmits">
+        <div class="label-input-block">
+        <button type="button" class="secondaryButton" (click)="run_auto_excluder_form('false')"
+            value="Preview">Manual Preview</button>
+        </div>
+        <div class="label-input-block">
+            <button type="button" [className]="exclude_count == 0 ? 'disabledButton' : 'secondaryButton'"(click)="run_manual_excluder_form()"
+                value="Preview">Manual Exclude ({{ exclude_count }})</button>
+            </div>
+            <div class="label-input-block">
+        <button type="button" class="primaryButton" (click)="run_auto_excluder_form('true')">Auto Run and Exclude</button>
+    </div>
+    </div>
+</form>
+
+<p>
+<table *ngIf="table_result" class="styled-table">
+    <thead>
+        <tr>
+            <th>Exclude</th>
+            <th>Placement Name</th>
+            <th>YouTube ID</th>
+            <th>Impressions</th>
+            <th>Clicks</th>
+            <th>Video Views</th>
+            <th>Cost</th>
+            <th>Conversions</th>
+            <th>Avg. CPM</th>
+            <th>CTR</th>
+            <th>YouTube Subscribers</th>
+            <th>YouTube View Count</th>
+            <th>YouTube Video Count</th>
+            <th>YouTube Language</th> 
+            <th>YouTube Country</th>  
+            <th>YouTube Title Standard Characters</th>   
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let data of table_result">
+            <td><input [value]="data.group_placement_view_placement" type="checkbox" (change)="excludeCheckChange(data.group_placement_view_placement)"
+                [checked]="data.excludeFromYt == 'true'"/></td>
+            <td>{{data.group_placement_view_display_name}}</td>
+            <td><a href="https://{{ data.group_placement_view_target_url }}" target="_blank">{{ data.group_placement_view_placement }}</a></td>
+            <td>{{data.metrics_impressions}}</td>
+            <td>{{data.metrics_clicks}}</td>
+            <td>{{data.metrics_video_views}}</td>
+            <td>{{data.metrics_cost_micros}}</td>
+            <td>{{data.metrics_conversions}}</td> 
+            <td>{{data.metrics_average_cpm}}</td>
+            <td>{{data.metrics_ctr}}</td>
+            <td>{{data.subscriberCount}}</td>
+            <td>{{data.viewCount}}</td>
+            <td>{{data.videoCount}}</td>
+            <td>{{data.language}}</td>
+            <td>{{data.country}}</td>
+            <td>{{data.asciiTitle}}</td>
+        </tr>
+    </tbody>
+</table>
+<div *ngIf="no_data" class="empty-table">No data matches your Google Ads filters!</div>
+
+<app-loading [showSpinner]=loading></app-loading>

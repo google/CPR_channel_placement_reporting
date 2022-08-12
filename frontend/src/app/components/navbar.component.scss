@@ -1,0 +1,32 @@
+
+.toolbar-spacer {
+    flex: 1 1 auto;
+  }
+  
+  .target-selector {
+    font-size: 12px;
+    height: 40px;
+  }
+
+  mat-toolbar {
+    background: #444444;
+    color: white;
+  }
+  
+  a, a:visited {
+    text-decoration: none;
+    font-size: 14px;
+    color: white;
+    padding: 5px 10px;
+  }
+
+  a:hover, .selected {
+    font-size: 14px;
+    background: #009879;
+  }
+
+  span {
+    font-size: 20px;
+    padding: 10px;
+    text-decoration: solid;
+  }
