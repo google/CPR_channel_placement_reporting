@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-import { finalize } from 'rxjs/operators';
-import { FormGroup, FormBuilder, FormControl } from '@angular/forms';
+import { FormGroup, FormBuilder } from '@angular/forms';
 import { Component, OnInit } from '@angular/core';
-import { PostService, ExcluderPromise } from './services/post.service';
 import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
-import { Observable, range } from 'rxjs';
+import { ActivatedRoute } from '@angular/router'
+
+import { PostService, ReturnPromise } from './services/post.service';
+import { DialogService } from './services/dialog.service';
+
 
 @Component({
   selector: 'app-newtask',
@@ -29,27 +31,45 @@ import { Observable, range } from 'rxjs';
 export class NewtaskComponent implements OnInit {
   formBuilder: any;
   gadsForm: FormGroup;
+  paginationForm: FormGroup;
   loading: boolean = false;
-  table_result: any;
+  table_result: any[] = [];
   finalGadsFilter: string = "";
   orAndEnabled = false;
   conditionEnabled = true;
   no_data = false;
   exclude_count = 0;
   subs: any;
-  isChecked:boolean = false;
+  isChecked: boolean = false;
+  save_button="Save Task";
+  save_file_name:string="";
 
   error_count = 0;
+  task_name_error=false;
   gads_error = false;
   customer_id_error = false;
+  gads_filter_error = false;
   yt_subscribers_error = false;
   yt_view_error = false;
   yt_video_error = false;
   yt_language_error = false;
   yt_country_error = false;
 
+  pagination_start = 0;
+  pagination_rpp = 10;
+  excluded_only = false;
+
   horizontalPosition: MatSnackBarHorizontalPosition = 'center';
   verticalPosition: MatSnackBarVerticalPosition = 'top';
+
+  pagination_values = [
+    ["10"],
+    ["25"],
+    ["50"],
+    ["100"],
+    ["200"],
+    ["500"]
+  ];
 
   reportDaysArray = [
     ["7", "last 7 days"],
@@ -57,7 +77,8 @@ export class NewtaskComponent implements OnInit {
     ["28", "last 28 days"],
     ["90", "last 3 months"],
     ["690", "last 690 TESTING"]
-  ]
+  ];
+
   scheduleArray = [
     ["0", "Do Not Schedule"],
     ["1", "every 1 hour"],
@@ -109,8 +130,11 @@ export class NewtaskComponent implements OnInit {
     ["==False", "non-standard text"],
     ["==True", "standard text"]
   ];
+  task_exists: any;
+  file_exists: any;
 
-  constructor(private snackbar: MatSnackBar, private service: PostService, private fb: FormBuilder) {
+  constructor(private snackbar: MatSnackBar, private service: PostService, private fb: FormBuilder, 
+    private dialogService: DialogService, private route:ActivatedRoute) {
     this.gadsForm = this.fb.group({
       taskName: [''],
       gadsCustomerId: [''],
@@ -132,14 +156,101 @@ export class NewtaskComponent implements OnInit {
       ytCountryValue: [''],
       ytStandardCharValue: ['']
     });
-   
+
     this.gadsForm.controls['daysAgo'].setValue(7);
     this.gadsForm.controls['schedule'].setValue(0);
+
+    this.paginationForm = this.fb.group({
+      paginationValue: ['']
+    });
+
+    this.paginationForm.controls['paginationValue'].setValue(this.pagination_rpp);
+
   }
 
-
   ngOnInit(): void {
+    this.save_file_name="";
+    this.route.queryParams
+    .subscribe(params => {
+      this.save_file_name = params['task'];
+    }
+  );
+  }
 
+  ngAfterViewInit(): void {
+    if(this.save_file_name!=undefined && this.save_file_name!=""){
+      this._populate_task_load(this.save_file_name);
+    }
+  }
+
+  async _populate_task_load(file_name:string) {
+    this.loading=true;
+    let file_name_json = { 'file_name': file_name };
+    (await this.service.get_task(JSON.stringify(file_name_json)))
+      .subscribe({
+        next: (response: ReturnPromise) => this._populate_task_fields(response),
+        error: (err) => this._call_service_error(),
+        complete: () => console.log("Completed")
+      });
+  }
+
+  async _populate_task_fields(response: ReturnPromise) {
+
+    let task_exists = (Object.entries(response).find(([k, v]) => {
+      if(k=='file_name') {
+        this.save_file_name=v;
+      }
+      if(k=='task_name') {
+        this.gadsForm.controls['taskName'].setValue(v);
+      }
+      if(k=='customer_id') {
+        this.gadsForm.controls['gadsCustomerId'].setValue(v);
+      }
+      if(k=='days_ago') {
+        this.gadsForm.controls['daysAgo'].setValue(v);
+      }
+      if(k=='schedule') {
+        this.gadsForm.controls['schedule'].setValue(v);
+      }
+      if(k=='gads_filter') {
+        this.finalGadsFilter=v;
+      }
+      if(k=='yt_subscriber_operator') {
+        this.gadsForm.controls['ytSubscriberOperator'].setValue(v);
+      }
+      if(k=='yt_subscriber_value') {
+        this.gadsForm.controls['ytSubscriberValue'].setValue(v);
+      }
+      if(k=='yt_view_operator') {
+        this.gadsForm.controls['ytViewOperator'].setValue(v);
+      }
+      if(k=='yt_view_value') {
+        this.gadsForm.controls['ytViewValue'].setValue(v);
+      }
+      if(k=='yt_video_operator') {
+        this.gadsForm.controls['ytVideoOperator'].setValue(v);
+      }
+      if(k=='yt_video_value') {
+        this.gadsForm.controls['ytVideoValue'].setValue(v);
+      }
+      if(k=='yt_language_operator') {
+        this.gadsForm.controls['ytLanguageOperator'].setValue(v);
+      }
+      if(k=='yt_language_value') {
+        this.gadsForm.controls['ytLanguageValue'].setValue(v);
+      }
+      if(k=='yt_country_operator') {
+        this.gadsForm.controls['ytCountryOperator'].setValue(v);
+      }
+      if(k=='yt_country_value') {
+        this.gadsForm.controls['ytCountryValue'].setValue(v);
+      }
+      if(k=='yt_std_character') {
+        this.gadsForm.controls['ytStandardCharValue'].setValue(v);
+      }
+    }));
+    this.scheduleChange();
+    this.loading=false;
   }
 
   openSnackBar(message: string, button: string, type: string) {
@@ -152,7 +263,8 @@ export class NewtaskComponent implements OnInit {
   }
 
   run_auto_excluder_form(auto_exclude: string) {
-    if (this.validate_fields()) {
+    if (this.validate_fields(false)) {
+      this.pagination_start = 0;
       this.loading = true;
       let formRawValue = {
         'excludeYt': auto_exclude,
@@ -171,10 +283,39 @@ export class NewtaskComponent implements OnInit {
         'ytCountryValue': this.gadsForm.controls['ytCountryValue'].value,
         'ytStandardCharValue': this.gadsForm.controls['ytStandardCharValue'].value
       };
-
       this._call_auto_service(JSON.stringify(formRawValue), auto_exclude);
     }
   }
+
+  async _call_auto_service(formRawValue: string, auto_exclude: string) {
+    this.loading = true;
+    this.subs = (await this.service.run_auto_excluder(formRawValue))
+      .subscribe({
+        next: (response: ReturnPromise) => this._call_auto_service_success(response, auto_exclude),
+        error: (err) => this._call_service_error(),
+        complete: () => console.log("Completed")
+      });
+  }
+
+  _call_auto_service_success(response: ReturnPromise, auto_exclude: string) {
+    this.table_result = Object.values(response);
+    if (this.table_result.length > 0) {
+      this.table_result.sort((a, b) => (a.excludeFromYt < b.excludeFromYt) ? 1 : -1);
+      this.no_data = false;
+      this._run_exclude_count();
+      if (auto_exclude == 'true') {
+        this.openSnackBar("Successfully excluded " + this.exclude_count + " YouTube channels", "Dismiss", "success-snackbar");
+      }
+    }
+    else {
+      this.no_data = true;
+      this.exclude_count = 0;
+      this.openSnackBar("Successful run, but no data matches criteria", "Dismiss", "success-snackbar");
+    }
+    this.loading = false;
+  }
+
+
 
   run_manual_excluder_form() {
     let yt_exclusion_list = [];
@@ -183,7 +324,7 @@ export class NewtaskComponent implements OnInit {
         yt_exclusion_list.push(data.group_placement_view_placement);
       }
     }
-    if(yt_exclusion_list.length > 0) {
+    if (yt_exclusion_list.length > 0) {
       let formRawValue = {
         'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value,
         'ytExclusionList': yt_exclusion_list
@@ -192,108 +333,162 @@ export class NewtaskComponent implements OnInit {
     }
   }
 
-  async _call_auto_service(formRawValue: string, auto_exclude: string) {
-    this.loading = true;
-    this.subs = (await this.service.run_auto_excluder(formRawValue))
-      .subscribe({
-        next: (response: ExcluderPromise) => this._call_auto_service_success(response, auto_exclude),
-        error: (err) => this._call_service_error(),
-        complete: () => console.log("Completed")
-      });
-  }
-
   async _call_manual_service(formRawValue: string) {
     this.loading = true;
-    this.subs = (await this.service.run_manual_excluder(formRawValue))
+    (await this.service.run_manual_excluder(formRawValue))
       .subscribe({
-        next: (response: ExcluderPromise) => this._call_manual_service_success(response),
+        next: (response: ReturnPromise) => this._call_manual_service_success(response),
         error: (err) => this._call_service_error(),
         complete: () => console.log("Completed")
       });
   }
 
-  _call_manual_service_success(response: ExcluderPromise) {
-    this.openSnackBar("Successfully excluded "+response+" YouTube channels", "Dismiss", "success-snackbar");
-    this.loading = false;
-  }
-
-  _call_auto_service_success(response: ExcluderPromise, auto_exclude: string) {
-    this.table_result = Object.values(response);
-    if (this.table_result.length > 0) {
-      this.no_data = false;
-      this._run_exclude_count();
-      if(auto_exclude=='true') {
-        this.openSnackBar("Successfully excluded "+this.exclude_count+" YouTube channels", "Dismiss", "success-snackbar");
-      }
-    }
-    else {
-      this.no_data = true;
-      this.exclude_count=0;
-      this.openSnackBar("Successful run, but no data matches criteria", "Dismiss", "success-snackbar");
-    }
+  _call_manual_service_success(response: ReturnPromise) {
+    this.openSnackBar("Successfully excluded " + response + " YouTube channels", "Dismiss", "success-snackbar");
     this.loading = false;
   }
 
   _call_service_error() {
-    this.loading = false
-    this.openSnackBar("Error retreiving data. Check Customer ID and credentials and try again", "Dismiss", "error-snackbar")
+    this.loading = false;
+    this.openSnackBar("Error retreiving data. Check Customer ID and credentials and try again", "Dismiss", "error-snackbar");
+  }
+
+
+  async save_task() {
+    if (this.validate_fields(true)) {
+      if (this.save_file_name!=undefined && this.save_file_name!="") {
+        this.dialogService.openConfirmDialog("Are you sure you want to update the current task with the new settings?")
+          .afterClosed().subscribe(res => {
+            if(res) {
+              this._finalise_save_task(this.save_file_name);
+            }
+          });
+      }
+      else {
+        this._finalise_save_task("");
+      }
+    }
+  }
+
+  async _finalise_save_task(file_name:string) {
+    let formRawValue = {
+      'file_name': file_name,
+      'task_name': this.gadsForm.controls['taskName'].value,
+      'customer_id': this.gadsForm.controls['gadsCustomerId'].value,
+      'days_ago': this.gadsForm.controls['daysAgo'].value,
+      'schedule': this.gadsForm.controls['schedule'].value,
+      'gads_filter': this.finalGadsFilter,
+      'yt_subscriber_operator': this.gadsForm.controls['ytSubscriberOperator'].value,
+      'yt_subscriber_value': this.gadsForm.controls['ytSubscriberValue'].value,
+      'yt_view_operator': this.gadsForm.controls['ytViewOperator'].value,
+      'yt_view_value': this.gadsForm.controls['ytViewValue'].value,
+      'yt_video_operator': this.gadsForm.controls['ytVideoOperator'].value,
+      'yt_video_value': this.gadsForm.controls['ytVideoValue'].value,
+      'yt_language_operator': this.gadsForm.controls['ytLanguageOperator'].value,
+      'yt_language_value': this.gadsForm.controls['ytLanguageValue'].value,
+      'yt_country_operator': this.gadsForm.controls['ytCountryOperator'].value,
+      'yt_country_value': this.gadsForm.controls['ytCountryValue'].value,
+      'yt_std_character': this.gadsForm.controls['ytStandardCharValue'].value
+    };
+
+    this._call_save_task_service(JSON.stringify(formRawValue));
+  }
+
+  async _call_save_task_service(taskFormValue: string) {
+    (await this.service.save_task(taskFormValue))
+      .subscribe({
+        next: (response: ReturnPromise) => this._call_save_task_success(response),
+        error: (err) => this.openSnackBar("Unknown error saving file", "Dismiss", "error-snackbar"),
+        complete: () => this.loading = false
+      });
+  }
+
+  async _call_save_task_success(response: ReturnPromise) {
+    this.openSnackBar("Successfully saved task '" + this.gadsForm.controls['taskName'].value + "' ("
+    +response+")", "Dismiss", "success-snackbar");
+    this.save_file_name=""+response;
+    this.loading = false;
+  }
+
+  async _call_save_task_error() {
+    this.loading = false;
+    this.openSnackBar("Unable to save task", "Dismiss", "error-snackbar");
   }
 
   _run_exclude_count() {
-    this.exclude_count=0;
+    this.exclude_count = 0;
     for (let data of this.table_result) {
       if (data.excludeFromYt == 'true') {
         this.exclude_count++;
       }
     }
   }
-  excludeCheckChange(ytChannelId: string){
+
+  excludeCheckChange(ytChannelId: string) {
     //this.table_result[ytChannelId].excludeFromYt = 'False';
     for (let i in this.table_result) {
-      if(this.table_result[i]['group_placement_view_placement'] == ytChannelId) {
+      if (this.table_result[i]['group_placement_view_placement'] == ytChannelId) {
         this.table_result[i]['excludeFromYt'] = String(!(this.table_result[i]['excludeFromYt'] == 'true'));
       }
     }
     this._run_exclude_count();
   }
 
-  validate_fields() {
-    this.error_count = 0;
+  validate_fields(full: boolean) {
+    let error_count = 0;
+    this.task_name_error=false;
     this.customer_id_error = false;
+    this.gads_filter_error = false;
     this.yt_subscribers_error = false;
     this.yt_view_error = false;
     this.yt_video_error = false;
     this.yt_language_error = false;
     this.yt_country_error = false;
-
+    if (full) {
+      /*
+      let format = /^[a-zA-Z0-9_-\s]+$/;
+      if (!format.test(this.gadsForm.controls['taskName'].value)) {
+        this.task_name_error=true;
+        error_count++;
+      }
+      */
+      if ((this.gadsForm.controls['taskName'].value).length ==0) {
+        this.task_name_error=true;
+        error_count++;
+      }
+    }
     let cus_id = this.gadsForm.controls['gadsCustomerId'].value;
     cus_id = cus_id.replace(new RegExp('-', 'g'), '');
     this.gadsForm.controls['gadsCustomerId'].setValue(cus_id);
+    if (this.finalGadsFilter.endsWith("(") || this.finalGadsFilter.endsWith("AND")) {
+      this.gads_filter_error = true;
+      error_count++;
+    }
     if (isNaN(Number(cus_id)) || cus_id == "") {
       this.customer_id_error = true;
-      this.error_count++;
+      error_count++;
     }
     if (isNaN(Number(this.gadsForm.controls['ytSubscriberValue'].value))) {
       this.yt_subscribers_error = true;
-      this.error_count++;
+      error_count++;
     }
     if (isNaN(Number(this.gadsForm.controls['ytViewValue'].value))) {
       this.yt_view_error = true;
-      this.error_count++;
+      error_count++;
     }
     if (isNaN(Number(this.gadsForm.controls['ytVideoValue'].value))) {
       this.yt_video_error = true;
-      this.error_count++;
+      error_count++;
     }
     if ((this.gadsForm.controls['ytLanguageValue'].value).length != 2 && this.gadsForm.controls['ytLanguageValue'].value != "") {
       this.yt_language_error = true;
-      this.error_count++;
+      error_count++;
     }
     if ((this.gadsForm.controls['ytCountryValue'].value).length != 2 && this.gadsForm.controls['ytCountryValue'].value != "") {
       this.yt_country_error = true;
-      this.error_count++;
+      error_count++;
     }
-    if (this.error_count == 0) { return true; }
+    if (error_count == 0) { return true; }
     else {
       this.openSnackBar("Error in some of your fields. Please review and correct them", "Dismiss", "error-snackbar");
       return false;
@@ -349,5 +544,39 @@ export class NewtaskComponent implements OnInit {
     this.conditionEnabled = true;
     this.orAndEnabled = false;
     this.finalGadsFilter = "";
+    this.gads_filter_error = false;
+  }
+
+
+  pagination_next() {
+    if (this.pagination_start + this.pagination_rpp < this.table_result.length) {
+      this.pagination_start += this.pagination_rpp;
+    }
+  }
+  pagination_prev() {
+    if (this.pagination_start - this.pagination_rpp >= 0) {
+      this.pagination_start -= this.pagination_rpp;
+    }
+  }
+
+  paginationChange() {
+    this.pagination_rpp = Number(this.paginationForm.controls['paginationValue'].value);
+    this.pagination_start = 0;
+  }
+
+  scheduleChange() {
+    if(this.gadsForm.controls['schedule'].value=="0")
+    {
+      this.save_button="Save Task";
+    }
+    else{
+      this.save_button="Save and Schedule Task";
+    }
+  }
+
+  duplicateTask()
+  {
+    this.save_file_name="";
+    this.gadsForm.controls['taskName'].setValue("");
   }
 }

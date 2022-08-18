@@ -1,3 +1,4 @@
+import { MatDialog } from '@angular/material/dialog';
 /**
  * Copyright 2022 Google LLC
  *
@@ -23,6 +24,9 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -31,6 +35,7 @@ import { TasksComponent } from './tasks.component';
 import { NewtaskComponent } from './newtask.component';
 import { SettingsComponent } from './settings.component';
 import { LoadingComponent } from './components/loading.component';
+import { ConfirmDialogComponent } from './components/confirm-dialog.component';
 
 @NgModule({
   declarations: [
@@ -39,7 +44,8 @@ import { LoadingComponent } from './components/loading.component';
     TasksComponent,
     NewtaskComponent,
     SettingsComponent,
-    LoadingComponent
+    LoadingComponent,
+    ConfirmDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -51,9 +57,13 @@ import { LoadingComponent } from './components/loading.component';
     ReactiveFormsModule,
     MatProgressSpinnerModule,
     BrowserAnimationsModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatSlideToggleModule,
+    MatDialogModule,
+    MatTooltipModule
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  entryComponents: [ConfirmDialogComponent]
 })
 export class AppModule { }

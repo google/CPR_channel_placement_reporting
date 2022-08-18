@@ -1,1 +1,48 @@
-<p>settings works!</p>
+<div class="centre-form">
+    <form [formGroup]="settingsForm">
+        <div>
+            <div class="heading">
+                <span>Settings</span>
+            </div>
+            <div>
+                <div class="label-input-block yt-label">
+                    <label for="clientFile">'client_secret.json' file</label>
+                </div>
+                <div class="label-input-block">
+                    <input type="file" class="file-upload" formControlName="clientFile" name="clientFile" 
+                    requiredFileType="json" (change)="upload_file($event)">{{file_status}}
+                </div>
+            </div>
+
+            <div>
+                <div class="label-input-block yt-label">
+                    <label for="gadsDevToken">Google Ads Developer Token</label>
+                </div>
+                <div class="label-input-block">
+                    <input type="text" class="inputElement" formControlName="gadsDevToken" name="gadsDevToken">
+                </div>
+            </div>
+            <div>
+                <div class="label-input-block yt-label">
+                    <label for="gadsMccId">MCC ID</label>
+                </div>
+                <div class="label-input-block">
+                    <input type="text" class="inputElement" formControlName="gadsMccId" name="gadsMccId">
+                </div>
+            </div>
+            <div>
+                <div class="label-input-block yt-label">
+                    <label for="emailAddress">Email Address</label>
+                </div>
+                <div class="label-input-block">
+                    <input type="text" class="inputElement" formControlName="emailAddress" name="emailAddress">
+                </div>
+            </div>
+            <div class="label-input-block centre-form">
+                <div class="label-input-block">
+                    <button type="button" class="primaryButton" (click)="save_settings()">Save</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

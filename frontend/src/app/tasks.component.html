@@ -1,1 +1,67 @@
-<p>tasks works!</p>
+<div class="task-width centre-table">
+    <div class="heading">
+        <span >Tasks</span>
+    </div>
+    <div *ngIf="task_table_data.length > 0" class="pagination">
+        <form [formGroup]="paginationForm">
+            <div class="label-input-block align-left">
+                <a routerLink="/newtask"><button type="button" class="secondaryButton"><mat-icon>add_box</mat-icon>New Task</button></a>
+            </div>
+            <div class="label-input-block">
+                <span *ngIf="pagination_start+pagination_rpp <= task_table_data.length">
+                    {{pagination_start+1}} to {{pagination_start+pagination_rpp}} of {{task_table_data.length}}
+                </span>
+                <span *ngIf="pagination_start+pagination_rpp > task_table_data.length  && task_table_data.length > 0">
+                    {{pagination_start+1}} to {{task_table_data.length}} of {{task_table_data.length}}
+                </span>
+            </div>
+            <div class="label-input-block">
+                <button type="button" class="pageButton" (click)="pagination_prev()"><<</button>
+            </div>
+            <div class="label-input-block">
+                <select name="paginationValue" formControlName="paginationValue" (change)="paginationChange()"
+                    class="pageElement" id="paginationValue">
+                    <option *ngFor="let item of pagination_values" [value]=item[0]>{{ item[0] }}</option>
+                </select>
+            </div>
+            <div class="label-input-block">
+                <button type="button" class="pageButton" (click)="pagination_next()">>></button>
+            </div>
+        </form>
+    </div>
+    <table *ngIf="task_table_data.length > 0" class="styled-table task-width">
+        <thead>
+            <tr>
+                <th>Date Created</th>
+                <th>Taks ID</th>
+                <th>Task Name</th>
+                <th>Customer ID</th>
+                <th>Schedule</th>
+                <th class="align-centre">Edit</th>
+                <th class="align-centre">Run Now</th>
+                <th class="align-centre">Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let data of task_table_data | slice:pagination_start:pagination_start+pagination_rpp">
+                <td>{{data.date_created}}</td>
+                <td>{{data.file_name}}</td>
+                <td>{{data.task_name}}</td>
+                <td>{{data.customer_id}}</td>
+                <td>{{getScheduleValue(data.schedule)}}</td>
+                <td class="align-centre">
+                    <a href="/newtask?task={{data.file_name}}" target="_self" matTooltip="Edit current task"><mat-icon>edit</mat-icon></a>
+                </td>
+                <td class="align-centre">
+                    <a (click)="runNow(data.file_name, data.task_name)" target="_self" matTooltip="Run task and exclude now"><mat-icon>play_arrow</mat-icon></a>
+                </td>
+                <td class="align-centre">
+                    <a (click)="deleteNow(data.file_name, data.task_name)" target="_self" matTooltip="Permanently delete this task"><mat-icon>delete_forever</mat-icon></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div *ngIf="no_data" class="empty-table">There are no saved tasks!</div>
+</div>
+
+<app-loading [showSpinner]=loading></app-loading>

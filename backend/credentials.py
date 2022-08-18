@@ -20,7 +20,7 @@ from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 token_file = 'token.pickle'
-client_secret_file = 'client.secret'
+client_secret_file = 'client_secret.json'
 scopes_array = [
                     'https://www.googleapis.com/auth/youtube.readonly',
                     'https://www.googleapis.com/auth/adwords'

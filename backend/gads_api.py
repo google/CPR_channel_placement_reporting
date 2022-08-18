@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from inspect import _void
+import operator
 import string
 from tokenize import String
 from typing import List
@@ -87,44 +88,44 @@ def get_youtube_data(credentials, channel_ids: list) -> list:
     yt_limit = 40 #can be put up to 50
     channel_ids_length = len(channel_ids)
     yt_items = []
+    if channel_ids_length > 0:
+        for i in range(int(channel_ids_length/yt_limit +1)):
+            ids_to_pass = ','.join(channel_ids[i*yt_limit:(i+1)*yt_limit])
+                
+            youtube = googleapiclient.discovery.build(
+                api_service_name, api_version, credentials=credentials)
 
-    for i in range(int(channel_ids_length/yt_limit +1)):
-        ids_to_pass = ','.join(channel_ids[i*yt_limit:(i+1)*yt_limit])
+            request = youtube.channels().list(
+                part="id, statistics, brandingSettings",
+                id=ids_to_pass
+            )
+            response = request.execute()
             
-        youtube = googleapiclient.discovery.build(
-            api_service_name, api_version, credentials=credentials)
-
-        request = youtube.channels().list(
-            part="id, statistics, brandingSettings",
-            id=ids_to_pass
-        )
-        response = request.execute()
-        
-        for item in response['items']:
-            yt_items.append(item)
-        ids_to_pass = ""
+            for item in response['items']:
+                yt_items.append(item)
+            ids_to_pass = ""
 
     return yt_items
 
 
-
 def exclude_youtube_channels(client, customer_id: str, channelsToRemove: list) -> _void:
-    exclude_operations=[]
-    for channel in channelsToRemove:
-        if channel:
-            placement_criterion_op = client.get_type("CustomerNegativeCriterionOperation")
-            placement_criterion = placement_criterion_op.create
-            placement_criterion.youtube_channel.channel_id = channel
-            exclude_operations.append(placement_criterion_op)
+    if len(channelsToRemove) > 0:
+        exclude_operations=[]
+        for channel in channelsToRemove:
+            if channel:
+                placement_criterion_op = client.get_type("CustomerNegativeCriterionOperation")
+                placement_criterion = placement_criterion_op.create
+                placement_criterion.youtube_channel.channel_id = channel
+                exclude_operations.append(placement_criterion_op)
 
-    customer_negative_criterion_service = client.get_service("CustomerNegativeCriterionService")
+        customer_negative_criterion_service = client.get_service("CustomerNegativeCriterionService")
 
-    response = (
-        customer_negative_criterion_service.mutate_customer_negative_criteria(
-            customer_id=customer_id,
-            operations=exclude_operations
+        response = (
+            customer_negative_criterion_service.mutate_customer_negative_criteria(
+                customer_id=customer_id,
+                operations=exclude_operations
+            )
         )
-    )
 
 
 def get_youtube_channel_id_list(full_data_set: dict) -> dict:
@@ -172,8 +173,6 @@ def append_youtube_data(
                 if eval(entry['statistics']['videoCount'] + " " + ytf_video_count):
                     matches_count += 1
         
-
-
         if entry['brandingSettings']['channel'].get('country'):
             full_data_set[entry['id']].update({'country': entry['brandingSettings']['channel']['country']})
         else:
@@ -203,8 +202,21 @@ def append_youtube_data(
             full_data_set[entry['id']].update({'excludeFromYt': 'true'})
         else:
             full_data_set[entry['id']].update({'excludeFromYt': 'false'})
-   
+
+    full_data_set = _is_yt_data(full_data_set)
+
     return full_data_set
+
+
+def _is_yt_data(full_data_set: dict) -> dict:
+    tempDict = dict()
+    yt_key='excludeFromYt'
+    for (key, value) in full_data_set.items():
+        if yt_key in value.keys():
+            tempDict[key] = value
+    
+    return tempDict
+
 
 
 def is_ascii_title(title: string) -> string:
