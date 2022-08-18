@@ -13,6 +13,15 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+a {
+  cursor: pointer;
+  text-decoration: none;
+  color: #009879;
+}
+a:hover {
+  text-decoration: none;
+  color: darkred;
+}
 .full-width {
     width: 100%;
   }
@@ -28,14 +37,37 @@ body {
   font-size:25px !important;
 }
 
+.heading {
+  color: #009879;
+  font-size: x-large;
+  font-weight: bold;
+  border-bottom: 1px solid #009879;
+}
+
 /* TABLE CSS */
 .styled-table {
     border-collapse: collapse;
     margin: 25px 0;
     font-size: 0.8em;
-    min-width: 400px;
-    width: 100%;
+    min-width: 600px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+.centre-table {
+  align-self: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+.task-width {
+  width:1000px;
+}
+.newtask-width {
+  width: 100%;
+}
+.align-centre {
+  text-align: center;
+}
+.align-left {
+  float: left;
 }
 
 .styled-table thead tr {
@@ -78,7 +110,7 @@ input[type='checkbox'] {
 }
 
 .inputElement {
-  width: 200px;
+  width: 240px;
   padding: 8px;
   border: 1px solid #ccc;
   background-color: #ffffff;
@@ -89,7 +121,7 @@ input[type='checkbox'] {
   resize: vertical;
 }
 .errorElement {
-  width: 200px;
+  width: 240px;
   padding: 8px;
   border: 1px solid red;
   background-color: #ffffff;
@@ -128,7 +160,21 @@ input[type='checkbox'] {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
 }
+
+.saveButton {
+  background-color: #f2f2f2;
+  color:#009879;
+  font-weight: bold;
+  padding: 12px 20px;
+  border-width: 2px;
+  border-color: #009879;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
 .disabledButton{
   background-color: grey;
   color: white;
@@ -164,7 +210,7 @@ button:disabled {
 }
 
 .extrawide {
-  width: 750px;
+  width: 800px;
 }
 
 .filterBorder {
@@ -181,8 +227,14 @@ button:disabled {
   text-align: right;
 }
 
+.centre-form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
 .yt-label {
-  width: 200px;
+  width: 300px;
   text-align: right;
 }
 
@@ -193,7 +245,7 @@ button:disabled {
 }
 
 .error-snackbar {
-  background: #ff9999;
+  background: #ffcccc;
   color: darkred;
   .mat-simple-snackbar-action {
     color: darkred;
@@ -208,4 +260,86 @@ button:disabled {
     color: #196619;
     background-color: white;
 }
+}
+
+.pagination {
+text-align: right;
+}
+
+.pageButton {
+  background-color: #009879;
+  color: white;
+  font-weight: bold;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pageElement {
+  width: 70px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  resize: vertical;
+}
+
+.float-left {
+  float: left;
+}
+
+.mat-slide-toggle.mat-checked:not(.mat-disabled) .mat-slide-toggle-bar {
+  background-color: #b3fff0;
+}
+
+.mat-slide-toggle.mat-checked:not(.mat-disabled) .mat-slide-toggle-thumb {
+  background-color: #009879;
+}
+
+
+/* mat-confirm-dialog (customised dialog) */
+.confirm-dialog-container .mat-dialog-container {
+  border-radius: .25em .25em .4em .4em;
+  padding: 0px;
+}
+.confirm-dialog-container .content-container{
+  margin: 5px 5px 15px 5px;
+  color: black;
+  display: flex;
+}
+.confirm-dialog-container #close-icon{
+  margin-left: auto;
+  order: 2;
+  font-weight: bolder;
+}
+.confirm-dialog-container #close-icon:hover{
+cursor: pointer;
+}
+
+.confirm-dialog-container #no-button{
+height: 50px;
+width: 50%;
+background-color: red;
+color:white;
+border: none;
+font-weight: bold;
+}
+
+.confirm-dialog-container #yes-button{
+  height: 50px;
+  width: 50%;
+  background-color: #009879;
+  color:white;
+  border: none;
+  font-weight: bold;
+}
+
+.confirm-dialog-container span.content-span{
+  padding:  35px 16px;
+  text-align: center;
+  font-size: 20px;
 }
