@@ -23,7 +23,7 @@ var EMAIL_SUBJECT;
 var fromDate;
 var toDate;
 
-const MAX_GADS_IDS = 500;
+const MAX_GADS_IDS = 300;
 const MICROS_CONVERSION = 1000000;
 
 const METRICS_API_ENGLISH = {
@@ -400,7 +400,7 @@ function runGAdsReport(query, currentSheetName) {
 
   //If retrieving next page of results, get page token
   var nextPageToken = wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_NEXT_PAGE_TOKEN).getValue().toString().trim();
-  if (nextPageToken.length != 0 && nextPageToken > 0) {
+  if (nextPageToken.length > 1) {
     payload['pageToken'] = nextPageToken;
   }
 

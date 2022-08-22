@@ -43,8 +43,8 @@ var scriptProperties = PropertiesService.getScriptProperties();
 const MAX_RUNNING_TIME = 4.5 * 60 * 1000;
 var WAIT_BETWEEN_LOOPS = 1 * 60 * 1000;
 const TOAST_DISPALY_TIME = 30; //15 seconds
-const MAX_TRIGGERS = 30;
-const CHUNK_SIZE = 50; //Do not change to above 50, YouTube.Videos.List allows max of 50 ids
+const MAX_TRIGGERS = 20;
+const CHUNK_SIZE = 35; //Do not change to above 50, YouTube.Videos.List allows max of 50 ids
 const SCRIPT_STATUS_VALUES = {
   DONE: 'Done.',
   RUNNING: 'Running. It might take time.',
@@ -100,6 +100,7 @@ var CONSTS = {
   CACHED_SHEET_NAME: 'CACHED_SHEET_NAME',
   CACHED_SHEET_INDEX: 'CACHED_SHEET_INDEX',
   CACHED_INTERRUPT: 'CACHED_INTERRUPT',
+  SEND_EMAIL: 'SEND_EMAIL',
 
   IS_YT_NEW: 'IS_YT_NEW',
   IS_EXCLUSION_NEW: 'IS_EXCLUSION_NEW',
@@ -148,7 +149,8 @@ function onOpen() {
 }
 
 function restart() {
-  wholeSpreadsheet.getRangeByName(CONSTS.CACHED_INTERRUPT).setValue("false");
+  wholeSpreadsheet.getRangeByName(CONSTS.SEND_EMAIL).setValue("FALSE");
+  wholeSpreadsheet.getRangeByName(CONSTS.CACHED_INTERRUPT).setValue("FALSE");
   clearAll();
   wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).setValue("");
   wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_INDEX).setValue("");
@@ -235,6 +237,7 @@ function isActiveSheetManual() {
 
 function runManualGadsPart() {
   if(isActiveSheetManual()) {
+    wholeSpreadsheet.getRangeByName(CONSTS.SEND_EMAIL).setValue("FALSE");
     setUpForManual();
     clearAll();
     wholeSpreadsheet.getRangeByName(CONSTS.CACHED_SHEET_NAME).setValue("");
@@ -245,6 +248,7 @@ function runManualGadsPart() {
 
 function runManualYtPart() {
   if(isActiveSheetManual()) {
+    wholeSpreadsheet.getRangeByName(CONSTS.SEND_EMAIL).setValue("FALSE");
     setUpForManual();
     runYtPart();
   }
@@ -252,6 +256,7 @@ function runManualYtPart() {
 
 function runManualExclusionPart() {
   if(isActiveSheetManual()) {
+    wholeSpreadsheet.getRangeByName(CONSTS.SEND_EMAIL).setValue("FALSE");
     setUpForManual();
     runExclusionPart();
   }
@@ -314,7 +319,7 @@ function runYtPart() {
       createTrigger("runYtPart", "Re-work. Wait 0.5 min ♻️", "🎞 YouTube", 0);
     } else {
       if (wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.IS_YT_NEW).getValue() != CONSTS.NEW) {
-        sendEmail(currentSheetName);
+        //sendEmail(currentSheetName);
       }
 
       wholeSpreadsheet.toast('Please wait', '🎞 YouTube', TOAST_DISPALY_TIME);
@@ -338,17 +343,22 @@ function runYtPart() {
 }
 
 
-function sendEmail(currentSheetName) {
+function sendEmail(currentSheetName, channelsToExclude) {
   Logger.log('Sending Email with a link to spreadsheet');
+  var excludedIds = "";
+  for (let i = 0; i < channelsToExclude.length; i++) {
+    excludedIds += "https://youtube.com/channel/"+channelsToExclude[i] + "<br>"
+  }
   MailApp.sendEmail(
     {
       to: wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.EMAILS).getValue(),
       subject: wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.EMAIL_SUBJECT).getValue(),
       htmlBody:
-        "<h3> New channels to excluded </h3><br>" +
-        "<h1> Full spreadsheet: </h1><br>" +
+        "<h3> "+ channelsToExclude.length + " New channels have been excluded </h3>" +
+         excludedIds +
+        "<h3> Full spreadsheet: </h3>" +
         SPREADSHEET_URL +
-        "<h3> Tab: </h3><br>" +
+        "<h3> Tab: </h3>" +
         currentSheetName
     });
 }
@@ -388,11 +398,13 @@ function runExclusionPart() {
     //Do C
     var idsToRowIdToBeExcluded = getUserSelectedChannels();
     if (Object.keys(idsToRowIdToBeExcluded).length != 0) {
+      wholeSpreadsheet.getRangeByName(CONSTS.SEND_EMAIL).setValue("TRUE");
       callExcludeApi(createPayload(Object.keys(idsToRowIdToBeExcluded)), currentSheetName, idsToRowIdToBeExcluded);
     }
     if (isExcludingWorkSplitNeeded(currentSheetName)) {
       createTrigger("runExclusionPart", "Re-work. Wait 0.5 min ♻️", "⛔️ Exclusion", 0);
-    }  else {
+    }  
+    else {
       if (isAutomaticTab(currentSheetName)) {
         finishedCurrentTab(currentSheetName);
       }
@@ -401,6 +413,12 @@ function runExclusionPart() {
         wholeSpreadsheet.getRangeByName(currentSheetName + '!' + CONSTS.GADS_EXCLUSION_SCRIPT_STATUS).setValue(SCRIPT_STATUS_VALUES.DONE);
 
         removeAllTriggers();
+      }
+      var send_email = wholeSpreadsheet.getRangeByName(CONSTS.SEND_EMAIL).getValue();
+      if(send_email)
+      {
+        sendEmail(currentSheetName, Object.keys(idsToRowIdToBeExcluded));
+        wholeSpreadsheet.getRangeByName(CONSTS.SEND_EMAIL).setValue("FALSE");
       }
     }
   }
@@ -416,6 +434,7 @@ function finishedCurrentTab(currentSheetName) {
 
   removeAllTriggers();
   var shouldStop = wholeSpreadsheet.getRangeByName(CONSTS.CACHED_INTERRUPT).getValue();
+  
   if(!shouldStop) {
     createTrigger("scanNextSheet", "Moving to next tab in a few minutes", "Finished 🏁", WAIT_BETWEEN_LOOPS);
   }
