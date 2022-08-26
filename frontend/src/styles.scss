@@ -58,7 +58,7 @@ a:hover {
   margin-right: auto;
 }
 .task-width {
-  width:1000px;
+  width:1200px;
 }
 .newtask-width {
   width: 100%;
@@ -240,6 +240,12 @@ button:disabled {
 
 .error_text {
   color: red;
+  font-size: 10px;
+  padding: 5px;
+}
+
+.valid_text {
+  color: green;
   font-size: 10px;
   padding: 5px;
 }

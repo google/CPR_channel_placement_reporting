@@ -16,7 +16,6 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
 
 export interface ReturnPromise {
   response: string
@@ -29,8 +28,12 @@ export class PostService {
 
   private baseUrl = 'http://127.0.0.1:5000';
 
-  constructor(private httpClient: HttpClient) { }
-  
+  constructor(private httpClient: HttpClient) {
+    if(window.location.href.includes(':5000'))
+    {
+      this.baseUrl = '';
+    }
+  }
   async run_auto_excluder(form_data_json: string) {
     const headers = new HttpHeaders();
     headers.set('Content-Type', 'application/json; charset=utf-8');
@@ -91,6 +94,10 @@ export class PostService {
     const headers = new HttpHeaders();
     headers.set('Content-Type', 'application/json; charset=utf-8');
     return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/getTask", file_name, {headers: headers});
+  }
+
+  async get_schedule_list() {
+    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getScheduleList");
   }
 
 

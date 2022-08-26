@@ -73,7 +73,7 @@ export class TasksComponent implements OnInit {
   }
 
   async updateTable() {
-    this.loading = true;
+    this.loading=true;
     (await this.service.get_tasks_list())
       .subscribe({
         next: (response: ReturnPromise) => this._fill_table_success(response),
@@ -100,7 +100,9 @@ export class TasksComponent implements OnInit {
 
   
   async runNow(file_name:string, task_name:string){
-    this.dialogService.openConfirmDialog("Are you sure you want to run the task '"+task_name+"' ("+file_name+")?")
+    this.dialogService.openConfirmDialog(`Are you sure you want to run the task '`+task_name+`' (`+file_name+`) now?
+    
+    This will be in addition to any upcoming schedules`)
         .afterClosed().subscribe(res => {
           if(res) {
             this._continue_run_task(file_name);
@@ -131,7 +133,9 @@ export class TasksComponent implements OnInit {
 
 
   async deleteNow(file_name:string, task_name:string){
-    this.dialogService.openConfirmDialog("Are you sure you want to delete '"+task_name+"' ("+file_name+")?")
+    this.dialogService.openConfirmDialog(`Are you sure you want to delete '`+task_name+`' (`+file_name+`)?
+    
+    This will also delete any schedules for this task`)
         .afterClosed().subscribe(res => {
           if(res) {
             this._continue_task_delete(file_name);

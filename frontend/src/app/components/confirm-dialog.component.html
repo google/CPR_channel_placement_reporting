@@ -1,6 +1,6 @@
 <div>
     <div class="content-container">
-      <span class="content-span full-width">{{data.message}}</span>
+      <span class="content-span full-width" [innerText]=data.message></span>
     </div>
     <button mat-flat-button id="no-button" [mat-dialog-close]="false">No</button>
     <button mat-flat-button id="yes-button" [mat-dialog-close]="true">Yes</button>

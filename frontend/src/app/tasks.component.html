@@ -37,6 +37,7 @@
                 <th>Task Name</th>
                 <th>Customer ID</th>
                 <th>Schedule</th>
+                <th>Next run in</th>
                 <th class="align-centre">Edit</th>
                 <th class="align-centre">Run Now</th>
                 <th class="align-centre">Delete</th>
@@ -49,6 +50,10 @@
                 <td>{{data.task_name}}</td>
                 <td>{{data.customer_id}}</td>
                 <td>{{getScheduleValue(data.schedule)}}</td>
+                <td>
+                    <span *ngIf="data.error_code=='2'" class="error_text"><mat-icon matTooltip="Last run failed due to end point error">error</mat-icon></span>
+                    <span *ngIf="data.error_code=='0'" class="valid_text"><mat-icon matTooltip="Schedule is up and running">check_circle</mat-icon></span>
+                    {{data.next_run}}</td>
                 <td class="align-centre">
                     <a href="/newtask?task={{data.file_name}}" target="_self" matTooltip="Edit current task"><mat-icon>edit</mat-icon></a>
                 </td>
