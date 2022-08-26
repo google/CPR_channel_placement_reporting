@@ -357,7 +357,7 @@ export class NewtaskComponent implements OnInit {
   async save_task() {
     if (this.validate_fields(true)) {
       if (this.save_file_name!=undefined && this.save_file_name!="") {
-        this.dialogService.openConfirmDialog("Are you sure you want to update the current task with the new settings?")
+        this.dialogService.openConfirmDialog("Are you sure you want to update the current task with the new settings?\n\nThis will also update your schedule settings")
           .afterClosed().subscribe(res => {
             if(res) {
               this._finalise_save_task(this.save_file_name);
@@ -365,7 +365,12 @@ export class NewtaskComponent implements OnInit {
           });
       }
       else {
-        this._finalise_save_task("");
+        this.dialogService.openConfirmDialog("Are you sure you want to save this task?\n\nThis will also create a schedule if you have selected a schedule setting")
+          .afterClosed().subscribe(res => {
+            if(res) {
+              this._finalise_save_task("");
+            }
+          });
       }
     }
   }
@@ -404,8 +409,15 @@ export class NewtaskComponent implements OnInit {
   }
 
   async _call_save_task_success(response: ReturnPromise) {
+    let schedule_text="";
+    if(this.gadsForm.controls['schedule'].value!="0") {
+      schedule_text=" and scheduled to run every "+this.gadsForm.controls['schedule'].value+" hours";
+    }
+    else {
+      schedule_text=" and removed any schedules that were running"
+    }
     this.openSnackBar("Successfully saved task '" + this.gadsForm.controls['taskName'].value + "' ("
-    +response+")", "Dismiss", "success-snackbar");
+    +response+")"+schedule_text, "Dismiss", "success-snackbar");
     this.save_file_name=""+response;
     this.loading = false;
   }

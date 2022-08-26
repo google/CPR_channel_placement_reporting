@@ -22,6 +22,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 token_file = 'token.pickle'
 client_secret_file = 'client_secret.json'
 scopes_array = [
+                    'https://www.googleapis.com/auth/cloud-platform',
                     'https://www.googleapis.com/auth/youtube.readonly',
                     'https://www.googleapis.com/auth/adwords'
                 ]
@@ -45,7 +46,6 @@ def get_oauth():
                                 authorization_prompt_message='')
             credentials = flow.credentials
 
-            # Save the credentials for the next run
             with open(token_file, 'wb') as f:
                 pickle.dump(credentials, f)
     return credentials

@@ -22,15 +22,18 @@ import googleapiclient.errors
 
 from googleapiclient.discovery import build
 
-api_service_name = "youtube"
-api_version = "v3"
-micro_conv = 1000000
+API_SERVICE_NAME = "youtube"
+API_VERSION = "v3"
+MICRO_CONV = 1000000
+
 def get_placement_data(client, ga_service, customer_id: str, 
 date_from: str, date_to: str, conditions: str) -> dict:
+    print("Getting Gads Data...")
     conditions_split = conditions.split(" OR ")
     if client:
         all_data_set = {}
         for condition in conditions_split:
+            print("Con: "+condition)
             condition = condition.replace("(", "")
             condition = condition.replace(")", "")
             query = f"""
@@ -60,23 +63,27 @@ date_from: str, date_to: str, conditions: str) -> dict:
             search_request.customer_id = customer_id
 
             search_request.query = query
+            print("Getting Gads Stream...")
             stream = ga_service.search_stream(search_request)
             for batch in stream:
+                print("Entered stream...")
                 for row in batch.results:
+                    row = row._pb
                     all_data_set[row.group_placement_view.placement] = {
                         'group_placement_view_placement_type': row.group_placement_view.placement_type,
                         'group_placement_view_display_name': row.group_placement_view.display_name,
                         'group_placement_view_placement': row.group_placement_view.placement,
                         'group_placement_view_target_url': row.group_placement_view.target_url,
                         'metrics_impressions': row.metrics.impressions,
-                        'metrics_cost_micros': row.metrics.cost_micros / micro_conv,
+                        'metrics_cost': row.metrics.cost_micros / MICRO_CONV,
                         'metrics_conversions': row.metrics.conversions,
                         'metrics_video_views': row.metrics.video_views,
                         'metrics_video_view_rate': row.metrics.video_view_rate,
                         'metrics_clicks': row.metrics.clicks,
-                        'metrics_average_cpm': row.metrics.average_cpm / micro_conv,
+                        'metrics_average_cpm': row.metrics.average_cpm / MICRO_CONV,
                         'metrics_ctr': row.metrics.ctr
                     }
+                print("Consolidated data...")
         return all_data_set
 
 
@@ -93,7 +100,7 @@ def get_youtube_data(credentials, channel_ids: list) -> list:
             ids_to_pass = ','.join(channel_ids[i*yt_limit:(i+1)*yt_limit])
                 
             youtube = googleapiclient.discovery.build(
-                api_service_name, api_version, credentials=credentials)
+                API_SERVICE_NAME, API_VERSION, credentials=credentials)
 
             request = youtube.channels().list(
                 part="id, statistics, brandingSettings",
