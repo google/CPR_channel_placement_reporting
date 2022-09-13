@@ -18,12 +18,11 @@ from tokenize import String
 from typing import List
 from datetime import datetime
 import googleapiclient.errors
-from credentials import get_oauth
 from googleapiclient.discovery import build
 
 CLOUD_VERSION='v1beta1'
 
-def update_cloud_schedule(credentials, project_id, location, server, file_name, hours):
+def update_cloud_schedule(credentials, project_id, location, server, task_id, hours):
     now = datetime.now()
     minute = now.strftime("%M")
     hour = now.strftime("%H")
@@ -37,7 +36,7 @@ def update_cloud_schedule(credentials, project_id, location, server, file_name, 
     service = googleapiclient.discovery.build('cloudscheduler', CLOUD_VERSION, credentials=credentials)
     
     parent = f"projects/{project_id}/locations/{location}"
-    job_name=f"{parent}/jobs/{file_name}"
+    job_name=f"{parent}/jobs/{task_id}"
     try:
         request = service.projects().locations().jobs().delete(name=job_name)
         request.execute()
@@ -48,10 +47,10 @@ def update_cloud_schedule(credentials, project_id, location, server, file_name, 
         print("Creating new schedule...")
         job_body = {
         "httpTarget": {
-            "uri": f"{server}/api/runTaskFromFile",
+            "uri": f"{server}/api/runTaskFromTaskId",
             "httpMethod": "POST",
             "headers": {
-            "file_name": file_name
+                "task_id": task_id
             }
         },
         "timeZone": "Etc/UTC",

@@ -1,12 +1,12 @@
 <div class="centre-form">
     <form [formGroup]="gadsForm">
         <div class="heading">
-            <span *ngIf='save_file_name!=undefined && this.save_file_name!=""'>Task ID / {{save_file_name}} <div class="label-input-block">
+            <span *ngIf='task_id!=undefined && this.task_id!=""'>Task ID / {{task_id}} <div class="label-input-block">
                 <a (click)="duplicateTask()" matTooltip="Make a copy">
                     <mat-icon>file_copy</mat-icon>
                 </a>
             </div></span>
-            <span *ngIf='save_file_name==undefined || this.save_file_name==""'>New Task</span>
+            <span *ngIf='task_id==undefined || this.task_id==""'>New Task</span>
         </div>
         <div class="centre-form">
             <div class="label-input-block">
