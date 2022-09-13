@@ -110,10 +110,10 @@ export class TasksComponent implements OnInit {
         });
   }
 
-  async _continue_run_task(file_name:string) {
+  async _continue_run_task(task_id:string) {
     this.loading = true;
-    let file_name_json = { 'file_name': file_name };
-    (await this.service.run_task_from_file(JSON.stringify(file_name_json)))
+    let task_id_json = { 'task_id': task_id };
+    (await this.service.run_task_from_task_id(JSON.stringify(task_id_json)))
       .subscribe({
         next: (response: ReturnPromise) => this._run_task_from_file_success(response),
         error: (err) => this._run_task_from_file_error(),
@@ -132,21 +132,21 @@ export class TasksComponent implements OnInit {
   }
 
 
-  async deleteNow(file_name:string, task_name:string){
-    this.dialogService.openConfirmDialog(`Are you sure you want to delete '`+task_name+`' (`+file_name+`)?
+  async deleteNow(task_id:string, task_name:string){
+    this.dialogService.openConfirmDialog(`Are you sure you want to delete '`+task_name+`' (`+task_id+`)?
     
     This will also delete any schedules for this task`)
         .afterClosed().subscribe(res => {
           if(res) {
-            this._continue_task_delete(file_name);
+            this._continue_task_delete(task_id);
           }
         });
   }
 
-  async _continue_task_delete(file_name:string) {
+  async _continue_task_delete(task_id:string) {
     this.loading = true;
-    let file_name_json = { 'file_name': file_name };
-    (await this.service.delete_task(JSON.stringify(file_name_json)))
+    let task_id_json = { 'task_id': task_id };
+    (await this.service.delete_task(JSON.stringify(task_id_json)))
       .subscribe({
         next: (response: ReturnPromise) => this._delete_task_success(response),
         error: (err) => this._delete_task_error(),

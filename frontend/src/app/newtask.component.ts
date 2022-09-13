@@ -42,7 +42,7 @@ export class NewtaskComponent implements OnInit {
   subs: any;
   isChecked: boolean = false;
   save_button="Save Task";
-  save_file_name:string="";
+  task_id:string="";
 
   error_count = 0;
   task_name_error=false;
@@ -76,7 +76,7 @@ export class NewtaskComponent implements OnInit {
     ["14", "last 14 days"],
     ["28", "last 28 days"],
     ["90", "last 3 months"],
-    ["690", "last 690 TESTING"]
+    ["720", "last 720 TESTING"]
   ];
 
   scheduleArray = [
@@ -103,8 +103,8 @@ export class NewtaskComponent implements OnInit {
   gadsOperatorsArray = [
     ["<", "less than"],
     [">", "greater than"],
-    ["<=", "less than or equal to"],
-    [">=", "great than or equal to"],
+    //["<=", "less than or equal to"],
+    //[">=", "great than or equal to"],
     ["=", "equal to"],
     ["!=", "not equal to"]
   ];
@@ -169,24 +169,24 @@ export class NewtaskComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.save_file_name="";
+    this.task_id="";
     this.route.queryParams
     .subscribe(params => {
-      this.save_file_name = params['task'];
+      this.task_id = params['task'];
     }
   );
   }
 
   ngAfterViewInit(): void {
-    if(this.save_file_name!=undefined && this.save_file_name!=""){
-      this._populate_task_load(this.save_file_name);
+    if(this.task_id!=undefined && this.task_id!=""){
+      this._populate_task_load(this.task_id);
     }
   }
 
-  async _populate_task_load(file_name:string) {
+  async _populate_task_load(task_id:string) {
     this.loading=true;
-    let file_name_json = { 'file_name': file_name };
-    (await this.service.get_task(JSON.stringify(file_name_json)))
+    let task_id_json = { 'task_id': task_id };
+    (await this.service.get_task(JSON.stringify(task_id_json)))
       .subscribe({
         next: (response: ReturnPromise) => this._populate_task_fields(response),
         error: (err) => this._call_service_error(),
@@ -198,7 +198,7 @@ export class NewtaskComponent implements OnInit {
 
     let task_exists = (Object.entries(response).find(([k, v]) => {
       if(k=='file_name') {
-        this.save_file_name=v;
+        this.task_id=v;
       }
       if(k=='task_name') {
         this.gadsForm.controls['taskName'].setValue(v);
@@ -350,17 +350,17 @@ export class NewtaskComponent implements OnInit {
 
   _call_service_error() {
     this.loading = false;
-    this.openSnackBar("Error retreiving data. Check Customer ID and credentials and try again", "Dismiss", "error-snackbar");
+    this.openSnackBar("Error retreiving data. Check Customer ID, credentials, and you have saved your config then try again", "Dismiss", "error-snackbar");
   }
 
 
   async save_task() {
     if (this.validate_fields(true)) {
-      if (this.save_file_name!=undefined && this.save_file_name!="") {
+      if (this.task_id!=undefined && this.task_id!="") {
         this.dialogService.openConfirmDialog("Are you sure you want to update the current task with the new settings?\n\nThis will also update your schedule settings")
           .afterClosed().subscribe(res => {
             if(res) {
-              this._finalise_save_task(this.save_file_name);
+              this._finalise_save_task(this.task_id);
             }
           });
       }
@@ -375,9 +375,9 @@ export class NewtaskComponent implements OnInit {
     }
   }
 
-  async _finalise_save_task(file_name:string) {
+  async _finalise_save_task(task_id:string) {
     let formRawValue = {
-      'file_name': file_name,
+      'task_id': task_id,
       'task_name': this.gadsForm.controls['taskName'].value,
       'customer_id': this.gadsForm.controls['gadsCustomerId'].value,
       'days_ago': this.gadsForm.controls['daysAgo'].value,
@@ -418,7 +418,7 @@ export class NewtaskComponent implements OnInit {
     }
     this.openSnackBar("Successfully saved task '" + this.gadsForm.controls['taskName'].value + "' ("
     +response+")"+schedule_text, "Dismiss", "success-snackbar");
-    this.save_file_name=""+response;
+    this.task_id=""+response;
     this.loading = false;
   }
 
@@ -588,7 +588,7 @@ export class NewtaskComponent implements OnInit {
 
   duplicateTask()
   {
-    this.save_file_name="";
+    this.task_id="";
     this.gadsForm.controls['taskName'].setValue("");
   }
 }

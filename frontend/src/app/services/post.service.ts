@@ -48,8 +48,10 @@ export class PostService {
     return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/runManualExcluder?cb=" + cacheBuster, form_data_json, {headers: headers});
   }
 
-  async file_upload(form_data: FormData) {
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/fileUpload", form_data);
+  async file_upload(file_data: string) {
+    const headers = new HttpHeaders();
+    headers.set('Content-Type', 'application/json; charset=utf-8');
+    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/fileUpload", file_data, {headers: headers});
   }
 
   async get_config() {
@@ -78,27 +80,30 @@ export class PostService {
     return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getTasksList");
   }
 
-  async delete_task(file_name: string) {
+  async delete_task(task_id: string) {
     const headers = new HttpHeaders();
     headers.set('Content-Type', 'application/json; charset=utf-8');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/deleteTask", file_name, {headers: headers});
+    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/deleteTask", task_id, {headers: headers});
   }
 
-  async run_task_from_file(file_name: string) {
+  async run_task_from_task_id(task_id: string) {
     const headers = new HttpHeaders();
     headers.set('Content-Type', 'application/json; charset=utf-8');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/runTaskFromFile", file_name, {headers: headers});
+    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/runTaskFromTaskId", task_id, {headers: headers});
   }
 
-  async get_task(file_name: string) {
+  async get_task(task_id: string) {
     const headers = new HttpHeaders();
     headers.set('Content-Type', 'application/json; charset=utf-8');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/getTask", file_name, {headers: headers});
+    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/getTask", task_id, {headers: headers});
   }
 
   async get_schedule_list() {
     return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getScheduleList");
   }
 
+  async refresh_credentials() {
+    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/refreshCredentials");
+  }
 
 }

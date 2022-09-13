@@ -33,7 +33,7 @@
         <thead>
             <tr>
                 <th>Date Created</th>
-                <th>Taks ID</th>
+                <th>Task ID</th>
                 <th>Task Name</th>
                 <th>Customer ID</th>
                 <th>Schedule</th>
@@ -46,7 +46,7 @@
         <tbody>
             <tr *ngFor="let data of task_table_data | slice:pagination_start:pagination_start+pagination_rpp">
                 <td>{{data.date_created}}</td>
-                <td>{{data.file_name}}</td>
+                <td>{{data.task_id}}</td>
                 <td>{{data.task_name}}</td>
                 <td>{{data.customer_id}}</td>
                 <td>{{getScheduleValue(data.schedule)}}</td>
@@ -55,13 +55,13 @@
                     <span *ngIf="data.error_code=='0'" class="valid_text"><mat-icon matTooltip="Schedule is up and running">check_circle</mat-icon></span>
                     {{data.next_run}}</td>
                 <td class="align-centre">
-                    <a href="/newtask?task={{data.file_name}}" target="_self" matTooltip="Edit current task"><mat-icon>edit</mat-icon></a>
+                    <a href="/newtask?task={{data.task_id}}" target="_self" matTooltip="Edit current task"><mat-icon>edit</mat-icon></a>
                 </td>
                 <td class="align-centre">
-                    <a (click)="runNow(data.file_name, data.task_name)" target="_self" matTooltip="Run task and exclude now"><mat-icon>play_arrow</mat-icon></a>
+                    <a (click)="runNow(data.task_id, data.task_name)" target="_self" matTooltip="Run task and exclude now"><mat-icon>play_arrow</mat-icon></a>
                 </td>
                 <td class="align-centre">
-                    <a (click)="deleteNow(data.file_name, data.task_name)" target="_self" matTooltip="Permanently delete this task"><mat-icon>delete_forever</mat-icon></a>
+                    <a (click)="deleteNow(data.task_id, data.task_name)" target="_self" matTooltip="Permanently delete this task"><mat-icon>delete_forever</mat-icon></a>
                 </td>
             </tr>
         </tbody>
