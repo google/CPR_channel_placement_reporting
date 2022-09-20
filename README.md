@@ -66,18 +66,15 @@ Once you have a project, enable the OAuth consent screen:
 
 
 Enable Google Ads API:
-
-<img src="src/2022-05-16_23-54.png" width="128"/>
-
+![Enable Google Ads API]("src/2022-05-16_23-54.png")
 
 Associate the Cloud Project with the Google Apps Script Project
 Open the Apps Script editor:
+![Associate the Cloud Project]("src/2022-05-16_23-54_1.png")
 
-<img src="src/2022-05-16_23-54_1.png" width="128"/>
 
-Scroll down to Script Properties and set dev token by entering “dev_token” for Property and then pasting the value and click Save script properties: 
-
-<img src="src/2022-05-16_23-55.png" width="128"/>
+Scroll down to Script Properties and set a dev token by entering “dev_token” for Property and then pasting the value and click Save script properties: 
+![set a dev token]("src/2022-05-16_23-55.png")
 
 
 
@@ -88,8 +85,7 @@ In the spreadsheet:
 Duplicate the template tab and rename it to your 10 digit child account ID (no dashes). 
 
 In the menu bar, click Activate script -> Activate script:
-
-<img src="src/2022-05-16_23-57.png" width="128"/>
+![menu bar]("src/2022-05-16_23-57.png")
 
 
 The spreadsheet-code is responsible for adding metadata to channels and automatically excluding them.
@@ -97,9 +93,9 @@ The spreadsheet-code is responsible for adding metadata to channels and automati
 Note: Do not make changes (adding/deleting rows) to the output table when the script is running, as this may cause data output into the incorrect rows.
 Fill it with a placement-id list in the dedicated column (by running the GAds script above). 
 
-<img src="src/2022-05-16_23-56_2.png" width="128"/>
+![]("src/2022-05-16_23-56_2.png")
 
-<img src="src/2022-05-16_23-56_1.png" width="128"/>
+![]("2022-05-16_23-56_1.png")
 
 
 ## Disclaimer
