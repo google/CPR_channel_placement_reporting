@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <style>
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+                text-align: center;
+            }
+            h1 {
+                color: #009879;
+            }
+
+            .authentication {
+                font-size: 25px;
+                border-width: 1px;
+                border-color: black;
+                border-style: solid;
+            }
+        </style>
+        <title>Auth completed</title>
+    </head>
+    <body>
+        <h1>Google API Authorisation completed</h1>
+        <p>Please following these next steps:
+            <li>The code has already been copied to your clipboard or you can copy the code below manually (Ctrl+C)</li>
+            <li>Go back to the main app (you can just close this tab)</li>
+            <li>Click the orange "Finish Authentication" button and paste the copied code in to the popup box<br><br>
+                <div class="authentication">
+        <script>
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const code = urlParams.get('code');
+            document.write(code);
+            navigator.clipboard.writeText(code);
+            if(navigator.clipboard.read() == code) 
+            {
+                window.close(); 
+            }
+        </script>
+    </div>
+    </body>
+</html>

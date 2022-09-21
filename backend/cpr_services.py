@@ -13,27 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from inspect import _void
-import logging
-import os
 import json
-import pickle
 from typing import List
-from smart_open import open
 
 from gads_make_client import make_client
 from gads_api import get_placement_data, get_youtube_data, append_youtube_data, get_youtube_channel_id_list, exclude_youtube_channels
 
-def run_auto_excluder(credentials, project_url, config_file, exclude_from_youtube: str, customer_id: str, 
+def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, customer_id: str, 
     date_from: str, date_to: str, gads_filters: str,
     view_count: str, sub_count: str, video_count: str, 
     country: str, language: str, isEnglish: str):
     try:
-        with open(f"{project_url}/{config_file}", 'rb') as token:
-            config = pickle.load(token)
-
-        mcc_id = config.get('mcc_id')
-        developer_token = config.get('dev_token')
+        mcc_id = config_file.get('mcc_id')
+        developer_token = config_file.get('dev_token')
         
         creds = json.loads(credentials.to_json())
         client = make_client(mcc_id, developer_token, creds)
@@ -55,14 +47,11 @@ def run_auto_excluder(credentials, project_url, config_file, exclude_from_youtub
     except ValueError:
         print("Error on running Excluder!")
 
-def run_manual_excluder(credentials, project_url, config_file, customer_id: str, yt_channel_ids: list):
+def run_manual_excluder(credentials, config_file, customer_id: str, yt_channel_ids: list):
     try:
         if(yt_channel_ids):
-            with open(f"{project_url}/{config_file}", 'rb') as token:
-                config = pickle.load(token)
-
-            mcc_id = config.get('mcc_id')
-            developer_token = config.get('dev_token')
+            mcc_id = config_file.get('mcc_id')
+            developer_token = config_file.get('dev_token')
             
             creds = json.loads(credentials.to_json())
             client = make_client(mcc_id, developer_token, creds)

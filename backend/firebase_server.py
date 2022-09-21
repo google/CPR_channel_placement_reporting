@@ -28,7 +28,40 @@ cred = credentials.ApplicationDefault()
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-COLLECTION_ID='tasks'
+COLLECTION_TASKS='tasks'
+COLLECTION_CONFIG='config'
+
+
+def fb_save_token(data) -> str:
+    doc_ref = db.collection(COLLECTION_CONFIG).document('token')
+    doc_ref.set({"token": data})
+
+def fb_read_token():
+    cs_ref = db.collection(COLLECTION_CONFIG).document('token')
+    return (cs_ref.get().to_dict())['token']
+
+def fb_save_client_secret(data) -> str:
+    doc_ref = db.collection(COLLECTION_CONFIG).document('client_secret')
+    doc_ref.set(data)
+    return "Success"
+
+def fb_read_client_secret():
+    cs_ref = db.collection(COLLECTION_CONFIG).document('client_secret')
+    return cs_ref.get().to_dict()
+
+
+def fb_save_settings(data) -> str:
+    doc_ref = db.collection(COLLECTION_CONFIG).document('settings')
+    doc_ref.set({
+        'dev_token': data['dev_token'],
+        'mcc_id': data['mcc_id'],
+        'email_address': data['email_address']
+        })
+    return "Success"
+
+def fb_read_settings():
+    config_ref = db.collection(COLLECTION_CONFIG).document('settings')
+    return config_ref.get().to_dict()
 
 def fb_save_task(data) -> str:
     date_created = date.today().strftime(date_format)
@@ -39,7 +72,7 @@ def fb_save_task(data) -> str:
     else:
         task_id=data['task_id']
 
-    doc_ref = db.collection(COLLECTION_ID).document(task_id)
+    doc_ref = db.collection(COLLECTION_TASKS).document(task_id)
     doc_ref.set({
         'task_id': task_id,
         'task_name': data['task_name'],
@@ -63,7 +96,7 @@ def fb_save_task(data) -> str:
     return task_id
 
 def fb_get_tasks_list() -> dict:
-    tasks_ref = db.collection(COLLECTION_ID)
+    tasks_ref = db.collection(COLLECTION_TASKS)
     tasks = tasks_ref.stream()
     task_list = {}
     for task in tasks:
@@ -79,11 +112,11 @@ def fb_get_tasks_list() -> dict:
     return task_list
 
 def fb_get_task(task_id) -> dict:
-    task_ref = db.collection(COLLECTION_ID).document(task_id)
+    task_ref = db.collection(COLLECTION_TASKS).document(task_id)
     return task_ref.get().to_dict()
 
 def fb_delete_task(task_id):
-    db.collection(COLLECTION_ID).document(task_id).delete()
+    db.collection(COLLECTION_TASKS).document(task_id).delete()
 
 
   

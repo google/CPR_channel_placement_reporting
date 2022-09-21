@@ -14,23 +14,23 @@
 # limitations under the License.
 
 from datetime import date, datetime, timedelta
+import logging
 import math
-from os import path, listdir, remove
-from os.path import isfile, join
+from os import environ, path, listdir, remove, getenv
+import os
 import pickle
-import time
-from urllib import response
-from flask import Flask, request, url_for, render_template
+
+from flask import Flask, request, render_template
 from flask_cors import CORS
 import json
-from werkzeug.utils import secure_filename
-from smart_open import open
+
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import Flow
 
 from cpr_services import run_auto_excluder, run_manual_excluder
 from gads_api import get_youtube_channel_id_list
 from cloud_api import get_schedule_list, update_cloud_schedule
-from credentials import get_oauth
-from firebase_server import fb_get_task, fb_save_task, fb_get_tasks_list, fb_delete_task
+from firebase_server import fb_get_task, fb_save_client_secret, fb_save_task, fb_get_tasks_list, fb_delete_task, fb_save_settings, fb_read_settings, fb_read_client_secret, fb_save_token, fb_read_token
 
 
 app = Flask(__name__, static_url_path='', 
@@ -38,25 +38,28 @@ app = Flask(__name__, static_url_path='',
       template_folder='static')
 CORS(app)
 
-TASKS_FOLDER="tasks"
-CONFIG_FILE="config.pickle"
-date_format='%Y-%m-%d'
+DATE_FORMAT='%Y-%m-%d'
+PROJECT_ID = getenv('GOOGLE_CLOUD_PROJECT')
+LOCATION="europe-west1"
+_REDIRECT_URI = f"https://{PROJECT_ID}.ew.r.appspot.com/authdone"
 
-project_id=""
-project_url=f"gs://{project_id}-cpr"
-location="europe-west1"
-server=f"https://{project_id}.appspot.com"
 credentials=None
 
+scopes_array = [
+                    'https://www.googleapis.com/auth/cloud-platform',
+                    'https://www.googleapis.com/auth/youtube.readonly',
+                    'https://www.googleapis.com/auth/adwords'
+                ]
+
+flow: Flow
 
 def refresh_credentials():
-  global credentials
-  if credentials==None:
-    credentials = get_oauth(project_url)
+  credentials = get_oauth()
+  return credentials
     
 
 def run_automatic_excluder_from_task_id(task_id:str):
-  refresh_credentials()
+  credentials = refresh_credentials()
   file_contents = fb_get_task(task_id)
 
   if(file_contents):
@@ -64,8 +67,8 @@ def run_automatic_excluder_from_task_id(task_id:str):
     customer_id = file_contents['customer_id']
     minus_days: int = int(file_contents['days_ago'])
     d = date.today() - timedelta(days=minus_days)
-    date_from = d.strftime(date_format)
-    yt_date_to = date.today().strftime(date_format)
+    date_from = d.strftime(DATE_FORMAT)
+    yt_date_to = date.today().strftime(DATE_FORMAT)
     gads_filters = file_contents['gads_filter']
     yt_view_count_filter = file_contents['yt_view_operator']+file_contents['yt_view_value']
     yt_sub_count_filter = file_contents['yt_subscriber_operator']+file_contents['yt_subscriber_value']
@@ -86,8 +89,7 @@ def run_automatic_excluder_from_task_id(task_id:str):
     
     response_data = run_auto_excluder(
       credentials,
-      project_url,
-      CONFIG_FILE,
+      fb_read_settings(),
       exclude_yt,
       customer_id,
       date_from,
@@ -111,10 +113,29 @@ def run_automatic_excluder_from_task_id(task_id:str):
 def run_static():
   return render_template('index.html')
 
+@app.route("/api/finishAuth", methods=['POST'])
+def finalise_auth():
+  data = request.get_json(force = True)
+  code=data['code']
+  finish_auth(code)
+  return _build_response(json.dumps("success"))
+
+@app.route("/authdone", methods=['GET'])
+def run_static_authdone():
+  return render_template('/template/authdone.html')
+
 
 @app.route("/newtask", methods=['GET'])
 def run_static_nt():
   return render_template('index.html')
+
+@app.route("/settings", methods=['GET'])
+def run_static_st():
+  return render_template('index.html')
+
+@app.route("/api/runTaskFromScheduler/<task_id>", methods=['GET'])
+def run_task_from_task_scheduler(task_id):
+  return run_automatic_excluder_from_task_id(task_id)
 
 
 @app.route("/api/runTaskFromTaskId", methods=['POST'])
@@ -127,14 +148,14 @@ def run_task_from_task_id():
 
 @app.route("/api/runAutoExcluder", methods=['POST'])
 def server_run_excluder():
-  refresh_credentials()
+  credentials = refresh_credentials()
   data = request.get_json(force = True)
   exclude_yt = data['excludeYt']
   customer_id = data['gadsCustomerId']
   minus_days: int = int(data['daysAgo'])
   d = date.today() - timedelta(days=minus_days)
-  date_from = d.strftime(date_format)
-  yt_date_to = date.today().strftime(date_format)
+  date_from = d.strftime(DATE_FORMAT)
+  yt_date_to = date.today().strftime(DATE_FORMAT)
   gads_filters = data['gadsFinalFilters']
   yt_view_count_filter = data['ytViewOperator']+data['ytViewValue']
   yt_sub_count_filter = data['ytSubscriberOperator']+data['ytSubscriberValue']
@@ -151,11 +172,10 @@ def server_run_excluder():
     yt_language_filter = f"{data['ytLanguageOperator']}'{data['ytLanguageValue'].lower()}'"
   
   yt_standard_characters_filter = data['ytStandardCharValue']
-  
+
   response_data = run_auto_excluder(
     credentials,
-    project_url,
-    CONFIG_FILE,
+    fb_read_settings(),
     exclude_yt,
     customer_id,
     date_from,
@@ -175,12 +195,12 @@ def server_run_excluder():
 
 @app.route("/api/runManualExcluder", methods=['POST', 'GET'])
 def server_run_manual_excluder():
-  refresh_credentials()
+  credentials = refresh_credentials()
   data = request.get_json(force = True)
   customer_id = data['gadsCustomerId']
   exclude_yt = data['ytExclusionList']
 
-  response_data = run_manual_excluder(credentials, project_url, CONFIG_FILE, customer_id, exclude_yt)
+  response_data = run_manual_excluder(credentials, fb_read_settings(), customer_id, exclude_yt)
 
   return _build_response(json.dumps(response_data))
 
@@ -190,8 +210,7 @@ def server_run_manual_excluder():
 def client_secret_upload():
   data = request.get_json(force = True)
 
-  with open(f"{project_url}/client_secret.json", 'wb') as cs:
-    cs.write((json.dumps(data)).encode("utf8"))
+  fb_save_client_secret(data)
   
   return _build_response(json.dumps("success"))
 
@@ -200,9 +219,8 @@ def client_secret_upload():
 @app.route("/api/getConfig", methods=['GET'])
 def get_config():
   try:
-    with open(f"{project_url}/{CONFIG_FILE}", 'rb') as token:
-        config = pickle.load(token)
-        return _build_response(json.dumps(config))
+    config = fb_read_settings()
+    return _build_response(json.dumps(config))
   except:
     return _build_response(json.dumps("x"))
   
@@ -213,23 +231,26 @@ def set_config():
   global credentials
   credentials=None
   data = request.get_json(force = True)
-  config = {'dev_token': data['dev_token'], 'mcc_id': data['mcc_id'], 'email_address': data['email_address']}
-  with open(f"{project_url}/{CONFIG_FILE}", 'wb') as f:
-    pickle.dump(config, f)
   
-  refresh_credentials()
-  return _build_response(json.dumps("success"))
+  fb_save_settings(data)
+  
+  creds: str = refresh_credentials()
+  try:
+    if creds.startswith("http"):
+      return _build_response(json.dumps(creds))
+  except:
+    return _build_response(json.dumps("success"))
 
 
 
 @app.route("/api/saveTask", methods=['POST'])
 def save_task():
-  refresh_credentials()
+  credentials = refresh_credentials()
   data = request.get_json(force = True)
   
   task_id=fb_save_task(data)
 
-  update_cloud_schedule(credentials, project_id, location, server, str(data['task_id']), int(data['schedule']))
+  update_cloud_schedule(credentials, PROJECT_ID, LOCATION, str(data['task_id']), int(data['schedule']))
   
   return _build_response(json.dumps(task_id))
 
@@ -237,11 +258,11 @@ def save_task():
 
 @app.route("/api/getTasksList", methods=['GET'])
 def get_tasks_list():
-  refresh_credentials()
+  credentials = refresh_credentials()
   files_data = fb_get_tasks_list()
 
   if files_data:
-    schedule_list = get_schedule_list(credentials, project_id, location, server)
+    schedule_list = get_schedule_list(credentials, PROJECT_ID, LOCATION)
     for schedule in schedule_list.values():
       sch_date = datetime.fromisoformat(schedule['scheduleTime'][:-1] + '+00:00').replace(tzinfo=None)
       now_date = datetime.today()
@@ -251,14 +272,14 @@ def get_tasks_list():
       {(math.floor(time_difference.total_seconds() / 60)-(60*math.floor(time_difference.total_seconds() / 3600)))}m
       """
 
-      if 'status' in schedule:
-        files_data[schedule['httpTarget']['headers']['task_id']].update({'error_code': schedule['status']['code']})
+      if 'status' in schedule and 'code' in schedule['status']:
+        files_data[(schedule['name'].split("/"))[5]].update({'error_code': schedule['status']['code']})
       else:
-        files_data[schedule['httpTarget']['headers']['task_id']].update({'error_code': '0'})
+        files_data[(schedule['name'].split("/"))[5]].update({'error_code': '0'})
       
-      files_data[schedule['httpTarget']['headers']['task_id']].update({'state': schedule['state']})
-      files_data[schedule['httpTarget']['headers']['task_id']].update({'schedule_time': (schedule['scheduleTime'][:-1]).replace("T", " ")})
-      files_data[schedule['httpTarget']['headers']['task_id']].update({'next_run': next_run})
+      files_data[(schedule['name'].split("/"))[5]].update({'state': schedule['state']})
+      files_data[(schedule['name'].split("/"))[5]].update({'schedule_time': (schedule['scheduleTime'][:-1]).replace("T", " ")})
+      files_data[(schedule['name'].split("/"))[5]].update({'next_run': next_run})
 
   return _build_response(json.dumps(files_data))
 
@@ -276,31 +297,64 @@ def get_task():
 
 @app.route("/api/deleteTask", methods=['POST'])
 def delete_task():
-  refresh_credentials()
+  credentials = refresh_credentials()
   data = request.get_json(force = True)
   task_id=data['task_id']
   
   fb_delete_task(task_id)
 
-  update_cloud_schedule(credentials, project_id, location, server, str(task_id), 0)
+  update_cloud_schedule(credentials, PROJECT_ID, LOCATION, str(task_id), 0)
 
   return _build_response(json.dumps(task_id))
   
 
-@app.route("/api/getScheduleList", methods=['GET'])
-def get_schedules():
-  refresh_credentials()
-  schedule_list = get_schedule_list(credentials, project_id, location, server)
-  print(schedule_list)
-
-  return _build_response(json.dumps("-"))
 
 def _build_response(msg='', status=200, mimetype='application/json'):
     """Helper method to build the response."""
     response = app.response_class(msg, status=status, mimetype=mimetype)
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
-    
 
-app.run(debug=True, port=5000)
+
+def get_oauth():
+    credentials = None
+    try:
+        credentials = pickle.loads(fb_read_token())
+    except:
+        logging.info("No token... refreshing") 
+
+    if not credentials or not credentials.valid or credentials==None:
+        if credentials and credentials.expired and credentials.refresh_token:
+            credentials.refresh(Request())
+            fb_save_token(pickle.dumps(credentials))
+            return credentials
+        else:
+            conf = fb_read_client_secret()
+            global flow
+            flow = Flow.from_client_config(conf, scopes=scopes_array)
+            flow.redirect_uri = _REDIRECT_URI
+
+            authorization_url = flow.authorization_url(
+            prompt="consent",
+            )
+            return authorization_url[0]
+            
+
+    else:
+        return credentials
+
+
+def finish_auth(code: str):
+    try:
+        flow.fetch_token(code=code)
+        credentials = flow.credentials
+
+        fb_save_token(pickle.dumps(credentials))
+    except:
+        logging.info("Error on auth code!")
+
+
+    
+if __name__ == '__main__':
+  app.run(debug=True, port=5000)
 

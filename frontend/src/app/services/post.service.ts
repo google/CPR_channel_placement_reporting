@@ -26,12 +26,12 @@ export interface ReturnPromise {
 })
 export class PostService {
 
-  private baseUrl = 'http://127.0.0.1:5000';
+  private baseUrl = '';
 
   constructor(private httpClient: HttpClient) {
-    if(window.location.href.includes(':5000'))
+    if(window.location.href.includes('localhost:4200'))
     {
-      this.baseUrl = '';
+      this.baseUrl = 'http://127.0.0.1:5000';
     }
   }
   async run_auto_excluder(form_data_json: string) {
@@ -96,6 +96,12 @@ export class PostService {
     const headers = new HttpHeaders();
     headers.set('Content-Type', 'application/json; charset=utf-8');
     return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/getTask", task_id, {headers: headers});
+  }
+
+  async finalise_auth(code: string) {
+    const headers = new HttpHeaders();
+    headers.set('Content-Type', 'application/json; charset=utf-8');
+    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/finishAuth", code, {headers: headers});
   }
 
   async get_schedule_list() {
