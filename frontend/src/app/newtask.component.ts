@@ -75,8 +75,8 @@ export class NewtaskComponent implements OnInit {
     ["7", "last 7 days"],
     ["14", "last 14 days"],
     ["28", "last 28 days"],
-    ["90", "last 3 months"],
-    ["720", "last 720 TESTING"]
+    ["90", "last 3 months"]
+    //["720", "last 720 TESTING"]
   ];
 
   scheduleArray = [

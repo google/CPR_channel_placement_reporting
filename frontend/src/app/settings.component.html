@@ -40,11 +40,17 @@
             </div>
             <div class="label-input-block centre-form">
                 <div class="label-input-block">
-                    <button type="button" class="primaryButton" (click)="save_settings()">Save</button>
+                    <button type="button" class="primaryButton" (click)="save_settings()">Save / Reauthenticate</button>
                 </div>
             </div>
         </div>
     </form>
+</div>
+
+<div class="label-input-block centre-form">
+    <div class="label-input-block">
+        <button [hidden]=hideAuth type="button" class="authButton" (click)="finish_auth()">Finish Authentication</button>
+    </div>
 </div>
 
 <app-loading [showSpinner]=loading></app-loading>

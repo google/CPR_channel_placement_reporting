@@ -14,7 +14,6 @@
 # limitations under the License.
 
 from inspect import _void
-import operator
 import string
 from tokenize import String
 from typing import List
@@ -28,12 +27,10 @@ MICRO_CONV = 1000000
 
 def get_placement_data(client, ga_service, customer_id: str, 
 date_from: str, date_to: str, conditions: str) -> dict:
-    print("Getting Gads Data...")
     conditions_split = conditions.split(" OR ")
     if client:
         all_data_set = {}
         for condition in conditions_split:
-            print("Con: "+condition)
             condition = condition.replace("(", "")
             condition = condition.replace(")", "")
             query = f"""
@@ -63,10 +60,8 @@ date_from: str, date_to: str, conditions: str) -> dict:
             search_request.customer_id = customer_id
 
             search_request.query = query
-            print("Getting Gads Stream...")
             stream = ga_service.search_stream(search_request)
             for batch in stream:
-                print("Entered stream...")
                 for row in batch.results:
                     row = row._pb
                     all_data_set[row.group_placement_view.placement] = {
@@ -83,7 +78,6 @@ date_from: str, date_to: str, conditions: str) -> dict:
                         'metrics_average_cpm': row.metrics.average_cpm / MICRO_CONV,
                         'metrics_ctr': row.metrics.ctr
                     }
-                print("Consolidated data...")
         return all_data_set
 
 
@@ -92,7 +86,7 @@ def get_youtube_data(credentials, channel_ids: list) -> list:
     returns a list of YouTube statistics for each channel ID
     '''
     ids_to_pass = ""
-    yt_limit = 40 #can be put up to 50
+    yt_limit = 50 #can be put up to 50
     channel_ids_length = len(channel_ids)
     yt_items = []
     if channel_ids_length > 0:

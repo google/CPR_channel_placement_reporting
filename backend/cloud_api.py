@@ -14,15 +14,12 @@
 # limitations under the License.
 
 import math
-from tokenize import String
-from typing import List
 from datetime import datetime
 import googleapiclient.errors
-from googleapiclient.discovery import build
 
 CLOUD_VERSION='v1beta1'
 
-def update_cloud_schedule(credentials, project_id, location, server, task_id, hours):
+def update_cloud_schedule(credentials, project_id, location, task_id, hours):
     now = datetime.now()
     minute = now.strftime("%M")
     hour = now.strftime("%H")
@@ -45,19 +42,19 @@ def update_cloud_schedule(credentials, project_id, location, server, task_id, ho
 
     if(hours > 0):
         print("Creating new schedule...")
+
         job_body = {
-        "httpTarget": {
-            "uri": f"{server}/api/runTaskFromTaskId",
-            "httpMethod": "POST",
-            "headers": {
-                "task_id": task_id
-            }
+
+        "app_engine_http_target": {
+            "http_method": "GET",
+            "relativeUri": f"/api/runTaskFromScheduler/{task_id}"
         },
         "timeZone": "Etc/UTC",
         "schedule": schedule,
         "name": job_name,
         "description": "CPR"
         }
+        
 
         request = service.projects().locations().jobs().create(parent=parent, body=job_body)
         request.execute()
@@ -65,22 +62,22 @@ def update_cloud_schedule(credentials, project_id, location, server, task_id, ho
     return "Success"
 
 
-def get_schedule_list(credentials, project_id, location, server) -> dict:
+def get_schedule_list(credentials, project_id, location) -> dict:
     job_list = {}
     parent = f"projects/{project_id}/locations/{location}"
     service = googleapiclient.discovery.build('cloudscheduler', CLOUD_VERSION, credentials=credentials)
-    #try:
+
     i=0
     request = service.projects().locations().jobs().list(parent=parent)
     while True:
         response = request.execute()
-
         for job in response.get('jobs', []):
-            job_list[i] = job
-            i=i+1
+            if job.get('description')=="CPR":
+                job_list[i] = job
+                i=i+1
         request = service.projects().locations().jobs().list_next(previous_request=request, previous_response=response)
         if request is None:
             break
-    
+    print(job_list)
     return job_list
 

@@ -51,7 +51,7 @@
                 <td>{{data.customer_id}}</td>
                 <td>{{getScheduleValue(data.schedule)}}</td>
                 <td>
-                    <span *ngIf="data.error_code=='2'" class="error_text"><mat-icon matTooltip="Last run failed due to end point error">error</mat-icon></span>
+                    <span *ngIf="data.error_code>0" class="error_text"><mat-icon matTooltip="Last run failed due to end point error">error</mat-icon></span>
                     <span *ngIf="data.error_code=='0'" class="valid_text"><mat-icon matTooltip="Schedule is up and running">check_circle</mat-icon></span>
                     {{data.next_run}}</td>
                 <td class="align-centre">
