@@ -250,7 +250,7 @@ def save_task():
   
   task_id=fb_save_task(data)
 
-  update_cloud_schedule(credentials, PROJECT_ID, LOCATION, str(data['task_id']), int(data['schedule']))
+  update_cloud_schedule(credentials, PROJECT_ID, LOCATION, task_id, int(data['schedule']))
   
   return _build_response(json.dumps(task_id))
 
