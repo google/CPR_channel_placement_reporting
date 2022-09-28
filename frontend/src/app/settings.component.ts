@@ -100,6 +100,7 @@
 
    async finish_auth() {
      var code=prompt("Please enter your authentication code","Authentication Code");
+     this.loading=true;
      if(code!=null) {
        let codeRawValue = {
          'code': code
