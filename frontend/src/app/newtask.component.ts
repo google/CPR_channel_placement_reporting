@@ -21,6 +21,7 @@ import { ActivatedRoute } from '@angular/router'
 
 import { PostService, ReturnPromise } from './services/post.service';
 import { DialogService } from './services/dialog.service';
+import { ThisReceiver } from '@angular/compiler';
 
 
 @Component({
@@ -47,6 +48,7 @@ export class NewtaskComponent implements OnInit {
   error_count = 0;
   task_name_error=false;
   gads_error = false;
+  gads_error_msg = "";
   customer_id_error = false;
   gads_filter_error = false;
   yt_subscribers_error = false;
@@ -76,7 +78,7 @@ export class NewtaskComponent implements OnInit {
     ["14", "last 14 days"],
     ["28", "last 28 days"],
     ["90", "last 3 months"]
-    //["720", "last 720 TESTING"]
+    //,["720", "last 720 TESTING"]
   ];
 
   scheduleArray = [
@@ -96,6 +98,8 @@ export class NewtaskComponent implements OnInit {
     ["metrics.cost_micros", "Cost"],
     ["metrics.average_cpm", "Avg. CPM"],
     ["metrics.conversions", "Conversions"],
+    ["metrics.cost_per_conversion", "CPA"],
+    ["metrics.view_through_conversions", "View-Through Conversions"],
     ["metrics.video_views", "Video Views"],
     ["metrics.video_view_rate", "Video View Rate"]
   ];
@@ -511,13 +515,25 @@ export class NewtaskComponent implements OnInit {
     this.gads_error = false;
     if (isNaN(Number(this.gadsForm.controls['gadsValue'].value))) {
       this.gads_error = true;
+      this.gads_error_msg="Needs to be a number";
+    }
+    else if (this.gadsForm.controls['gadsField'].value == "metrics.cost_per_conversion" &&
+    (this.gadsForm.controls['gadsOperator'].value == "=" ||
+    this.gadsForm.controls['gadsOperator'].value == "!=" ) &&
+    this.gadsForm.controls['gadsValue'].value ==0)
+    {
+      this.gads_error = true;
+      this.gads_error_msg="Cannot use CPA=/!=0 (use Conversions)";
     }
     else if (this.gadsForm.controls['gadsField'].value != "" &&
       this.gadsForm.controls['gadsOperator'].value != "" &&
       this.gadsForm.controls['gadsValue'].value != "" &&
       this.conditionEnabled) {
       let finalValue = this.gadsForm.controls['gadsValue'].value;
-      if (this.gadsForm.controls['gadsField'].value == "metrics.average_cpm" || this.gadsForm.controls['gadsField'].value == "metrics.cost_micros") {
+      if (this.gadsForm.controls['gadsField'].value == "metrics.average_cpm" ||
+      this.gadsForm.controls['gadsField'].value == "metrics.cost_micros" ||
+      this.gadsForm.controls['gadsField'].value == "metrics.cost_per_conversion")
+      {
         finalValue = finalValue * 1000000;
       }
       if (!this.finalGadsFilter.endsWith("(") && this.finalGadsFilter != "") {
