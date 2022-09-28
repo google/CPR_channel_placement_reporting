@@ -117,8 +117,8 @@ def run_static():
 def finalise_auth():
   data = request.get_json(force = True)
   code=data['code']
-  finish_auth(code)
-  return _build_response(json.dumps("success"))
+  msg = finish_auth(code)
+  return _build_response(json.dumps(msg))
 
 @app.route("/authdone", methods=['GET'])
 def run_static_authdone():
@@ -350,8 +350,9 @@ def finish_auth(code: str):
         credentials = flow.credentials
 
         fb_save_token(pickle.dumps(credentials))
+        return "success"
     except:
-        logging.info("Error on auth code!")
+        return "error"
 
 
     

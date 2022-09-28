@@ -106,12 +106,22 @@
        }
        this.subs = (await ((this.service.finalise_auth(JSON.stringify(codeRawValue)))))
        .subscribe({
-         next: (response: ReturnPromise) => this.openSnackBar("Auth Completed!", "Dismiss", "success-snackbar"),
+         next: (response: ReturnPromise) => this._auth_complete(response),
          error: (err: any) => this.openSnackBar("Error updating settings"+JSON.stringify(err), "Dismiss", "error-snackbar"),
          complete: () => this.loading=false
        });
        this.hideAuth = true;  
      }
+   }
+
+   _auth_complete(response: ReturnPromise) {
+      let resp = response.toString();
+      if(resp=="error") {
+        this.openSnackBar("Error creating credentials. Try running the process again and check you have not copied any additional spaces when pasting the code", "Dismiss", "error-snackbar")
+      }
+      else {
+        this.openSnackBar("Auth Completed!", "Dismiss", "success-snackbar");
+      }
    }
  
    async upload_file(event: any) {
