@@ -40,13 +40,15 @@ date_from: str, date_to: str, conditions: str) -> dict:
                 group_placement_view.placement,
                 group_placement_view.target_url,
                 metrics.impressions,
-                metrics.cost_micros,
-                metrics.conversions,
-                metrics.video_views,
-                metrics.video_view_rate,
                 metrics.clicks,
+                metrics.cost_micros,
                 metrics.average_cpm,
-                metrics.ctr
+                metrics.ctr,
+                metrics.conversions,
+                metrics.cost_per_conversion,
+                metrics.view_through_conversions,
+                metrics.video_views,
+                metrics.video_view_rate
             FROM group_placement_view
             WHERE
                 group_placement_view.placement_type IN ("YOUTUBE_CHANNEL")
@@ -71,7 +73,9 @@ date_from: str, date_to: str, conditions: str) -> dict:
                         'group_placement_view_target_url': row.group_placement_view.target_url,
                         'metrics_impressions': row.metrics.impressions,
                         'metrics_cost': row.metrics.cost_micros / MICRO_CONV,
+                        'metrics_cost_per_conversion': row.metrics.cost_per_conversion / MICRO_CONV,
                         'metrics_conversions': row.metrics.conversions,
+                        'metrics_view_through_conversions': row.metrics.view_through_conversions,
                         'metrics_video_views': row.metrics.video_views,
                         'metrics_video_view_rate': row.metrics.video_view_rate,
                         'metrics_clicks': row.metrics.clicks,
