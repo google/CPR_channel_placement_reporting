@@ -364,6 +364,7 @@ export class NewtaskComponent implements OnInit {
         this.dialogService.openConfirmDialog("Are you sure you want to update the current task with the new settings?\n\nThis will also update your schedule settings")
           .afterClosed().subscribe(res => {
             if(res) {
+              this.loading = true;
               this._finalise_save_task(this.task_id);
             }
           });
@@ -372,6 +373,7 @@ export class NewtaskComponent implements OnInit {
         this.dialogService.openConfirmDialog("Are you sure you want to save this task?\n\nThis will also create a schedule if you have selected a schedule setting")
           .afterClosed().subscribe(res => {
             if(res) {
+              this.loading = true;
               this._finalise_save_task("");
             }
           });
