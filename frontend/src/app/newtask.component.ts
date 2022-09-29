@@ -21,7 +21,6 @@ import { ActivatedRoute } from '@angular/router'
 
 import { PostService, ReturnPromise } from './services/post.service';
 import { DialogService } from './services/dialog.service';
-import { ThisReceiver } from '@angular/compiler';
 
 
 @Component({
@@ -78,7 +77,7 @@ export class NewtaskComponent implements OnInit {
     ["14", "last 14 days"],
     ["28", "last 28 days"],
     ["90", "last 3 months"]
-    //,["720", "last 720 TESTING"]
+    ,["720", "last 720 TESTING"]
   ];
 
   scheduleArray = [
