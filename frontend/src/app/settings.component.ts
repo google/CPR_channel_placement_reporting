@@ -72,9 +72,17 @@
  
    async save_settings() {
      this.loading=true
+     let mcc_id = this.settingsForm.controls['gadsMccId'].value;
+     mcc_id = (mcc_id.replace(new RegExp('-', 'g'), '')).trim();
+     this.settingsForm.controls['gadsMccId'].setValue(mcc_id);
+
+     let dev_tok = this.settingsForm.controls['gadsDevToken'].value;
+     dev_tok = dev_tok.trim();
+     this.settingsForm.controls['gadsDevToken'].setValue(dev_tok);
+
      let formRawValue = {
-       'dev_token': this.settingsForm.controls['gadsDevToken'].value,
-       'mcc_id': this.settingsForm.controls['gadsMccId'].value,
+       'dev_token': dev_tok,
+       'mcc_id': mcc_id,
        'email_address': this.settingsForm.controls['emailAddress'].value
      };
  

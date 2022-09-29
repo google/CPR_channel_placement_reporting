@@ -60,6 +60,7 @@ if [[ "$CLOUD_SHELL" == "true" ]]; then
   sudo su -c '. /usr/local/nvm/nvm.sh && nvm install $NODE_VER --lts'
   . /usr/local/nvm/nvm.sh && nvm use $NODE_VER
 fi
+export NG_CLI_ANALYTICS=ci
 npm install --no-audit
 npm run build
 cd ..
@@ -130,4 +131,4 @@ fi
 
 
 
-echo -e "\n${COLOR}Done!${NC}"
+echo -e "\n${COLOR}Done! Please verify the install at https://$PROJECT_ID.ew.r.appspot.com${NC}"
