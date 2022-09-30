@@ -25,7 +25,7 @@ def make_client(mcc_id, developer_token, credentials: json) -> GoogleAdsClient:
         "use_proto_plus": True
     }
     google_ads_client = GoogleAdsClient.load_from_dict(creds)
-    if mcc_id != "":
+    if mcc_id:
         google_ads_client.login_customer_id = mcc_id
     return google_ads_client
 

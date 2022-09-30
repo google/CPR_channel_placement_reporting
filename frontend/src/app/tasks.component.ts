@@ -95,14 +95,14 @@ export class TasksComponent implements OnInit {
 
   async _fill_table_error() {
     this.loading = false;
-    this.openSnackBar("Unknown error retrieving task list", "Dismiss", "error-snackbar");
+    this.openSnackBar("Not able to retrieve list of tasks. Make sure you have provieded the details in Settings and Authenticated with Google Ads", "Dismiss", "error-snackbar");
   }
 
   
   async runNow(file_name:string, task_name:string){
     this.dialogService.openConfirmDialog(`Are you sure you want to run the task '`+task_name+`' (`+file_name+`) now?
     
-    This will be in addition to any upcoming schedules`)
+    This will add any exclusions to your account and be an addition run to any upcoming schedules`)
         .afterClosed().subscribe(res => {
           if(res) {
             this._continue_run_task(file_name);
@@ -128,7 +128,7 @@ export class TasksComponent implements OnInit {
 
   async _run_task_from_file_error() {
     this.loading = false;
-    this.openSnackBar("Unknown error running task. Check your settings and ensure you have a valud Customer ID", "Dismiss", "error-snackbar");
+    this.openSnackBar("Permission error: Check you have Authenticated in settings and that you have the correct permissions to the account and your Customer ID/MCC IDs are correct. If you have just changed your permissions in Google Ads, go back to Settings and click 'Save / Reauthenticate' to update permissions and try again", "Dismiss", "error-snackbar");
   }
 
 

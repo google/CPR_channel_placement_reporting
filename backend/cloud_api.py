@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import math
 from datetime import datetime
 import googleapiclient.errors
@@ -38,11 +39,9 @@ def update_cloud_schedule(credentials, project_id, location, task_id, hours):
         request = service.projects().locations().jobs().delete(name=job_name)
         request.execute()
     except:
-        print("Schedule does not exist")
+        logging.info("Schedule does not exist")
 
     if(hours > 0):
-        print("Creating new schedule...")
-
         job_body = {
 
         "app_engine_http_target": {
@@ -78,6 +77,5 @@ def get_schedule_list(credentials, project_id, location) -> dict:
         request = service.projects().locations().jobs().list_next(previous_request=request, previous_response=response)
         if request is None:
             break
-    print(job_list)
     return job_list
 

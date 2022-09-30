@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import json
+import logging
 from typing import List
 
 from gads_make_client import make_client
@@ -22,7 +23,7 @@ from gads_api import get_placement_data, get_youtube_data, append_youtube_data, 
 def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, customer_id: str, 
     date_from: str, date_to: str, gads_filters: str,
     view_count: str, sub_count: str, video_count: str, 
-    country: str, language: str, isEnglish: str):
+    country: str, language: str, isEnglish: str) -> dict:
     try:
         mcc_id = config_file.get('mcc_id')
         developer_token = config_file.get('dev_token')
@@ -30,26 +31,20 @@ def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, custo
         creds = json.loads(credentials.to_json())
         client = make_client(mcc_id, developer_token, creds)
         ga_service = client.get_service("GoogleAdsService")
-        print("Getting GAds data...")
         full_data_set = get_placement_data(client, ga_service, customer_id, date_from, date_to, gads_filters)
-        print("Getting YouTube data...")
         yt_data = get_youtube_data(credentials, [d.get('group_placement_view_placement') for d in full_data_set.values()])
-        print("Blending data...")
         full_data_set = append_youtube_data(full_data_set, yt_data, view_count, sub_count, video_count, country, language, isEnglish)
         
-        if exclude_from_youtube=="true":
-            print("Excluding channels...")
+        if exclude_from_youtube:
             exclude_youtube_channels(client, customer_id, get_youtube_channel_id_list(full_data_set))
-
-        print("Data successfully combined!")
         return full_data_set
             
     except ValueError:
-        print("Error on running Excluder!")
+        logging.info("Error on running Excluder!")
 
-def run_manual_excluder(credentials, config_file, customer_id: str, yt_channel_ids: list):
+def run_manual_excluder(credentials, config_file, customer_id: str, yt_channel_ids: list) -> str:
     try:
-        if(yt_channel_ids):
+        if yt_channel_ids:
             mcc_id = config_file.get('mcc_id')
             developer_token = config_file.get('dev_token')
             
@@ -58,11 +53,10 @@ def run_manual_excluder(credentials, config_file, customer_id: str, yt_channel_i
 
             exclude_youtube_channels(client, customer_id, yt_channel_ids)
 
-            print("Data successfully excluded!")
             return f"{len(yt_channel_ids)}"
             
     except ValueError:
-        print("Error on running Excluder!")
+        logging.info("Error on running Excluder!")
 
 
 
