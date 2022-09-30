@@ -125,12 +125,10 @@ def exclude_youtube_channels(client, customer_id: str, channelsToRemove: list) -
 
         customer_negative_criterion_service = client.get_service("CustomerNegativeCriterionService")
 
-        response = (
-            customer_negative_criterion_service.mutate_customer_negative_criteria(
+        customer_negative_criterion_service.mutate_customer_negative_criteria(
                 customer_id=customer_id,
                 operations=exclude_operations
             )
-        )
 
 
 def get_youtube_channel_id_list(full_data_set: dict) -> dict:

@@ -77,7 +77,6 @@ export class NewtaskComponent implements OnInit {
     ["14", "last 14 days"],
     ["28", "last 28 days"],
     ["90", "last 3 months"]
-    ,["720", "last 720 TESTING"]
   ];
 
   scheduleArray = [
@@ -106,8 +105,6 @@ export class NewtaskComponent implements OnInit {
   gadsOperatorsArray = [
     ["<", "less than"],
     [">", "greater than"],
-    //["<=", "less than or equal to"],
-    //[">=", "great than or equal to"],
     ["=", "equal to"],
     ["!=", "not equal to"]
   ];
@@ -353,7 +350,7 @@ export class NewtaskComponent implements OnInit {
 
   _call_service_error() {
     this.loading = false;
-    this.openSnackBar("Error retreiving data. Check Customer ID, credentials, and you have saved your config then try again", "Dismiss", "error-snackbar");
+    this.openSnackBar("Permission error: Check you have Authenticated in settings and that you have the correct permissions to the account and your Customer ID/MCC IDs are correct. If you have just changed your permissions in Google Ads, go back to Settings and click 'Save / Reauthenticate' to update permissions and try again", "Dismiss", "error-snackbar");
   }
 
 
@@ -442,7 +439,6 @@ export class NewtaskComponent implements OnInit {
   }
 
   excludeCheckChange(ytChannelId: string) {
-    //this.table_result[ytChannelId].excludeFromYt = 'False';
     for (let i in this.table_result) {
       if (this.table_result[i]['group_placement_view_placement'] == ytChannelId) {
         this.table_result[i]['excludeFromYt'] = String(!(this.table_result[i]['excludeFromYt'] == 'true'));
@@ -462,13 +458,6 @@ export class NewtaskComponent implements OnInit {
     this.yt_language_error = false;
     this.yt_country_error = false;
     if (full) {
-      /*
-      let format = /^[a-zA-Z0-9_-\s]+$/;
-      if (!format.test(this.gadsForm.controls['taskName'].value)) {
-        this.task_name_error=true;
-        error_count++;
-      }
-      */
       if ((this.gadsForm.controls['taskName'].value).length ==0) {
         this.task_name_error=true;
         error_count++;

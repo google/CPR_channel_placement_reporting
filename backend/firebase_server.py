@@ -32,41 +32,39 @@ COLLECTION_TASKS='tasks'
 COLLECTION_CONFIG='config'
 
 
-def fb_save_token(data) -> str:
+def fb_save_token(data):
     doc_ref = db.collection(COLLECTION_CONFIG).document('token')
     doc_ref.set({"token": data})
 
-def fb_read_token():
+def fb_read_token() -> dict:
     cs_ref = db.collection(COLLECTION_CONFIG).document('token')
     return (cs_ref.get().to_dict())['token']
 
-def fb_save_client_secret(data) -> str:
+def fb_save_client_secret(data):
     doc_ref = db.collection(COLLECTION_CONFIG).document('client_secret')
     doc_ref.set(data)
-    return "Success"
 
-def fb_read_client_secret():
+def fb_read_client_secret() -> dict:
     cs_ref = db.collection(COLLECTION_CONFIG).document('client_secret')
     return cs_ref.get().to_dict()
 
 
-def fb_save_settings(data) -> str:
+def fb_save_settings(data):
     doc_ref = db.collection(COLLECTION_CONFIG).document('settings')
     doc_ref.set({
         'dev_token': data['dev_token'],
         'mcc_id': data['mcc_id'],
         'email_address': data['email_address']
         })
-    return "Success"
 
-def fb_read_settings():
+def fb_read_settings() -> dict:
     config_ref = db.collection(COLLECTION_CONFIG).document('settings')
     return config_ref.get().to_dict()
 
 def fb_save_task(data) -> str:
     date_created = date.today().strftime(date_format)
     task_id=""
-    if data['task_id'] == "":
+    if not data['task_id']:
         task_id=int(round(time.time() * 1000))
         task_id=str(task_id)
     else:

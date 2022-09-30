@@ -29,6 +29,7 @@ export class PostService {
   private baseUrl = '';
 
   constructor(private httpClient: HttpClient) {
+    //Used for local testing only
     if(window.location.href.includes('localhost:4200'))
     {
       this.baseUrl = 'http://127.0.0.1:5000';

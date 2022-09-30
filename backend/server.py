@@ -338,24 +338,21 @@ def get_oauth():
             prompt="consent",
             )
             return authorization_url[0]
-            
-
     else:
         return credentials
 
 
 def finish_auth(code: str):
-    try:
+    #try:
         flow.fetch_token(code=code)
         credentials = flow.credentials
 
         fb_save_token(pickle.dumps(credentials))
         return "success"
-    except:
-        return "error"
+    #except:
+    #    return "error"
 
-
-    
+   
 if __name__ == '__main__':
   app.run(debug=True, port=5000)
 
