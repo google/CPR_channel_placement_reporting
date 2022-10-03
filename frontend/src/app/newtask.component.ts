@@ -41,11 +41,11 @@ export class NewtaskComponent implements OnInit {
   exclude_count = 0;
   subs: any;
   isChecked: boolean = false;
-  save_button="Save Task";
-  task_id:string="";
+  save_button = "Save Task";
+  task_id: string = "";
 
   error_count = 0;
-  task_name_error=false;
+  task_name_error = false;
   gads_error = false;
   gads_error_msg = "";
   customer_id_error = false;
@@ -133,8 +133,8 @@ export class NewtaskComponent implements OnInit {
   task_exists: any;
   file_exists: any;
 
-  constructor(private snackbar: MatSnackBar, private service: PostService, private fb: FormBuilder, 
-    private dialogService: DialogService, private route:ActivatedRoute) {
+  constructor(private snackbar: MatSnackBar, private service: PostService, private fb: FormBuilder,
+    private dialogService: DialogService, private route: ActivatedRoute) {
     this.gadsForm = this.fb.group({
       taskName: [''],
       gadsCustomerId: [''],
@@ -169,27 +169,27 @@ export class NewtaskComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.task_id="";
+    this.task_id = "";
     this.route.queryParams
-    .subscribe(params => {
-      this.task_id = params['task'];
-    }
-  );
+      .subscribe(params => {
+        this.task_id = params['task'];
+      }
+      );
   }
 
   ngAfterViewInit(): void {
-    if(this.task_id!=undefined && this.task_id!=""){
+    if (this.task_id != undefined && this.task_id != "") {
       this._populate_task_load(this.task_id);
     }
   }
 
-  async _populate_task_load(task_id:string) {
-    this.loading=true;
+  async _populate_task_load(task_id: string) {
+    this.loading = true;
     let task_id_json = { 'task_id': task_id };
     (await this.service.get_task(JSON.stringify(task_id_json)))
       .subscribe({
         next: (response: ReturnPromise) => this._populate_task_fields(response),
-        error: (err) => this._call_service_error(),
+        error: (err) => this._call_service_error(err),
         complete: () => console.log("Completed")
       });
   }
@@ -197,60 +197,60 @@ export class NewtaskComponent implements OnInit {
   async _populate_task_fields(response: ReturnPromise) {
 
     let task_exists = (Object.entries(response).find(([k, v]) => {
-      if(k=='file_name') {
-        this.task_id=v;
+      if (k == 'file_name') {
+        this.task_id = v;
       }
-      if(k=='task_name') {
+      if (k == 'task_name') {
         this.gadsForm.controls['taskName'].setValue(v);
       }
-      if(k=='customer_id') {
+      if (k == 'customer_id') {
         this.gadsForm.controls['gadsCustomerId'].setValue(v);
       }
-      if(k=='days_ago') {
+      if (k == 'days_ago') {
         this.gadsForm.controls['daysAgo'].setValue(v);
       }
-      if(k=='schedule') {
+      if (k == 'schedule') {
         this.gadsForm.controls['schedule'].setValue(v);
       }
-      if(k=='gads_filter') {
-        this.finalGadsFilter=v;
+      if (k == 'gads_filter') {
+        this.finalGadsFilter = v;
       }
-      if(k=='yt_subscriber_operator') {
+      if (k == 'yt_subscriber_operator') {
         this.gadsForm.controls['ytSubscriberOperator'].setValue(v);
       }
-      if(k=='yt_subscriber_value') {
+      if (k == 'yt_subscriber_value') {
         this.gadsForm.controls['ytSubscriberValue'].setValue(v);
       }
-      if(k=='yt_view_operator') {
+      if (k == 'yt_view_operator') {
         this.gadsForm.controls['ytViewOperator'].setValue(v);
       }
-      if(k=='yt_view_value') {
+      if (k == 'yt_view_value') {
         this.gadsForm.controls['ytViewValue'].setValue(v);
       }
-      if(k=='yt_video_operator') {
+      if (k == 'yt_video_operator') {
         this.gadsForm.controls['ytVideoOperator'].setValue(v);
       }
-      if(k=='yt_video_value') {
+      if (k == 'yt_video_value') {
         this.gadsForm.controls['ytVideoValue'].setValue(v);
       }
-      if(k=='yt_language_operator') {
+      if (k == 'yt_language_operator') {
         this.gadsForm.controls['ytLanguageOperator'].setValue(v);
       }
-      if(k=='yt_language_value') {
+      if (k == 'yt_language_value') {
         this.gadsForm.controls['ytLanguageValue'].setValue(v);
       }
-      if(k=='yt_country_operator') {
+      if (k == 'yt_country_operator') {
         this.gadsForm.controls['ytCountryOperator'].setValue(v);
       }
-      if(k=='yt_country_value') {
+      if (k == 'yt_country_value') {
         this.gadsForm.controls['ytCountryValue'].setValue(v);
       }
-      if(k=='yt_std_character') {
+      if (k == 'yt_std_character') {
         this.gadsForm.controls['ytStandardCharValue'].setValue(v);
       }
     }));
     this.scheduleChange();
-    this.loading=false;
+    this.loading = false;
   }
 
   openSnackBar(message: string, button: string, type: string) {
@@ -265,7 +265,6 @@ export class NewtaskComponent implements OnInit {
   run_auto_excluder_form(auto_exclude: string) {
     if (this.validate_fields(false)) {
       this.pagination_start = 0;
-      this.loading = true;
       let formRawValue = {
         'excludeYt': auto_exclude,
         'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value,
@@ -283,7 +282,19 @@ export class NewtaskComponent implements OnInit {
         'ytCountryValue': this.gadsForm.controls['ytCountryValue'].value,
         'ytStandardCharValue': this.gadsForm.controls['ytStandardCharValue'].value
       };
-      this._call_auto_service(JSON.stringify(formRawValue), auto_exclude);
+      if (this.finalGadsFilter == "") {
+        this.dialogService.openConfirmDialog("WARNING: Are you sure you want to run with no Google Ads Filters?\n\nThis can take considerably longer on larger accounts and even run out of memory. It is advised to add filters for best results.")
+          .afterClosed().subscribe(res => {
+            if (res) {
+              this.loading = true;
+              this._call_auto_service(JSON.stringify(formRawValue), auto_exclude);
+            }
+          });
+      }
+      else {
+        this.loading = true;
+        this._call_auto_service(JSON.stringify(formRawValue), auto_exclude);
+      }
     }
   }
 
@@ -292,7 +303,7 @@ export class NewtaskComponent implements OnInit {
     this.subs = (await this.service.run_auto_excluder(formRawValue))
       .subscribe({
         next: (response: ReturnPromise) => this._call_auto_service_success(response, auto_exclude),
-        error: (err) => this._call_service_error(),
+        error: (err) => this._call_service_error(err),
         complete: () => console.log("Completed")
       });
   }
@@ -338,7 +349,7 @@ export class NewtaskComponent implements OnInit {
     (await this.service.run_manual_excluder(formRawValue))
       .subscribe({
         next: (response: ReturnPromise) => this._call_manual_service_success(response),
-        error: (err) => this._call_service_error(),
+        error: (err) => this._call_service_error(err),
         complete: () => console.log("Completed")
       });
   }
@@ -348,18 +359,24 @@ export class NewtaskComponent implements OnInit {
     this.loading = false;
   }
 
-  _call_service_error() {
+  _call_service_error(err: ErrorEvent) {
     this.loading = false;
-    this.openSnackBar("Permission error: Check you have Authenticated in settings and that you have the correct permissions to the account and your Customer ID/MCC IDs are correct. If you have just changed your permissions in Google Ads, go back to Settings and click 'Save / Reauthenticate' to update permissions and try again", "Dismiss", "error-snackbar");
+    this.openSnackBar(err.message, "Dismiss", "error-snackbar");
+    //this.openSnackBar("Permission error: Check you have Authenticated in settings and that you have the correct permissions to the account and your Customer ID/MCC IDs are correct. If you have just changed your permissions in Google Ads, go back to Settings and click 'Save / Reauthenticate' to update permissions and try again", "Dismiss", "error-snackbar");
   }
 
 
   async save_task() {
+    let warning = "";
+    if(this.finalGadsFilter == "" && this.gadsForm.controls['schedule'].value != "0") 
+    {
+      warning = "WARNING: Are you sure you want to schedule a task with no Google Ads Filters?\n\nThis can take considerably longer on larger accounts and even run out of memory. It is advised to add filters for best results.\n\n";
+    }
     if (this.validate_fields(true)) {
-      if (this.task_id!=undefined && this.task_id!="") {
-        this.dialogService.openConfirmDialog("Are you sure you want to update the current task with the new settings?\n\nThis will also update your schedule settings")
+      if (this.task_id != undefined && this.task_id != "") {
+        this.dialogService.openConfirmDialog(warning+"Are you sure you want to update the current task with the new settings?\n\nThis will also update your schedule settings")
           .afterClosed().subscribe(res => {
-            if(res) {
+            if (res) {
               this.loading = true;
               this._finalise_save_task(this.task_id);
             }
@@ -368,7 +385,7 @@ export class NewtaskComponent implements OnInit {
       else {
         this.dialogService.openConfirmDialog("Are you sure you want to save this task?\n\nThis will also create a schedule if you have selected a schedule setting")
           .afterClosed().subscribe(res => {
-            if(res) {
+            if (res) {
               this.loading = true;
               this._finalise_save_task("");
             }
@@ -377,7 +394,7 @@ export class NewtaskComponent implements OnInit {
     }
   }
 
-  async _finalise_save_task(task_id:string) {
+  async _finalise_save_task(task_id: string) {
     let formRawValue = {
       'task_id': task_id,
       'task_name': this.gadsForm.controls['taskName'].value,
@@ -411,16 +428,16 @@ export class NewtaskComponent implements OnInit {
   }
 
   async _call_save_task_success(response: ReturnPromise) {
-    let schedule_text="";
-    if(this.gadsForm.controls['schedule'].value!="0") {
-      schedule_text=" and scheduled to run every "+this.gadsForm.controls['schedule'].value+" hours";
+    let schedule_text = "";
+    if (this.gadsForm.controls['schedule'].value != "0") {
+      schedule_text = " and scheduled to run every " + this.gadsForm.controls['schedule'].value + " hours";
     }
     else {
-      schedule_text=" and removed any schedules that were running"
+      schedule_text = " and removed any schedules that were running"
     }
     this.openSnackBar("Successfully saved task '" + this.gadsForm.controls['taskName'].value + "' ("
-    +response+")"+schedule_text, "Dismiss", "success-snackbar");
-    this.task_id=""+response;
+      + response + ")" + schedule_text, "Dismiss", "success-snackbar");
+    this.task_id = "" + response;
     this.loading = false;
   }
 
@@ -449,7 +466,7 @@ export class NewtaskComponent implements OnInit {
 
   validate_fields(full: boolean) {
     let error_count = 0;
-    this.task_name_error=false;
+    this.task_name_error = false;
     this.customer_id_error = false;
     this.gads_filter_error = false;
     this.yt_subscribers_error = false;
@@ -458,8 +475,8 @@ export class NewtaskComponent implements OnInit {
     this.yt_language_error = false;
     this.yt_country_error = false;
     if (full) {
-      if ((this.gadsForm.controls['taskName'].value).length ==0) {
-        this.task_name_error=true;
+      if ((this.gadsForm.controls['taskName'].value).length == 0) {
+        this.task_name_error = true;
         error_count++;
       }
     }
@@ -505,15 +522,14 @@ export class NewtaskComponent implements OnInit {
     this.gads_error = false;
     if (isNaN(Number(this.gadsForm.controls['gadsValue'].value))) {
       this.gads_error = true;
-      this.gads_error_msg="Needs to be a number";
+      this.gads_error_msg = "Needs to be a number";
     }
     else if (this.gadsForm.controls['gadsField'].value == "metrics.cost_per_conversion" &&
-    (this.gadsForm.controls['gadsOperator'].value == "=" ||
-    this.gadsForm.controls['gadsOperator'].value == "!=" ) &&
-    this.gadsForm.controls['gadsValue'].value ==0)
-    {
+      (this.gadsForm.controls['gadsOperator'].value == "=" ||
+        this.gadsForm.controls['gadsOperator'].value == "!=") &&
+      this.gadsForm.controls['gadsValue'].value == 0) {
       this.gads_error = true;
-      this.gads_error_msg="Cannot use CPA=/!=0 (use Conversions)";
+      this.gads_error_msg = "Cannot use CPA=/!=0 (use Conversions)";
     }
     else if (this.gadsForm.controls['gadsField'].value != "" &&
       this.gadsForm.controls['gadsOperator'].value != "" &&
@@ -521,9 +537,8 @@ export class NewtaskComponent implements OnInit {
       this.conditionEnabled) {
       let finalValue = this.gadsForm.controls['gadsValue'].value;
       if (this.gadsForm.controls['gadsField'].value == "metrics.average_cpm" ||
-      this.gadsForm.controls['gadsField'].value == "metrics.cost_micros" ||
-      this.gadsForm.controls['gadsField'].value == "metrics.cost_per_conversion")
-      {
+        this.gadsForm.controls['gadsField'].value == "metrics.cost_micros" ||
+        this.gadsForm.controls['gadsField'].value == "metrics.cost_per_conversion") {
         finalValue = finalValue * 1000000;
       }
       if (!this.finalGadsFilter.endsWith("(") && this.finalGadsFilter != "") {
@@ -583,18 +598,16 @@ export class NewtaskComponent implements OnInit {
   }
 
   scheduleChange() {
-    if(this.gadsForm.controls['schedule'].value=="0")
-    {
-      this.save_button="Save Task";
+    if (this.gadsForm.controls['schedule'].value == "0") {
+      this.save_button = "Save Task";
     }
-    else{
-      this.save_button="Save and Schedule Task";
+    else {
+      this.save_button = "Save and Schedule Task";
     }
   }
 
-  duplicateTask()
-  {
-    this.task_id="";
+  duplicateTask() {
+    this.task_id = "";
     this.gadsForm.controls['taskName'].setValue("");
   }
 }
