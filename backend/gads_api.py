@@ -80,8 +80,25 @@ date_from: str, date_to: str, conditions: str) -> dict:
                         'metrics_video_view_rate': row.metrics.video_view_rate,
                         'metrics_clicks': row.metrics.clicks,
                         'metrics_average_cpm': row.metrics.average_cpm / MICRO_CONV,
-                        'metrics_ctr': row.metrics.ctr
+                        'metrics_ctr': row.metrics.ctr,
+                        'excluded_already': 'No'
                     }
+            if all_data_set:
+                query = f"""
+                SELECT
+                    customer_negative_criterion.type,
+                    customer_negative_criterion.youtube_channel.channel_id
+                FROM customer_negative_criterion
+                WHERE customer_negative_criterion.type IN ("YOUTUBE_CHANNEL")
+                """
+                search_request.query = query
+                stream = ga_service.search_stream(search_request)
+                for batch in stream:
+                    for row in batch.results:
+                        row = row._pb
+                        if row.customer_negative_criterion.youtube_channel.channel_id in all_data_set.keys():
+                            all_data_set[row.customer_negative_criterion.youtube_channel.channel_id].update({'excluded_already':'Yes'})
+
         return all_data_set
 
 
@@ -133,9 +150,13 @@ def exclude_youtube_channels(client, customer_id: str, channelsToRemove: list) -
 
 
 def get_youtube_channel_id_list(full_data_set: dict) -> dict:
-    ytList = [d.get('group_placement_view_placement') for d in full_data_set.values() if d.get('excludeFromYt') == 'true']
+    ytList = [d.get('group_placement_view_placement') for d in full_data_set.values() if d.get('excludeFromYt') == 'true' and d.get('excluded_already') == 'No']
     return ytList
 
+
+def get_youtube_channel_id_name_list(full_data_set: dict) -> dict:
+    ytList = [(d.get('group_placement_view_placement'), d.get('group_placement_view_display_name')) for d in full_data_set.values() if d.get('excludeFromYt') == 'true' and d.get('excluded_already') == 'No']
+    return ytList
 
 
 def append_youtube_data(
@@ -224,6 +245,7 @@ def _is_yt_data(full_data_set: dict) -> dict:
 
 
 def is_ascii_title(title: string) -> string:
+    title = title.replace("–", "") #special edge case for European Dash
     return str(title.isascii())
 
 

@@ -200,6 +200,10 @@
             </div>
         </div>
             <div class="label-input-block">
+                Email Alerts <mat-slide-toggle name="emailAlerts" formControlName="emailAlerts" id="emailAlerts">
+                </mat-slide-toggle> 
+            </div>
+            <div class="label-input-block">
                 <button type="button" class="saveButton" (click)="save_task()">{{save_button}}</button>
             </div>
         </div>
@@ -207,7 +211,12 @@
 </div>
 <p>
 <!---->
-<div *ngIf="table_result.length > 0" class="pagination">
+<div *ngIf="table_result.length > 0" >
+    <div class="pagination-left">
+        <mat-slide-toggle id="showExcluded" [(ngModel)]="bringToTop" (change)="bring_to_top(bringToTop)">
+        </mat-slide-toggle> Bring Already Excluded To Top
+        </div>
+    <div class="pagination">
     <form [formGroup]="paginationForm">
         <div class="label-input-block">
             <span *ngIf="pagination_start+pagination_rpp <= table_result.length">
@@ -231,11 +240,13 @@
         </div>
     </form>
 </div>
+</div>
 
 <table *ngIf="table_result.length > 0" class="styled-table newtask-width">
     <thead>
         <tr>
             <th>Exclude</th>
+            <th>Excluded Already</th>
             <th>Placement Name</th>
             <th>YouTube ID</th>
             <th>Impressions</th>
@@ -256,10 +267,13 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let data of table_result | slice:pagination_start:pagination_start+pagination_rpp">
+        <tr *ngFor="let data of table_result | slice:pagination_start:pagination_start+pagination_rpp"
+        [className]="row_class(data.excluded_already, data.excludeFromYt)">
             <td><input [value]="data.group_placement_view_placement" type="checkbox"
                     (change)="excludeCheckChange(data.group_placement_view_placement)"
-                    [checked]="data.excludeFromYt == 'true'" /></td>
+                    [checked]="data.excludeFromYt == 'true' && data.excluded_already == 'No'" 
+                    [disabled]="data.excluded_already == 'Yes'"/></td>
+            <td>{{data.excluded_already}}</td>        
             <td>{{data.group_placement_view_display_name}}</td>
             <td><a href="https://{{ data.group_placement_view_target_url }}" target="_blank">{{
                     data.group_placement_view_placement }}</a></td>

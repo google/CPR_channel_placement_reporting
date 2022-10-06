@@ -85,9 +85,9 @@ a:hover {
   border-bottom: 1px solid #dddddd;
 }
 
-.styled-table tbody tr:nth-of-type(even) {
-  background-color: #f3f3f3;
-}
+//.styled-table tbody tr:nth-of-type(even) {
+//  background-color: #f3f3f3;
+//}
 
 .styled-table tbody tr:last-of-type {
   border-bottom: 2px solid #009879;
@@ -97,6 +97,15 @@ a:hover {
   text-align: center;
   text-decoration: bold;
   border-bottom: 2px solid #009879;
+}
+
+.tobeexcluded {
+  background-color: #f6fff0;
+}
+
+.alreadyexcluded {
+  background-color: #e8e8e8;
+  color: #a1a1a1;
 }
 
 input[type='checkbox'] {
@@ -281,7 +290,13 @@ button:disabled {
 
 .pagination {
 text-align: right;
+float:right;
 }
+
+.pagination-left {
+  text-align: left;
+  float: left;
+  }
 
 .pageButton {
   background-color: #009879;

@@ -89,6 +89,7 @@ def fb_save_task(data) -> str:
         'yt_country_operator': data['yt_country_operator'],
         'yt_country_value': data['yt_country_value'],
         'yt_std_character': data['yt_std_character'],
+        'email_alerts': data['emailAlerts'],
         'date_created': date_created
     })
     return task_id

@@ -27,8 +27,11 @@ import json
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import Flow
 
+from google.appengine.api import wrap_wsgi_app
+from google.appengine.api.mail import send_mail
+
 from cpr_services import run_auto_excluder, run_manual_excluder
-from gads_api import get_youtube_channel_id_list
+from gads_api import get_youtube_channel_id_list, get_youtube_channel_id_name_list
 from cloud_api import get_schedule_list, update_cloud_schedule
 from firebase_server import fb_get_task, fb_save_client_secret, fb_save_task, fb_get_tasks_list, fb_delete_task, fb_save_settings, fb_read_settings, fb_read_client_secret, fb_save_token, fb_read_token
 
@@ -36,6 +39,7 @@ from firebase_server import fb_get_task, fb_save_client_secret, fb_save_task, fb
 app = Flask(__name__, static_url_path='', 
       static_folder='static', 
       template_folder='static')
+app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
 CORS(app)
 
 DATE_FORMAT='%Y-%m-%d'
@@ -52,6 +56,21 @@ scopes_array = [
                 ]
 
 flow: Flow
+
+
+def send_email(ytList: list):
+  config = fb_read_settings()
+  count = len(ytList)
+  ytListToPrint = ""
+  for yt in ytList:
+    ytListToPrint += f"{yt[1]} - https://www.youtube.com/channel/{yt[0]}\n"
+  
+  send_mail(sender=f"exclusions@{PROJECT_ID}.appspotmail.com",
+            to=config['email_address'],
+            subject=f"{count} Channel Exclusions Added",
+              body=f"""There were {count} channel exclusions added to your account\n\n
+{ytListToPrint}
+                 """)
 
 def refresh_credentials():
   credentials = get_oauth()
@@ -103,8 +122,10 @@ def run_automatic_excluder_from_task_id(task_id:str):
       yt_standard_characters_filter
     )
     
-    yt_exclusions=get_youtube_channel_id_list(response_data)
-    
+    yt_exclusions=get_youtube_channel_id_name_list(response_data)
+    if yt_exclusions and file_contents['email_alerts']:
+      send_email(yt_exclusions)
+
     return _build_response(json.dumps(f"{len(yt_exclusions)}"))
   else:
     return _build_response(json.dumps("Config doesn't exist"))

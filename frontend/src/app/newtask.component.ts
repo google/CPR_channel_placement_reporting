@@ -43,6 +43,7 @@ export class NewtaskComponent implements OnInit {
   isChecked: boolean = false;
   save_button = "Save Task";
   task_id: string = "";
+  bringToTop: boolean = false;
 
   error_count = 0;
   task_name_error = false;
@@ -73,20 +74,20 @@ export class NewtaskComponent implements OnInit {
   ];
 
   reportDaysArray = [
-    ["7", "last 7 days"],
-    ["14", "last 14 days"],
-    ["28", "last 28 days"],
-    ["90", "last 3 months"]
+    ["7", "Last 7 days"],
+    ["14", "Last 14 days"],
+    ["28", "Last 28 days"],
+    ["90", "Last 3 months"]
   ];
 
   scheduleArray = [
-    ["0", "Do Not Schedule"],
-    ["1", "every 1 hour"],
-    ["2", "every 2 hours"],
-    ["4", "every 4 hours"],
-    ["12", "every 12 hours"],
-    ["24", "every 1 day"],
-    ["48", "every 2 days"]
+    ["0", "Do not schedule"],
+    ["1", "Every 1 hour"],
+    ["2", "Every 2 hours"],
+    ["4", "Every 4 hours"],
+    ["12", "Every 12 hours"],
+    ["24", "Every 1 day"],
+    ["48", "Every 2 days"]
   ];
 
   gadsFieldsArray = [
@@ -154,7 +155,8 @@ export class NewtaskComponent implements OnInit {
       ytLanguageValue: [''],
       ytCountryOperator: [''],
       ytCountryValue: [''],
-      ytStandardCharValue: ['']
+      ytStandardCharValue: [''],
+      emailAlerts: ['false']
     });
 
     this.gadsForm.controls['daysAgo'].setValue(7);
@@ -248,6 +250,9 @@ export class NewtaskComponent implements OnInit {
       if (k == 'yt_std_character') {
         this.gadsForm.controls['ytStandardCharValue'].setValue(v);
       }
+      if (k == 'email_alerts') {
+        this.gadsForm.controls['emailAlerts'].setValue(v);
+      }
     }));
     this.scheduleChange();
     this.loading = false;
@@ -311,12 +316,14 @@ export class NewtaskComponent implements OnInit {
   _call_auto_service_success(response: ReturnPromise, auto_exclude: string) {
     this.table_result = Object.values(response);
     if (this.table_result.length > 0) {
-      this.table_result.sort((a, b) => (a.excludeFromYt < b.excludeFromYt) ? 1 : -1);
+      this.sort_table();
+     
       this.no_data = false;
-      this._run_exclude_count();
       if (auto_exclude == 'true') {
+        this._run_exclude_count('false');
         this.openSnackBar("Successfully excluded " + this.exclude_count + " YouTube channels", "Dismiss", "success-snackbar");
       }
+      this._run_exclude_count(auto_exclude);
     }
     else {
       this.no_data = true;
@@ -326,12 +333,30 @@ export class NewtaskComponent implements OnInit {
     this.loading = false;
   }
 
+  bring_to_top(bringToTop: boolean)
+  {
+    this.bringToTop = bringToTop;
+    this.sort_table();
+  }
 
+  sort_table()
+  {
+    if(this.bringToTop)
+      {
+        this.table_result.sort((a, b) => (a.excludeFromYt > b.excludeFromYt) ? 1 : -1);
+        this.table_result.sort((a, b) => (a.excluded_already < b.excluded_already) ? 1 : -1);
+      }
+      else
+      {
+        this.table_result.sort((a, b) => (a.excludeFromYt > b.excludeFromYt) ? 1 : -1);
+        this.table_result.sort((a, b) => (a.excluded_already > b.excluded_already) ? 1 : -1);
+      }
+  }
 
   run_manual_excluder_form() {
     let yt_exclusion_list = [];
     for (let data of this.table_result) {
-      if (data.excludeFromYt == 'true') {
+      if (data.excludeFromYt == 'true' && data.excluded_already == 'No') {
         yt_exclusion_list.push(data.group_placement_view_placement);
       }
     }
@@ -355,6 +380,7 @@ export class NewtaskComponent implements OnInit {
   }
 
   _call_manual_service_success(response: ReturnPromise) {
+    this._run_exclude_count('true');
     this.openSnackBar("Successfully excluded " + response + " YouTube channels", "Dismiss", "success-snackbar");
     this.loading = false;
   }
@@ -412,7 +438,8 @@ export class NewtaskComponent implements OnInit {
       'yt_language_value': this.gadsForm.controls['ytLanguageValue'].value,
       'yt_country_operator': this.gadsForm.controls['ytCountryOperator'].value,
       'yt_country_value': this.gadsForm.controls['ytCountryValue'].value,
-      'yt_std_character': this.gadsForm.controls['ytStandardCharValue'].value
+      'yt_std_character': this.gadsForm.controls['ytStandardCharValue'].value,
+      'emailAlerts': this.gadsForm.controls['emailAlerts'].value
     };
 
     this._call_save_task_service(JSON.stringify(formRawValue));
@@ -446,12 +473,31 @@ export class NewtaskComponent implements OnInit {
     this.openSnackBar("Unable to save task", "Dismiss", "error-snackbar");
   }
 
-  _run_exclude_count() {
+  _run_exclude_count(edit_table: string) {
     this.exclude_count = 0;
-    for (let data of this.table_result) {
-      if (data.excludeFromYt == 'true') {
-        this.exclude_count++;
+    for (let i in this.table_result) {
+      if (this.table_result[i]['excludeFromYt'] == 'true' && 
+        this.table_result[i]['excluded_already'] == 'No') {
+          this.exclude_count++;
+          if(edit_table=='true') {
+            this.table_result[i]['excluded_already'] = 'Yes';
+            this.exclude_count--;
+          }
       }
+    }
+    this.sort_table();
+  }
+
+  row_class(excluded_already: string, excludeFromYt: string)
+  {
+    if(excluded_already == 'Yes') {
+      return "alreadyexcluded";
+    }
+    else if(excludeFromYt=='true') {
+      return "tobeexcluded";
+    }
+    else {
+      return "";
     }
   }
 
@@ -461,7 +507,7 @@ export class NewtaskComponent implements OnInit {
         this.table_result[i]['excludeFromYt'] = String(!(this.table_result[i]['excludeFromYt'] == 'true'));
       }
     }
-    this._run_exclude_count();
+    this._run_exclude_count('false');
   }
 
   validate_fields(full: boolean) {
