@@ -7,3 +7,4 @@ flask-cors
 google-ads
 gunicorn
 firebase_admin
+appengine-python-standard>=1.0.0

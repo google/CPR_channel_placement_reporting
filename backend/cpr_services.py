@@ -35,7 +35,7 @@ def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, custo
         yt_data = get_youtube_data(credentials, [d.get('group_placement_view_placement') for d in full_data_set.values()])
         full_data_set = append_youtube_data(full_data_set, yt_data, view_count, sub_count, video_count, country, language, isEnglish)
         
-        if exclude_from_youtube:
+        if exclude_from_youtube == 'true':
             exclude_youtube_channels(client, customer_id, get_youtube_channel_id_list(full_data_set))
         return full_data_set
             

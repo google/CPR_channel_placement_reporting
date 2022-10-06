@@ -2,11 +2,13 @@
     <div class="heading">
         <span >Tasks</span>
     </div>
-    <div *ngIf="task_table_data.length > 0" class="pagination">
+    <br>
+    <div *ngIf="task_table_data.length > 0">
         <form [formGroup]="paginationForm">
-            <div class="label-input-block align-left">
+            <div class="pagination-left">
                 <a routerLink="/newtask"><button type="button" class="secondaryButton"><mat-icon>add_box</mat-icon>New Task</button></a>
             </div>
+            <div class="pagination">
             <div class="label-input-block">
                 <span *ngIf="pagination_start+pagination_rpp <= task_table_data.length">
                     {{pagination_start+1}} to {{pagination_start+pagination_rpp}} of {{task_table_data.length}}
@@ -27,6 +29,7 @@
             <div class="label-input-block">
                 <button type="button" class="pageButton" (click)="pagination_next()">>></button>
             </div>
+        </div>
         </form>
     </div>
     <table *ngIf="task_table_data.length > 0" class="styled-table task-width">

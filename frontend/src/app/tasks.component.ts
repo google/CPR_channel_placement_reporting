@@ -47,13 +47,13 @@ export class TasksComponent implements OnInit {
   ];
 
   scheduleArray = [
-    ["0", "Do Not Schedule"],
-    ["1", "every 1 hour"],
-    ["2", "every 2 hours"],
-    ["4", "every 4 hours"],
-    ["12", "every 12 hours"],
-    ["24", "every 1 day"],
-    ["48", "every 2 days"]
+    ["0", "Do not schedule"],
+    ["1", "Every 1 hour"],
+    ["2", "Every 2 hours"],
+    ["4", "Every 4 hours"],
+    ["12", "Every 12 hours"],
+    ["24", "Every 1 day"],
+    ["48", "Every 2 days"]
   ];
 
   constructor(private snackbar: MatSnackBar, private fb: FormBuilder, private service: PostService, private dialogService: DialogService) { 
