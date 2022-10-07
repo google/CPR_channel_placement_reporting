@@ -44,6 +44,7 @@ export class NewtaskComponent implements OnInit {
   save_button = "Save Task";
   task_id: string = "";
   bringToTop: boolean = false;
+  email_alerts: boolean =false;
 
   error_count = 0;
   task_name_error = false;
