@@ -199,7 +199,7 @@
                 <button type="button" class="primaryButton" (click)="run_auto_excluder_form('true')">'One click' Preview and Exclude</button>
             </div>
         </div>
-            <div class="label-input-block">
+            <div class="label-input-block" [hidden]="email_alerts_hidden">
                 Email Alerts <mat-slide-toggle name="emailAlerts" [(ngModel)]="email_alerts" formControlName="emailAlerts" id="emailAlerts">
                 </mat-slide-toggle> 
             </div>
