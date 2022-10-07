@@ -45,6 +45,7 @@ export class NewtaskComponent implements OnInit {
   task_id: string = "";
   bringToTop: boolean = false;
   email_alerts: boolean =false;
+  email_alerts_hidden: boolean = true;
 
   error_count = 0;
   task_name_error = false;
@@ -647,9 +648,12 @@ export class NewtaskComponent implements OnInit {
   scheduleChange() {
     if (this.gadsForm.controls['schedule'].value == "0") {
       this.save_button = "Save Task";
+      this.email_alerts_hidden = true;
+      this.email_alerts = false;
     }
     else {
       this.save_button = "Save and Schedule Task";
+      this.email_alerts_hidden = false;
     }
   }
 

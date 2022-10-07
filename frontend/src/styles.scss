@@ -1,5 +1,7 @@
 @import "@angular/material/prebuilt-themes/deeppurple-amber.css";
 
+[hidden] { display: none !important;}
+
 .primaryColor {
   color: #009879;
 }
@@ -193,6 +195,7 @@ input[type='checkbox'] {
   border-color: #009879;
   border-radius: 4px;
   cursor: pointer;
+  width: 200px;
 }
 
 .disabledButton{
