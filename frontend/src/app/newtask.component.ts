@@ -411,7 +411,7 @@ export class NewtaskComponent implements OnInit {
           });
       }
       else {
-        this.dialogService.openConfirmDialog("Are you sure you want to save this task?\n\nThis will also create a schedule if you have selected a schedule setting")
+        this.dialogService.openConfirmDialog(warning+"Are you sure you want to save this task?\n\nThis will also create a schedule if you have selected a schedule setting")
           .afterClosed().subscribe(res => {
             if (res) {
               this.loading = true;
