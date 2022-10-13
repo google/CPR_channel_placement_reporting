@@ -40,7 +40,7 @@
                 <th>Task Name</th>
                 <th>Customer ID</th>
                 <th>Schedule</th>
-                <th>Next run in</th>
+                <th>Next Run and Status</th>
                 <th class="align-centre">Edit</th>
                 <th class="align-centre">Run Now</th>
                 <th class="align-centre">Delete</th>
@@ -54,9 +54,13 @@
                 <td>{{data.customer_id}}</td>
                 <td>{{getScheduleValue(data.schedule)}}</td>
                 <td>
+                    {{data.next_run}}
                     <span *ngIf="data.error_code>0" class="error_text"><mat-icon matTooltip="Last run failed due to end point error">error</mat-icon></span>
                     <span *ngIf="data.error_code=='0'" class="valid_text"><mat-icon matTooltip="Schedule is up and running">check_circle</mat-icon></span>
-                    {{data.next_run}}</td>
+                    
+                    <span *ngIf="data.email_alerts==true" class="valid_text"><mat-icon matTooltip="Email alerts are enabled for this schedule">mail</mat-icon></span>
+
+                    </td>
                 <td class="align-centre">
                     <a href="/newtask?task={{data.task_id}}" target="_self" matTooltip="Edit current task"><mat-icon>edit</mat-icon></a>
                 </td>

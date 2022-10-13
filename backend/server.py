@@ -58,7 +58,7 @@ scopes_array = [
 flow: Flow
 
 
-def send_email(ytList: list):
+def send_email(ytList: list, task_id:str, customer_id:str):
   config = fb_read_settings()
   count = len(ytList)
   ytListToPrint = ""
@@ -67,8 +67,11 @@ def send_email(ytList: list):
   
   send_mail(sender=f"exclusions@{PROJECT_ID}.appspotmail.com",
             to=config['email_address'],
-            subject=f"{count} Channel Exclusions Added",
-              body=f"""There were {count} channel exclusions added to your account\n\n
+            subject=f"CPR Task ID {task_id} has added {count} Channel Exclusions",
+              body=f"""
+CPR Task ID: {task_id}
+Customer ID: {customer_id}
+{count} channel exclusions added to your account\n
 {ytListToPrint}
                  """)
 
@@ -124,7 +127,7 @@ def run_automatic_excluder_from_task_id(task_id:str):
     
     yt_exclusions=get_youtube_channel_id_name_list(response_data)
     if yt_exclusions and file_contents['email_alerts']:
-      send_email(yt_exclusions)
+      send_email(yt_exclusions, task_id, customer_id)
 
     return _build_response(json.dumps(f"{len(yt_exclusions)}"))
   else:

@@ -105,7 +105,8 @@ def fb_get_tasks_list() -> dict:
           'task_name': tmp['task_name'],
           'customer_id': tmp['customer_id'],
           'schedule': tmp['schedule'],
-          'date_created': tmp['date_created']
+          'date_created': tmp['date_created'],
+          'email_alerts': tmp['email_alerts']
         }
     
     return task_list
