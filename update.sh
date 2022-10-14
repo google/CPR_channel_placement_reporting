@@ -43,6 +43,7 @@ if [[ "$CLOUD_SHELL" == "true" ]]; then
 fi
 export NG_CLI_ANALYTICS=ci
 npm install --no-audit
+npm i --save-dev @types/file-saver
 npm run build
 cd ..
 

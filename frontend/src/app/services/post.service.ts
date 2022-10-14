@@ -71,12 +71,6 @@ export class PostService {
     return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/saveTask", task_data, {headers: headers});
   }
 
-  async does_task_exist(task_name: string) {
-    const headers = new HttpHeaders();
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/doesTaskExist", task_name, {headers: headers});
-  }
-
   async get_tasks_list() {
     return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getTasksList");
   }
@@ -105,12 +99,12 @@ export class PostService {
     return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/finishAuth", code, {headers: headers});
   }
 
-  async get_schedule_list() {
-    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getScheduleList");
-  }
-
   async refresh_credentials() {
     return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/refreshCredentials");
+  }
+
+  async get_customer_list() {
+    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getCustomerIds");
   }
 
 }

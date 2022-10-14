@@ -18,7 +18,7 @@ import logging
 from typing import List
 
 from gads_make_client import make_client
-from gads_api import get_placement_data, get_youtube_data, append_youtube_data, get_youtube_channel_id_list, exclude_youtube_channels
+from gads_api import get_placement_data, get_youtube_data, append_youtube_data, get_youtube_channel_id_list, exclude_youtube_channels, get_gads_customer_ids
 
 def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, customer_id: str, 
     date_from: str, date_to: str, gads_filters: str,
@@ -59,6 +59,17 @@ def run_manual_excluder(credentials, config_file, customer_id: str, yt_channel_i
         logging.info("Error on running Excluder!")
 
 
+def get_customer_ids(credentials, config_file) -> dict:
+    try:
+        mcc_id = config_file.get('mcc_id')
+        developer_token = config_file.get('dev_token')
+        creds = json.loads(credentials.to_json())
+        client = make_client(mcc_id, developer_token, creds)
+
+        return get_gads_customer_ids(client, mcc_id)
+            
+    except ValueError:
+        logging.info("Error on running Excluder!")
 
     
 
