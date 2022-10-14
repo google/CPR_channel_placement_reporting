@@ -15,6 +15,8 @@
 
 from inspect import _void
 import string
+import sys
+from os import getenv
 from tokenize import String
 from typing import List
 import googleapiclient.errors
@@ -24,6 +26,8 @@ from googleapiclient.discovery import build
 API_SERVICE_NAME = "youtube"
 API_VERSION = "v3"
 MICRO_CONV = 1000000
+ENGINE_SIZE=float(getenv('GAE_MEMORY_MB'))*0.95
+MEMORY_WARNING=False
 
 def get_placement_data(client, ga_service, customer_id: str, 
 date_from: str, date_to: str, conditions: str) -> dict:
@@ -51,8 +55,8 @@ date_from: str, date_to: str, conditions: str) -> dict:
                 metrics.video_view_rate
             FROM group_placement_view
             WHERE
-                group_placement_view.placement_type IN ("YOUTUBE_CHANNEL")
-                AND campaign.advertising_channel_type = "VIDEO"
+                campaign.status='ENABLED'
+                AND group_placement_view.placement_type IN ("YOUTUBE_CHANNEL")
             AND segments.date BETWEEN '{date_from}' AND '{date_to}'
             """
             if condition:
@@ -83,6 +87,14 @@ date_from: str, date_to: str, conditions: str) -> dict:
                         'metrics_ctr': row.metrics.ctr,
                         'excluded_already': 'No'
                     }
+                    if (sys.getsizeof(all_data_set)/1000000) > ENGINE_SIZE:
+                        MEMORY_WARNING=True
+                        all_data_set[row.group_placement_view.placement].update({'memory_warning': True})
+                        break
+                else:
+                    continue
+                break
+
             if all_data_set:
                 query = f"""
                 SELECT
@@ -98,7 +110,6 @@ date_from: str, date_to: str, conditions: str) -> dict:
                         row = row._pb
                         if row.customer_negative_criterion.youtube_channel.channel_id in all_data_set.keys():
                             all_data_set[row.customer_negative_criterion.youtube_channel.channel_id].update({'excluded_already':'Yes'})
-
         return all_data_set
 
 
@@ -123,7 +134,7 @@ def get_youtube_data(credentials, channel_ids: list) -> list:
             )
             response = request.execute()
             
-            if response:
+            if response['items']:
                 for item in response['items']:
                     yt_items.append(item)
             ids_to_pass = ""
@@ -249,3 +260,32 @@ def is_ascii_title(title: string) -> string:
     return str(title.isascii())
 
 
+def get_gads_customer_ids(client, mcc_id) -> dict:
+    if client:
+        all_customer_ids = {}
+        query = f"""
+        SELECT
+          customer_client.client_customer,
+          customer_client.level,
+          customer_client.manager,
+          customer_client.descriptive_name,
+          customer_client.currency_code,
+          customer_client.time_zone,
+          customer_client.id
+        FROM customer_client
+        WHERE customer_client.level <= 1"""
+
+        googleads_service = client.get_service("GoogleAdsService")
+
+        response = googleads_service.search(
+                customer_id=str(mcc_id), query=query
+            )
+
+        for googleads_row in response:
+            customer_client = googleads_row.customer_client
+            all_customer_ids[customer_client.id] = {
+                        'account_name': customer_client.descriptive_name,
+                        'id': customer_client.id
+            }
+
+    return all_customer_ids

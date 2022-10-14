@@ -21,7 +21,7 @@ import { ActivatedRoute } from '@angular/router'
 
 import { PostService, ReturnPromise } from './services/post.service';
 import { DialogService } from './services/dialog.service';
-
+import { saveAs } from 'file-saver'
 
 @Component({
   selector: 'app-newtask',
@@ -34,6 +34,7 @@ export class NewtaskComponent implements OnInit {
   paginationForm: FormGroup;
   loading: boolean = false;
   table_result: any[] = [];
+  customer_list: any[] = [];
   finalGadsFilter: string = "";
   orAndEnabled = false;
   conditionEnabled = true;
@@ -46,18 +47,23 @@ export class NewtaskComponent implements OnInit {
   bringToTop: boolean = false;
   email_alerts: boolean =false;
   email_alerts_hidden: boolean = true;
+  manual_cid: boolean = false;
+  cid_choice: string = "Enter manually";
 
   error_count = 0;
   task_name_error = false;
   gads_error = false;
   gads_error_msg = "";
   customer_id_error = false;
+  lookback_error = false;
   gads_filter_error = false;
   yt_subscribers_error = false;
   yt_view_error = false;
   yt_video_error = false;
   yt_language_error = false;
   yt_country_error = false;
+  memory_error = false;
+  gads_filter_lock=true;
 
   pagination_start = 0;
   pagination_rpp = 10;
@@ -73,13 +79,6 @@ export class NewtaskComponent implements OnInit {
     ["100"],
     ["200"],
     ["500"]
-  ];
-
-  reportDaysArray = [
-    ["7", "Last 7 days"],
-    ["14", "Last 14 days"],
-    ["28", "Last 28 days"],
-    ["90", "Last 3 months"]
   ];
 
   scheduleArray = [
@@ -179,12 +178,34 @@ export class NewtaskComponent implements OnInit {
         this.task_id = params['task'];
       }
       );
+
+      this._populate_customer_list();
   }
 
   ngAfterViewInit(): void {
+    
     if (this.task_id != undefined && this.task_id != "") {
       this._populate_task_load(this.task_id);
     }
+  }
+
+  async _populate_customer_list() {
+    this.loading = true;
+    this.gadsForm.controls['gadsCustomerId'].disable();
+    (await this.service.get_customer_list())
+      .subscribe({
+        next: (response: ReturnPromise) => this._customer_list_populated(response),
+        error: (err) => this._call_service_error(err),
+        complete: () => console.log("Completed")
+      });
+  }
+
+  async _customer_list_populated(response: ReturnPromise) {
+    this.customer_list = Object.values(response);
+    this.customer_list.sort((a, b) => (a.account_name.toLowerCase() > b.account_name.toLowerCase()) ? 1 : -1);
+
+    this.gadsForm.controls['gadsCustomerId'].enable();
+    this.loading = false;
   }
 
   async _populate_task_load(task_id: string) {
@@ -218,6 +239,10 @@ export class NewtaskComponent implements OnInit {
       }
       if (k == 'gads_filter') {
         this.finalGadsFilter = v;
+        if(v != "") {
+          this.conditionEnabled = false;
+          this.orAndEnabled = true;
+        }
       }
       if (k == 'yt_subscriber_operator') {
         this.gadsForm.controls['ytSubscriberOperator'].setValue(v);
@@ -261,8 +286,10 @@ export class NewtaskComponent implements OnInit {
   }
 
   openSnackBar(message: string, button: string, type: string) {
+    let dur = 10000;
+    if(type=="error-snackbar") { dur = 0; }
     this.snackbar.open(message, button, {
-      duration: 10000,
+      duration: dur,
       horizontalPosition: this.horizontalPosition,
       verticalPosition: this.verticalPosition,
       panelClass: [type]
@@ -389,8 +416,7 @@ export class NewtaskComponent implements OnInit {
 
   _call_service_error(err: ErrorEvent) {
     this.loading = false;
-    this.openSnackBar(err.message, "Dismiss", "error-snackbar");
-    //this.openSnackBar("Permission error: Check you have Authenticated in settings and that you have the correct permissions to the account and your Customer ID/MCC IDs are correct. If you have just changed your permissions in Google Ads, go back to Settings and click 'Save / Reauthenticate' to update permissions and try again", "Dismiss", "error-snackbar");
+    this.openSnackBar("Error - This could be due to credential issues or filter issues. Check your credentials and any manual edits to your filters", "Dismiss", "error-snackbar");
   }
 
 
@@ -477,6 +503,7 @@ export class NewtaskComponent implements OnInit {
 
   _run_exclude_count(edit_table: string) {
     this.exclude_count = 0;
+    this.memory_error = false;
     for (let i in this.table_result) {
       if (this.table_result[i]['excludeFromYt'] == 'true' && 
         this.table_result[i]['excluded_already'] == 'No') {
@@ -485,6 +512,9 @@ export class NewtaskComponent implements OnInit {
             this.table_result[i]['excluded_already'] = 'Yes';
             this.exclude_count--;
           }
+      }
+      if (this.table_result[i]['memory_warning'] != null) {
+        this.memory_error = true;
       }
     }
     this.sort_table();
@@ -516,6 +546,7 @@ export class NewtaskComponent implements OnInit {
     let error_count = 0;
     this.task_name_error = false;
     this.customer_id_error = false;
+    this.lookback_error = false;
     this.gads_filter_error = false;
     this.yt_subscribers_error = false;
     this.yt_view_error = false;
@@ -533,6 +564,11 @@ export class NewtaskComponent implements OnInit {
     this.gadsForm.controls['gadsCustomerId'].setValue(cus_id);
     if (this.finalGadsFilter.endsWith("(") || this.finalGadsFilter.endsWith("AND")) {
       this.gads_filter_error = true;
+      error_count++;
+    }
+    //if (isNaN(Number(this.gadsForm.controls['daysAgo'].value)) || Number(this.gadsForm.controls['daysAgo'].value) >90) {
+    if (isNaN(Number(this.gadsForm.controls['daysAgo'].value))) {
+    this.lookback_error = true;
       error_count++;
     }
     if (isNaN(Number(cus_id)) || cus_id == "") {
@@ -622,10 +658,15 @@ export class NewtaskComponent implements OnInit {
   }
 
   clearFilter() {
-    this.conditionEnabled = true;
-    this.orAndEnabled = false;
-    this.finalGadsFilter = "";
-    this.gads_filter_error = false;
+    this.dialogService.openConfirmDialog("Are you sure you want to clear your current Google Ads filters?")
+          .afterClosed().subscribe(res => {
+            if (res) {
+              this.conditionEnabled = true;
+              this.orAndEnabled = false;
+              this.finalGadsFilter = "";
+              this.gads_filter_error = false;
+            }
+          });
   }
 
 
@@ -660,5 +701,32 @@ export class NewtaskComponent implements OnInit {
   duplicateTask() {
     this.task_id = "";
     this.gadsForm.controls['taskName'].setValue("");
+  }
+
+  switch_cid() {
+    this.manual_cid =! this.manual_cid;
+    if(this.manual_cid) {
+      this.cid_choice="Pick from List";
+    }
+    else {
+      this.cid_choice="Enter manually";
+    }
+  }
+
+  unlockFilter()
+  {
+    this.gads_filter_lock = !this.gads_filter_lock;
+  }
+
+  downloadCSV()
+  {
+    let data = this.table_result;
+    const header = Object.keys(data[0]);
+    let csv = data.map(row => header.map(fieldName => JSON.stringify(row[fieldName])).join(','));
+    csv.unshift(header.join(','));
+    let csvArray = csv.join('\r\n');
+
+    var blob = new Blob([csvArray], {type: 'text/csv' })
+    saveAs(blob, "cpr_export.csv");
   }
 }

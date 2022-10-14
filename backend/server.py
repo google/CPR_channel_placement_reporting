@@ -30,8 +30,8 @@ from google_auth_oauthlib.flow import Flow
 from google.appengine.api import wrap_wsgi_app
 from google.appengine.api.mail import send_mail
 
-from cpr_services import run_auto_excluder, run_manual_excluder
-from gads_api import get_youtube_channel_id_list, get_youtube_channel_id_name_list
+from cpr_services import run_auto_excluder, run_manual_excluder, get_customer_ids
+from gads_api import get_youtube_channel_id_name_list
 from cloud_api import get_schedule_list, update_cloud_schedule
 from firebase_server import fb_get_task, fb_save_client_secret, fb_save_task, fb_get_tasks_list, fb_delete_task, fb_save_settings, fb_read_settings, fb_read_client_secret, fb_save_token, fb_read_token
 
@@ -90,7 +90,7 @@ def run_automatic_excluder_from_task_id(task_id:str):
     minus_days: int = int(file_contents['days_ago'])
     d = date.today() - timedelta(days=minus_days)
     date_from = d.strftime(DATE_FORMAT)
-    yt_date_to = date.today().strftime(DATE_FORMAT)
+    date_to = date.today().strftime(DATE_FORMAT)
     gads_filters = file_contents['gads_filter']
     yt_view_count_filter = file_contents['yt_view_operator']+file_contents['yt_view_value']
     yt_sub_count_filter = file_contents['yt_subscriber_operator']+file_contents['yt_subscriber_value']
@@ -115,7 +115,7 @@ def run_automatic_excluder_from_task_id(task_id:str):
       exclude_yt,
       customer_id,
       date_from,
-      yt_date_to,
+      date_to,
       gads_filters, 
       yt_view_count_filter,
       yt_sub_count_filter,
@@ -179,7 +179,7 @@ def server_run_excluder():
   minus_days: int = int(data['daysAgo'])
   d = date.today() - timedelta(days=minus_days)
   date_from = d.strftime(DATE_FORMAT)
-  yt_date_to = date.today().strftime(DATE_FORMAT)
+  date_to = date.today().strftime(DATE_FORMAT)
   gads_filters = data['gadsFinalFilters']
   yt_view_count_filter = data['ytViewOperator']+data['ytViewValue']
   yt_sub_count_filter = data['ytSubscriberOperator']+data['ytSubscriberValue']
@@ -203,7 +203,7 @@ def server_run_excluder():
     exclude_yt,
     customer_id,
     date_from,
-    yt_date_to,
+    date_to,
     gads_filters, 
     yt_view_count_filter,
     yt_sub_count_filter,
@@ -279,6 +279,13 @@ def save_task():
   return _build_response(json.dumps(task_id))
 
 
+@app.route("/api/getCustomerIds", methods=['GET'])
+def get_customr_ids():
+  credentials = refresh_credentials()
+  customer_list = {}
+  customer_list = get_customer_ids(credentials, fb_read_settings())
+  return _build_response(json.dumps(customer_list))
+  
 
 @app.route("/api/getTasksList", methods=['GET'])
 def get_tasks_list():
@@ -288,22 +295,23 @@ def get_tasks_list():
   if files_data:
     schedule_list = get_schedule_list(credentials, PROJECT_ID, LOCATION)
     for schedule in schedule_list.values():
-      sch_date = datetime.fromisoformat(schedule['scheduleTime'][:-1] + '+00:00').replace(tzinfo=None)
-      now_date = datetime.today()
-      time_difference = sch_date - now_date
-      next_run=f"""
-      {math.floor(time_difference.total_seconds() / 3600)}h 
-      {(math.floor(time_difference.total_seconds() / 60)-(60*math.floor(time_difference.total_seconds() / 3600)))}m
-      """
+      if schedule['scheduleTime']:
+        sch_date = datetime.fromisoformat(schedule['scheduleTime'][:-1] + '+00:00').replace(tzinfo=None)
+        now_date = datetime.today()
+        time_difference = sch_date - now_date
+        next_run=f"""
+        {math.floor(time_difference.total_seconds() / 3600)}h 
+        {(math.floor(time_difference.total_seconds() / 60)-(60*math.floor(time_difference.total_seconds() / 3600)))}m
+        """
 
-      if 'status' in schedule and 'code' in schedule['status']:
-        files_data[(schedule['name'].split("/"))[5]].update({'error_code': schedule['status']['code']})
-      else:
-        files_data[(schedule['name'].split("/"))[5]].update({'error_code': '0'})
-      
-      files_data[(schedule['name'].split("/"))[5]].update({'state': schedule['state']})
-      files_data[(schedule['name'].split("/"))[5]].update({'schedule_time': (schedule['scheduleTime'][:-1]).replace("T", " ")})
-      files_data[(schedule['name'].split("/"))[5]].update({'next_run': next_run})
+        if 'status' in schedule and 'code' in schedule['status']:
+          files_data[(schedule['name'].split("/"))[5]].update({'error_code': schedule['status']['code']})
+        else:
+          files_data[(schedule['name'].split("/"))[5]].update({'error_code': '0'})
+        
+        files_data[(schedule['name'].split("/"))[5]].update({'state': schedule['state']})
+        files_data[(schedule['name'].split("/"))[5]].update({'schedule_time': (schedule['scheduleTime'][:-1]).replace("T", " ")})
+        files_data[(schedule['name'].split("/"))[5]].update({'next_run': next_run})
 
   return _build_response(json.dumps(files_data))
 

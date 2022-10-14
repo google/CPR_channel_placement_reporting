@@ -30,13 +30,13 @@ a:hover {
 
 .bigicon {
   margin-top: 10px;
+  margin-right: 5px;
   font-size: 30px;
 }
 
-.smallicon {
-  height:30px !important;
-  width:30px !important;
-  font-size:25px !important;
+.smalltext {
+  font-size: x-small;
+  color: #009879;
 }
 
 .heading {
@@ -44,6 +44,14 @@ a:hover {
   font-size: x-large;
   font-weight: bold;
   border-bottom: 1px solid #009879;
+}
+
+.green_icon {
+  color:rgb(102, 192, 107);
+}
+
+.red_icon {
+  color: darkred;
 }
 
 /* TABLE CSS */
