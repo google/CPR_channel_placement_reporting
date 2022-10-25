@@ -44,11 +44,11 @@ export class NewtaskComponent implements OnInit {
   isChecked: boolean = false;
   save_button = "Save Task";
   task_id: string = "";
-  bringToTop: boolean = false;
   email_alerts: boolean =false;
   email_alerts_hidden: boolean = true;
   manual_cid: boolean = false;
   cid_choice: string = "Enter manually";
+  revSort: string ="";
 
   error_count = 0;
   task_name_error = false;
@@ -345,7 +345,7 @@ export class NewtaskComponent implements OnInit {
   _call_auto_service_success(response: ReturnPromise, auto_exclude: string) {
     this.table_result = Object.values(response);
     if (this.table_result.length > 0) {
-      this.sort_table();
+      this.sort_table("default");
      
       this.no_data = false;
       if (auto_exclude == 'true') {
@@ -362,24 +362,21 @@ export class NewtaskComponent implements OnInit {
     this.loading = false;
   }
 
-  bring_to_top(bringToTop: boolean)
-  {
-    this.bringToTop = bringToTop;
-    this.sort_table();
-  }
 
-  sort_table()
-  {
-    if(this.bringToTop)
-      {
-        this.table_result.sort((a, b) => (a.excludeFromYt > b.excludeFromYt) ? 1 : -1);
-        this.table_result.sort((a, b) => (a.excluded_already < b.excluded_already) ? 1 : -1);
-      }
-      else
-      {
-        this.table_result.sort((a, b) => (a.excludeFromYt > b.excludeFromYt) ? 1 : -1);
-        this.table_result.sort((a, b) => (a.excluded_already > b.excluded_already) ? 1 : -1);
-      }
+  sort_table(element: string) {
+    if(element=="default") {
+      this.table_result.sort((a, b) => (a.excludeFromYt > b.excludeFromYt) ? 1 : -1);
+      this.table_result.sort((a, b) => (a.excluded_already > b.excluded_already) ? 1 : -1);
+      this.revSort = "";
+    }
+    else if(this.revSort == element) {
+      this.table_result.sort((a, b) => (a[element] > b[element]) ? 1 : -1);
+      this.revSort = "";
+    }
+    else {
+      this.table_result.sort((a, b) => (a[element] < b[element]) ? 1 : -1);
+      this.revSort = element;
+    }
   }
 
   run_manual_excluder_form() {
@@ -517,7 +514,7 @@ export class NewtaskComponent implements OnInit {
         this.memory_error = true;
       }
     }
-    this.sort_table();
+    this.sort_table("default");
   }
 
   row_class(excluded_already: string, excludeFromYt: string)
@@ -566,8 +563,7 @@ export class NewtaskComponent implements OnInit {
       this.gads_filter_error = true;
       error_count++;
     }
-    //if (isNaN(Number(this.gadsForm.controls['daysAgo'].value)) || Number(this.gadsForm.controls['daysAgo'].value) >90) {
-    if (isNaN(Number(this.gadsForm.controls['daysAgo'].value))) {
+    if (isNaN(Number(this.gadsForm.controls['daysAgo'].value)) || Number(this.gadsForm.controls['daysAgo'].value) >90) {
     this.lookback_error = true;
       error_count++;
     }

@@ -15,18 +15,31 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+.hrlink a {
+  cursor: pointer;
+  text-decoration: none;
+  color: #FFFFFF;
+}
+.hrlink a:hover {
+  cursor: pointer;
+  text-decoration: underline;
+  color: #FFFFFF;
+}
+
 a {
   cursor: pointer;
   text-decoration: none;
   color: #009879;
 }
 a:hover {
+  cursor: pointer;
   text-decoration: none;
   color: darkred;
 }
+
 .full-width {
     width: 100%;
-  }
+}
 
 .bigicon {
   margin-top: 10px;

@@ -217,8 +217,6 @@
 <!---->
 <div *ngIf="table_result.length > 0" >
     <div class="pagination-left">
-        <mat-slide-toggle id="showExcluded" [(ngModel)]="bringToTop" (change)="bring_to_top(bringToTop)">
-        </mat-slide-toggle> Bring Already Excluded To Top 
         <span class="error_text" *ngIf=memory_error><mat-icon>warning</mat-icon> Your report is only partial due to memory of your instance being reached</span> 
         </div>
     <div class="pagination">
@@ -251,25 +249,25 @@
 <table *ngIf="table_result.length > 0" class="styled-table newtask-width">
     <thead>
         <tr>
-            <th>Exclude</th>
-            <th>Excluded Already</th>
-            <th>Placement Name</th>
-            <th>YouTube ID</th>
-            <th>Impressions</th>
-            <th>Clicks</th>
-            <th>Video Views</th>
-            <th>Cost</th>
-            <th>Conversions</th>
-            <th>CPA</th>
-            <th>View-Through Conversions</th>
-            <th>Avg. CPM</th>
-            <th>CTR</th>
-            <th>YouTube Subscribers</th>
-            <th>YouTube View Count</th>
-            <th>YouTube Video Count</th>
-            <th>YouTube Language</th>
-            <th>YouTube Country</th>
-            <th>YouTube Title Standard Characters</th>
+            <th class="hrlink"><a (click)="sort_table('default')">Exclude</a></th>
+            <th class="hrlink"><a (click)="sort_table('excluded_already')">Excluded Already</a></th>
+            <th class="hrlink"><a (click)="sort_table('group_placement_view_display_name')">Placement Name</a></th>
+            <th class="hrlink"><a (click)="sort_table('group_placement_view_placement')">YouTube ID</a></th>
+            <th class="hrlink"><a (click)="sort_table('metrics_impressions')">Impressions</a></th>
+            <th class="hrlink"><a (click)="sort_table('metrics_clicks')">Clicks</a></th>
+            <th class="hrlink"><a (click)="sort_table('metrics_video_views')">Video Views</a></th>
+            <th class="hrlink"><a (click)="sort_table('metrics_cost')">Cost</a></th>
+            <th class="hrlink"><a (click)="sort_table('metrics_conversions')">Conversions</a></th>
+            <th class="hrlink"><a (click)="sort_table('metrics_cost_per_conversion')">CPA</a></th>
+            <th class="hrlink"><a (click)="sort_table('metrics_view_through_conversions')">View-Through Conversions</a></th>
+            <th class="hrlink"><a (click)="sort_table('metrics_average_cpm')">Avg. CPM</a></th>
+            <th class="hrlink"><a (click)="sort_table('metrics_ctr')">CTR</a></th>
+            <th class="hrlink"><a (click)="sort_table('subscriberCount')">YouTube Subscribers</a></th>
+            <th class="hrlink"><a (click)="sort_table('viewCount')">YouTube View Count</a></th>
+            <th class="hrlink"><a (click)="sort_table('videoCount')">YouTube Video Count</a></th>
+            <th class="hrlink"><a (click)="sort_table('language')">YouTube Language</a></th>
+            <th class="hrlink"><a (click)="sort_table('country')">YouTube Country</a></th>
+            <th class="hrlink"><a (click)="sort_table('asciiTitle')">YouTube Title Standard Characters</a></th>
         </tr>
     </thead>
     <tbody>
