@@ -55,14 +55,14 @@ cp app.yaml app.yaml
 
 echo -e "${COLOR}Building app...${NC}"
 cd frontend
-NODE_VER=16
+NODE_VER=18
 if [[ "$CLOUD_SHELL" == "true" ]]; then
   sudo su -c '. /usr/local/nvm/nvm.sh && nvm install $NODE_VER --lts'
   . /usr/local/nvm/nvm.sh && nvm use $NODE_VER
 fi
 export NG_CLI_ANALYTICS=ci
 npm install --no-audit
-npm i --save-dev @types/file-saver
+npm i --save-dev file-saver
 npm run build
 cd ..
 
