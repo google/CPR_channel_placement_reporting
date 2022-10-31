@@ -24,6 +24,7 @@ NC='\033[0m' # No Color
 
 PROJECT_ID=$(gcloud config get-value project 2> /dev/null)
 
+git stash --include-untracked
 git pull
 
 # check the billing
@@ -43,7 +44,8 @@ if [[ "$CLOUD_SHELL" == "true" ]]; then
 fi
 export NG_CLI_ANALYTICS=ci
 npm install --no-audit
-npm i --save-dev file-saver
+npm install file-saver --save
+npm install @types/file-saver --save-dev
 npm run build
 cd ..
 
