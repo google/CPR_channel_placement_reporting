@@ -134,7 +134,7 @@ def get_youtube_data(credentials, channel_ids: list) -> list:
             )
             response = request.execute()
             
-            if response['items']:
+            if "items" in response:
                 for item in response['items']:
                     yt_items.append(item)
             ids_to_pass = ""
