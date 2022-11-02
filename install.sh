@@ -82,12 +82,12 @@ gcloud projects add-iam-policy-binding $PROJECT_ID --member=serviceAccount:$SERV
 
 # create IAP
 echo -e "${COLOR}Creating oauth brand (consent screen) for IAP...${NC}"
-gcloud alpha iap oauth-brands create --application_title="$PROJECT_TITLE" --support_email=$USER_EMAIL
+gcloud iap oauth-brands create --application_title="$PROJECT_TITLE" --support_email=$USER_EMAIL
 
 # create OAuth client for IAP
 echo -e "${COLOR}Creating OAuth client for IAP...${NC}"
 # TODO: ideally we need to parse the response from the previous command to get brand full name
-gcloud alpha iap oauth-clients create projects/$PROJECT_NUMBER/brands/$PROJECT_NUMBER --display_name=iap \
+gcloud iap oauth-clients create projects/$PROJECT_NUMBER/brands/$PROJECT_NUMBER --display_name=iap \
   --format=json 2> /dev/null |\
   python3 -c "import sys, json; res=json.load(sys.stdin); i = res['name'].rfind('/'); print(res['name'][i+1:]); print(res['secret'])" \
   > .oauth
@@ -107,7 +107,7 @@ curl -X PATCH -H "Content-Type: application/json" \
 
 # Grant access to the current user
 echo -e "${COLOR}Granting user $USER_EMAIL access to the app through IAP...${NC}"
-gcloud alpha iap web add-iam-policy-binding --resource-type=app-engine --member="user:$USER_EMAIL" --role='roles/iap.httpsResourceAccessor'
+gcloud iap web add-iam-policy-binding --resource-type=app-engine --member="user:$USER_EMAIL" --role='roles/iap.httpsResourceAccessor'
 
 echo -e "${COLOR}Creating Firestore database...${NC}"
 gcloud firestore databases create --region=eur3
