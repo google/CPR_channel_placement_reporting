@@ -99,12 +99,16 @@ export class PostService {
     return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/finishAuth", code, {headers: headers});
   }
 
-  async refresh_credentials() {
-    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/refreshCredentials");
+  async set_reauth() {
+    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/setReauth");
   }
 
   async get_customer_list() {
     return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getCustomerIds");
+  }
+
+  async get_mcc_list() {
+    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getMccIds");
   }
 
 }

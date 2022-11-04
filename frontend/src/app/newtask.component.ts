@@ -49,6 +49,7 @@ export class NewtaskComponent implements OnInit {
   manual_cid: boolean = false;
   cid_choice: string = "Enter manually";
   revSort: string ="";
+  include_youtube: boolean = true;
 
   error_count = 0;
   task_name_error = false;
@@ -157,7 +158,8 @@ export class NewtaskComponent implements OnInit {
       ytCountryOperator: [''],
       ytCountryValue: [''],
       ytStandardCharValue: [''],
-      emailAlerts: ['false']
+      emailAlerts: ['false'],
+      includeYouTube: ['true']
     });
 
     this.gadsForm.controls['daysAgo'].setValue(7);
@@ -280,6 +282,9 @@ export class NewtaskComponent implements OnInit {
       if (k == 'email_alerts') {
         this.gadsForm.controls['emailAlerts'].setValue(v);
       }
+      if (k == 'include_youtube') {
+        this.gadsForm.controls['includeYouTube'].setValue(v);
+      }
     }));
     this.scheduleChange();
     this.loading = false;
@@ -314,7 +319,8 @@ export class NewtaskComponent implements OnInit {
         'ytLanguageValue': this.gadsForm.controls['ytLanguageValue'].value,
         'ytCountryOperator': this.gadsForm.controls['ytCountryOperator'].value,
         'ytCountryValue': this.gadsForm.controls['ytCountryValue'].value,
-        'ytStandardCharValue': this.gadsForm.controls['ytStandardCharValue'].value
+        'ytStandardCharValue': this.gadsForm.controls['ytStandardCharValue'].value,
+        'includeYouTubeData': this.include_youtube
       };
       if (this.finalGadsFilter == "") {
         this.dialogService.openConfirmDialog("WARNING: Are you sure you want to run with no Google Ads Filters?\n\nThis can take considerably longer on larger accounts and even run out of memory. It is advised to add filters for best results.")
@@ -464,7 +470,8 @@ export class NewtaskComponent implements OnInit {
       'yt_country_operator': this.gadsForm.controls['ytCountryOperator'].value,
       'yt_country_value': this.gadsForm.controls['ytCountryValue'].value,
       'yt_std_character': this.gadsForm.controls['ytStandardCharValue'].value,
-      'emailAlerts': this.gadsForm.controls['emailAlerts'].value
+      'emailAlerts': this.gadsForm.controls['emailAlerts'].value,
+      'includeYouTubeData': this.include_youtube
     };
 
     this._call_save_task_service(JSON.stringify(formRawValue));
@@ -563,7 +570,8 @@ export class NewtaskComponent implements OnInit {
       this.gads_filter_error = true;
       error_count++;
     }
-    if (isNaN(Number(this.gadsForm.controls['daysAgo'].value)) || Number(this.gadsForm.controls['daysAgo'].value) >90 || this.gadsForm.controls['daysAgo'].value=="") {
+    //|| Number(this.gadsForm.controls['daysAgo'].value) >90
+    if (isNaN(Number(this.gadsForm.controls['daysAgo'].value)) || this.gadsForm.controls['daysAgo'].value=="") {
     this.lookback_error = true;
       error_count++;
     }
@@ -571,23 +579,33 @@ export class NewtaskComponent implements OnInit {
       this.customer_id_error = true;
       error_count++;
     }
-    if (isNaN(Number(this.gadsForm.controls['ytSubscriberValue'].value))) {
+    if (isNaN(Number(this.gadsForm.controls['ytSubscriberValue'].value)) 
+    || (this.gadsForm.controls['ytSubscriberValue'].value !="" && this.gadsForm.controls['ytSubscriberOperator'].value == "")
+    || (this.gadsForm.controls['ytSubscriberValue'].value =="" && this.gadsForm.controls['ytSubscriberOperator'].value != "")) {
       this.yt_subscribers_error = true;
       error_count++;
     }
-    if (isNaN(Number(this.gadsForm.controls['ytViewValue'].value))) {
+    if (isNaN(Number(this.gadsForm.controls['ytViewValue'].value)) 
+    || (this.gadsForm.controls['ytViewValue'].value !="" && this.gadsForm.controls['ytViewOperator'].value == "")
+    || (this.gadsForm.controls['ytViewValue'].value =="" && this.gadsForm.controls['ytViewOperator'].value != "")) {
       this.yt_view_error = true;
       error_count++;
     }
-    if (isNaN(Number(this.gadsForm.controls['ytVideoValue'].value))) {
+    if (isNaN(Number(this.gadsForm.controls['ytVideoValue'].value)) 
+    || (this.gadsForm.controls['ytVideoValue'].value !="" && this.gadsForm.controls['ytVideoOperator'].value == "")
+    || (this.gadsForm.controls['ytVideoValue'].value =="" && this.gadsForm.controls['ytVideoOperator'].value != "")) {
       this.yt_video_error = true;
       error_count++;
     }
-    if ((this.gadsForm.controls['ytLanguageValue'].value).length != 2 && this.gadsForm.controls['ytLanguageValue'].value != "") {
+    if ((this.gadsForm.controls['ytLanguageValue'].value).length != 2 && this.gadsForm.controls['ytLanguageValue'].value != "" 
+    || (this.gadsForm.controls['ytLanguageValue'].value !="" && this.gadsForm.controls['ytLanguageOperator'].value == "")
+    || (this.gadsForm.controls['ytLanguageValue'].value =="" && this.gadsForm.controls['ytLanguageOperator'].value != "")) {
       this.yt_language_error = true;
       error_count++;
     }
-    if ((this.gadsForm.controls['ytCountryValue'].value).length != 2 && this.gadsForm.controls['ytCountryValue'].value != "") {
+    if ((this.gadsForm.controls['ytCountryValue'].value).length != 2 && this.gadsForm.controls['ytCountryValue'].value != "" 
+    || (this.gadsForm.controls['ytCountryValue'].value !="" && this.gadsForm.controls['ytCountryOperator'].value == "")
+    || (this.gadsForm.controls['ytCountryValue'].value =="" && this.gadsForm.controls['ytCountryOperator'].value != "")) {
       this.yt_country_error = true;
       error_count++;
     }
@@ -725,4 +743,5 @@ export class NewtaskComponent implements OnInit {
     var blob = new Blob([csvArray], {type: 'text/csv' })
     saveAs(blob, "cpr_export.csv");
   }
+
 }

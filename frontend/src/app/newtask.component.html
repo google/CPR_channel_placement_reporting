@@ -90,7 +90,15 @@
         <br>
         <!-- YouTube Filters-->
         <div class="filterBorder">
-            <b>YouTube Exclusion Rules (AND only)</b><br>
+            <div class="label-input-block">
+            <b>YouTube Exclusion Rules (AND only)</b>
+            </div>
+                <div class="label-input-block align-right">
+                    Include YouTube Data <mat-slide-toggle name="includeYouTube" [(ngModel)]="include_youtube" formControlName="includeYouTube" id="includeYouTube">
+                    </mat-slide-toggle> 
+                </div>
+            <br>
+            <br>
             <div>
                 <div class="label-input-block yt-label">
                     Subscriber Count

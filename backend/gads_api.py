@@ -57,6 +57,7 @@ date_from: str, date_to: str, conditions: str) -> dict:
             WHERE
                 campaign.status='ENABLED'
                 AND group_placement_view.placement_type IN ("YOUTUBE_CHANNEL")
+                AND group_placement_view.display_name != ""
             AND segments.date BETWEEN '{date_from}' AND '{date_to}'
             """
             if condition:
@@ -85,7 +86,8 @@ date_from: str, date_to: str, conditions: str) -> dict:
                         'metrics_clicks': row.metrics.clicks,
                         'metrics_average_cpm': row.metrics.average_cpm / MICRO_CONV,
                         'metrics_ctr': row.metrics.ctr,
-                        'excluded_already': 'No'
+                        'excluded_already': 'No',
+                        'excludeFromYt': 'true'
                     }
                     if (sys.getsizeof(all_data_set)/1000000) > ENGINE_SIZE:
                         MEMORY_WARNING=True
@@ -118,7 +120,7 @@ def get_youtube_data(credentials, channel_ids: list) -> list:
     returns a list of YouTube statistics for each channel ID
     '''
     ids_to_pass = ""
-    yt_limit = 50 #can be put up to 50
+    yt_limit = 50 #max 50
     channel_ids_length = len(channel_ids)
     yt_items = []
     if channel_ids_length > 0:
@@ -265,12 +267,7 @@ def get_gads_customer_ids(client, mcc_id) -> dict:
         all_customer_ids = {}
         query = f"""
         SELECT
-          customer_client.client_customer,
-          customer_client.level,
-          customer_client.manager,
           customer_client.descriptive_name,
-          customer_client.currency_code,
-          customer_client.time_zone,
           customer_client.id
         FROM customer_client
         WHERE customer_client.level <= 1"""
@@ -289,3 +286,17 @@ def get_gads_customer_ids(client, mcc_id) -> dict:
             }
 
     return all_customer_ids
+
+def get_gads_mcc_ids(client) -> list:
+    all_mcc_ids = []
+    customer_service = client.get_service("CustomerService")
+
+    accessible_customers = customer_service.list_accessible_customers()
+    result_total = len(accessible_customers.resource_names)
+    print(f"Total results: {result_total}")
+
+    resource_names = accessible_customers.resource_names
+    for resource_name in resource_names:
+        all_mcc_ids.append(resource_name.split('/')[1])
+
+    return all_mcc_ids
