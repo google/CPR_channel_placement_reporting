@@ -30,10 +30,10 @@ from google_auth_oauthlib.flow import Flow
 from google.appengine.api import wrap_wsgi_app
 from google.appengine.api.mail import send_mail
 
-from cpr_services import run_auto_excluder, run_manual_excluder, get_customer_ids
+from cpr_services import get_mcc_ids, run_auto_excluder, run_manual_excluder, get_customer_ids
 from gads_api import get_youtube_channel_id_name_list
 from cloud_api import get_schedule_list, update_cloud_schedule
-from firebase_server import fb_get_task, fb_save_client_secret, fb_save_task, fb_get_tasks_list, fb_delete_task, fb_save_settings, fb_read_settings, fb_read_client_secret, fb_save_token, fb_read_token
+from firebase_server import fb_get_task, fb_save_client_secret, fb_save_task, fb_get_tasks_list, fb_delete_task, fb_save_settings, fb_read_settings, fb_read_client_secret, fb_save_token, fb_read_token, fb_clear_token
 
 
 app = Flask(__name__, static_url_path='', 
@@ -95,6 +95,7 @@ def run_automatic_excluder_from_task_id(task_id:str):
     yt_view_count_filter = file_contents['yt_view_operator']+file_contents['yt_view_value']
     yt_sub_count_filter = file_contents['yt_subscriber_operator']+file_contents['yt_subscriber_value']
     yt_video_count_filter = file_contents['yt_video_operator']+file_contents['yt_video_value']
+    include_yt_data = file_contents['include_youtube']
     
     if file_contents['yt_country_operator']:
       yt_country_filter = f"{file_contents['yt_country_operator']}'{file_contents['yt_country_value'].upper()}'"
@@ -122,7 +123,8 @@ def run_automatic_excluder_from_task_id(task_id:str):
       yt_video_count_filter,
       yt_country_filter, 
       yt_language_filter,
-      yt_standard_characters_filter
+      yt_standard_characters_filter,
+      include_yt_data
     )
     
     yt_exclusions=get_youtube_channel_id_name_list(response_data)
@@ -141,6 +143,8 @@ def run_static():
 def finalise_auth():
   data = request.get_json(force = True)
   code=data['code']
+
+  fb_save_settings(data)
   msg = finish_auth(code)
   return _build_response(json.dumps(msg))
 
@@ -184,6 +188,7 @@ def server_run_excluder():
   yt_view_count_filter = data['ytViewOperator']+data['ytViewValue']
   yt_sub_count_filter = data['ytSubscriberOperator']+data['ytSubscriberValue']
   yt_video_count_filter = data['ytVideoOperator']+data['ytVideoValue']
+  include_yt_data = data['includeYouTubeData']
   
   if data['ytCountryOperator']== "":
     yt_country_filter = ""
@@ -210,7 +215,8 @@ def server_run_excluder():
     yt_video_count_filter,
     yt_country_filter, 
     yt_language_filter,
-    yt_standard_characters_filter
+    yt_standard_characters_filter,
+    include_yt_data
   )
   
   return _build_response(json.dumps(response_data))
@@ -249,6 +255,20 @@ def get_config():
     return _build_response(json.dumps("x"))
   
 
+@app.route("/api/setReauth", methods=['GET'])
+def set_reauth():
+  global credentials
+  credentials=None
+  
+  fb_clear_token()
+
+  creds: str = refresh_credentials()
+  try:
+    if creds.startswith("http"):
+      return _build_response(json.dumps(creds))
+  except:
+    return _build_response(json.dumps("success"))
+
 
 @app.route("/api/setConfig", methods=['POST'])
 def set_config():
@@ -285,6 +305,18 @@ def get_customr_ids():
   customer_list = {}
   customer_list = get_customer_ids(credentials, fb_read_settings())
   return _build_response(json.dumps(customer_list))
+
+
+@app.route("/api/getMccIds", methods=['GET'])
+def get_all_mcc_ids():
+  credentials = refresh_credentials()
+  mcc_list = {}
+  print(credentials)
+  if not isinstance(credentials, str):
+    mcc_list = get_mcc_ids(credentials, fb_read_settings())
+  return _build_response(json.dumps(mcc_list))
+
+
   
 
 @app.route("/api/getTasksList", methods=['GET'])

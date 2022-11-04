@@ -18,12 +18,12 @@ import logging
 from typing import List
 
 from gads_make_client import make_client
-from gads_api import get_placement_data, get_youtube_data, append_youtube_data, get_youtube_channel_id_list, exclude_youtube_channels, get_gads_customer_ids
+from gads_api import get_gads_mcc_ids, get_placement_data, get_youtube_data, append_youtube_data, get_youtube_channel_id_list, exclude_youtube_channels, get_gads_customer_ids
 
 def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, customer_id: str, 
     date_from: str, date_to: str, gads_filters: str,
     view_count: str, sub_count: str, video_count: str, 
-    country: str, language: str, isEnglish: str) -> dict:
+    country: str, language: str, isEnglish: str, include_yt_data: bool) -> dict:
     try:
         mcc_id = config_file.get('mcc_id')
         developer_token = config_file.get('dev_token')
@@ -32,10 +32,12 @@ def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, custo
         client = make_client(mcc_id, developer_token, creds)
         ga_service = client.get_service("GoogleAdsService")
         full_data_set = get_placement_data(client, ga_service, customer_id, date_from, date_to, gads_filters)
-        yt_data = get_youtube_data(credentials, [d.get('group_placement_view_placement') for d in full_data_set.values()])
-        full_data_set = append_youtube_data(full_data_set, yt_data, view_count, sub_count, video_count, country, language, isEnglish)
         
-        if exclude_from_youtube == 'true':
+        if include_yt_data:
+            yt_data = get_youtube_data(credentials, [d.get('group_placement_view_placement') for d in full_data_set.values()])
+            full_data_set = append_youtube_data(full_data_set, yt_data, view_count, sub_count, video_count, country, language, isEnglish)
+
+        if exclude_from_youtube == 'true': #value is text so needs to be checked explicitly
             exclude_youtube_channels(client, customer_id, get_youtube_channel_id_list(full_data_set))
         return full_data_set
             
@@ -70,6 +72,18 @@ def get_customer_ids(credentials, config_file) -> dict:
             
     except ValueError:
         logging.info("Error on running Excluder!")
+
+
+def get_mcc_ids(credentials,config_file) -> list:
+
+    creds = json.loads(credentials.to_json())
+    developer_token = config_file.get('dev_token')
+    mccs = []
+    if developer_token:
+        client = make_client("", developer_token, creds)
+        mccs = get_gads_mcc_ids(client)
+
+    return mccs
 
     
 

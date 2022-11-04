@@ -40,6 +40,9 @@ def fb_read_token() -> dict:
     cs_ref = db.collection(COLLECTION_CONFIG).document('token')
     return (cs_ref.get().to_dict())['token']
 
+def fb_clear_token():
+    db.collection(COLLECTION_CONFIG).document('token').delete()
+
 def fb_save_client_secret(data):
     doc_ref = db.collection(COLLECTION_CONFIG).document('client_secret')
     doc_ref.set(data)
@@ -90,6 +93,7 @@ def fb_save_task(data) -> str:
         'yt_country_value': data['yt_country_value'],
         'yt_std_character': data['yt_std_character'],
         'email_alerts': data['emailAlerts'],
+        'include_youtube': data['includeYouTubeData'],
         'date_created': date_created
     })
     return task_id

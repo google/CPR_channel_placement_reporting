@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
- import { Component, OnInit } from '@angular/core';
+ import { ANALYZE_FOR_ENTRY_COMPONENTS, Component, OnInit } from '@angular/core';
  import { FormBuilder, FormGroup } from '@angular/forms';
  import { PostService, ReturnPromise } from './services/post.service';
  import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
@@ -30,6 +30,7 @@
    file_status="";
    subs: any;
    hideAuth = true;
+   mcc_list: any[] = [];
  
    horizontalPosition: MatSnackBarHorizontalPosition = 'center';
    verticalPosition: MatSnackBarVerticalPosition = 'top';
@@ -56,10 +57,11 @@
        });
    }
  
-   _parse_config(response: ReturnPromise) {
+  _parse_config(response: ReturnPromise) {
      let config = (Object.entries(response).find(([k, v]) => {
        if(k=='dev_token') {
          this.settingsForm.controls['gadsDevToken'].setValue(v);
+         this.populate_mcc_ids();
        }
        if(k=='mcc_id') {
          this.settingsForm.controls['gadsMccId'].setValue(v);
@@ -68,6 +70,23 @@
          this.settingsForm.controls['emailAddress'].setValue(v);
        }
      }));
+   }
+
+   async populate_mcc_ids()
+   {
+    this.subs = (await ((this.service.get_mcc_list())))
+       .subscribe({
+         next: (response: ReturnPromise) => this._populate_mcc_list(response),
+         error: (err: any) => this.file_status="Unknown error!",
+         complete: () => this.loading=false
+       });
+   }
+
+   _populate_mcc_list(response: ReturnPromise)
+   {
+    this.mcc_list = Object.entries(response);
+    this.mcc_list.sort((a, b) => (a[1] > b[1]) ? 1 : -1);
+    this.loading=false;
    }
  
    async save_settings() {
@@ -93,6 +112,16 @@
          complete: () => this.loading=false
        });  
    }
+
+   async reauth() {
+    this.loading=true
+    this.subs = (await ((this.service.set_reauth())))
+    .subscribe({
+      next: (response: ReturnPromise) => this._redirect(response),
+      error: (err: any) => this.openSnackBar("Error updating settings", "Dismiss", "error-snackbar"),
+      complete: () => this.loading=false
+    });  
+   }
    
    _redirect(response: ReturnPromise) {
     let url = response.toString();
@@ -103,6 +132,9 @@
     }
     else {
       this.openSnackBar("Config Saved!", "Dismiss", "success-snackbar");
+      if(this.mcc_list.length == 0) {
+        this.populate_mcc_ids();
+      }
     }
    }
 
@@ -111,7 +143,10 @@
      this.loading=true;
      if(code!=null) {
        let codeRawValue = {
-         'code': code
+         'code': code,
+         'dev_token': this.settingsForm.controls['gadsDevToken'].value,
+         'mcc_id': '',
+         'email_address': this.settingsForm.controls['emailAddress'].value
        }
        this.subs = (await ((this.service.finalise_auth(JSON.stringify(codeRawValue)))))
        .subscribe({
@@ -130,6 +165,7 @@
       }
       else {
         this.openSnackBar("Auth Completed!", "Dismiss", "success-snackbar");
+        this.populate_mcc_ids();
       }
    }
  
