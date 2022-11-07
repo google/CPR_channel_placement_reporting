@@ -570,8 +570,8 @@ export class NewtaskComponent implements OnInit {
       this.gads_filter_error = true;
       error_count++;
     }
-    //|| Number(this.gadsForm.controls['daysAgo'].value) >90
-    if (isNaN(Number(this.gadsForm.controls['daysAgo'].value)) || this.gadsForm.controls['daysAgo'].value=="") {
+    
+    if (isNaN(Number(this.gadsForm.controls['daysAgo'].value)) || this.gadsForm.controls['daysAgo'].value=="" || Number(this.gadsForm.controls['daysAgo'].value) >90) {
     this.lookback_error = true;
       error_count++;
     }
