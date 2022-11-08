@@ -293,7 +293,6 @@ def get_gads_mcc_ids(client) -> list:
 
     accessible_customers = customer_service.list_accessible_customers()
     result_total = len(accessible_customers.resource_names)
-    print(f"Total results: {result_total}")
 
     resource_names = accessible_customers.resource_names
     for resource_name in resource_names:

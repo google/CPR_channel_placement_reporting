@@ -26,6 +26,14 @@ body {
   color: #FFFFFF;
 }
 
+table th {
+  position: -webkit-sticky; // this is for all Safari (Desktop & iOS), not for Chrome
+  position: sticky;
+  top: 0;
+  z-index: 99; // any positive value, layer order is global
+  background: #009879; // any bg-color to overlap
+}
+
 a {
   cursor: pointer;
   text-decoration: none;
@@ -167,6 +175,29 @@ input[type='checkbox'] {
   resize: vertical;
 }
 
+.smallInputElement {
+  width: 110px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  resize: vertical;
+}
+.smallErrorElement {
+  width: 110px;
+  padding: 8px;
+  border: 1px solid red;
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  resize: vertical;
+}
+
 /* Style the submit button with a specific background color etc */
 .focusButton {
   background-color: #009879;
@@ -279,6 +310,10 @@ button:disabled {
   align-items: center;
   justify-content: center;
   width: 100%;
+}
+.top-centre-form {
+  vertical-align: top;
+  height: 80px;
 }
 .yt-label {
   width: 300px;

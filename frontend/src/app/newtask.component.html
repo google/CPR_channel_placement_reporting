@@ -9,26 +9,34 @@
             <span *ngIf='task_id==undefined || this.task_id==""'>New Task</span>
         </div>
         <div class="centre-form">
-            <div class="label-input-block">
-                <label for="taskName">Task Name</label><span class="error_text" *ngIf=task_name_error>Must have a name to save</span><br>
-                <input type="text" [className]="task_name_error ? 'errorElement' : 'inputElement'" formControlName="taskName" name="taskName">
+            <div class="label-input-block top-centre-form">
+                <label for="taskName">Task Name</label><br>
+                <input type="text" [className]="task_name_error ? 'errorElement' : 'inputElement'" formControlName="taskName" name="taskName"><br>
+                <span class="error_text" *ngIf=task_name_error>Must have a name to save</span>
             </div>
 
-            <div class="label-input-block">
-                <label for="gadsCustomerId">Customer ID <a (click)="switch_cid()" class="smalltext">{{cid_choice}}</a><span class="error_text" *ngIf=customer_id_error>Needs a
-                        valid CID</span></label><br>
+            <div class="label-input-block top-centre-form">
+                <label for="gadsCustomerId">Customer ID <a (click)="switch_cid()" class="smalltext">{{cid_choice}}</a><br>
                 <select [className]="customer_id_error ? 'errorElement' : 'inputElement'" *ngIf="!manual_cid" name="gadsCustomerId" class="inputElement" formControlName="gadsCustomerId" id="gadsCustomerId">
                     <option *ngFor="let cust_list of customer_list" [value]=cust_list.id>{{ cust_list.account_name }} [{{ cust_list.id }}]</option>
                 </select>
-                <input *ngIf="manual_cid" type="text" [className]="customer_id_error ? 'errorElement' : 'inputElement'" formControlName="gadsCustomerId" name="gadsCustomerId">
+                <input *ngIf="manual_cid" type="text" [className]="customer_id_error ? 'errorElement' : 'inputElement'" formControlName="gadsCustomerId" name="gadsCustomerId"><br>
+                <span class="error_text" *ngIf=customer_id_error>Needs a valid CID</span></label>
             </div>
 
-            <div class="label-input-block">
-                <label for="daysAgo">Lookback Days <span class="error_text" *ngIf=lookback_error>Needs to be number  <= 90</span></label><br>
-                <input type="text" [className]="lookback_error ? 'errorElement' : 'inputElement'" formControlName="daysAgo" name="daysAgo">
+            <div class="label-input-block top-centre-form">
+                <label for="fromDaysAgo">Start Days Ago</label><br>
+                <input type="text" [className]="from_lookback_error ? 'smallErrorElement' : 'smallInputElement'" formControlName="fromDaysAgo" name="fromDaysAgo"><br>
+                <span class="error_text" *ngIf=from_lookback_error>Must be number <= 90</span>
             </div>
 
-            <div class="label-input-block">
+            <div class="label-input-block top-centre-form">
+                <label for="lookbackDays">Lookback Days</label><br>
+                <input type="text" [className]="lookback_error ? 'smallErrorElement' : 'smallInputElement'" formControlName="lookbackDays" name="lookbackDays"><br>
+                <span class="error_text" *ngIf=lookback_error>Must be number <= 90</span>
+            </div>
+
+            <div class="label-input-block top-centre-form">
                 <label for="schedule">Schedule</label><br>
                 <select name="schedule" class="inputElement" formControlName="schedule" id="schedule" (change)="scheduleChange()">
                     <option *ngFor="let item of scheduleArray" [value]=item[0]>{{ item[1] }}</option>
@@ -201,14 +209,11 @@
             <div class="float-left">
             <div class="label-input-block">
                 <button type="button" class="secondaryButton" (click)="run_auto_excluder_form('false')"
-                    value="Preview">Manual Preview</button>
+                    value="Preview">Preview Results</button>
             </div>
             <div class="label-input-block">
                 <button type="button" [className]="exclude_count == 0 ? 'disabledButton' : 'secondaryButton'"
-                    (click)="run_manual_excluder_form()" value="Preview">Manual Exclude ({{ exclude_count }})</button>
-            </div>
-            <div class="label-input-block">
-                <button type="button" class="primaryButton" (click)="run_auto_excluder_form('true')">'One click' Preview and Exclude</button>
+                    (click)="run_manual_excluder_form()" value="Preview">Manually Exclude ({{ exclude_count }})</button>
             </div>
         </div>
             <div class="label-input-block" [hidden]="email_alerts_hidden">
