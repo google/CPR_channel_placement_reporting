@@ -87,10 +87,16 @@ def run_automatic_excluder_from_task_id(task_id:str):
   if(file_contents):
     exclude_yt = 'true'
     customer_id = file_contents['customer_id']
-    minus_days: int = int(file_contents['days_ago'])
-    d = date.today() - timedelta(days=minus_days)
+    minus_days: int = int(file_contents['lookback_days'])
+    start_days: int = int(file_contents['from_days_ago'])
+    total_lookback = minus_days + start_days
+
+    d = date.today() - timedelta(days=total_lookback)
     date_from = d.strftime(DATE_FORMAT)
-    date_to = date.today().strftime(DATE_FORMAT)
+
+    dt = date.today() - timedelta(days=start_days)
+    date_to = dt.strftime(DATE_FORMAT)
+
     gads_filters = file_contents['gads_filter']
     yt_view_count_filter = file_contents['yt_view_operator']+file_contents['yt_view_value']
     yt_sub_count_filter = file_contents['yt_subscriber_operator']+file_contents['yt_subscriber_value']
@@ -180,10 +186,16 @@ def server_run_excluder():
   data = request.get_json(force = True)
   exclude_yt = data['excludeYt']
   customer_id = data['gadsCustomerId']
-  minus_days: int = int(data['daysAgo'])
-  d = date.today() - timedelta(days=minus_days)
+  minus_days: int = int(data['lookbackDays'])
+  start_days: int = int(data['fromDaysAgo'])
+  total_lookback = minus_days + start_days
+
+  d = date.today() - timedelta(days=total_lookback)
   date_from = d.strftime(DATE_FORMAT)
-  date_to = date.today().strftime(DATE_FORMAT)
+
+  dt = date.today() - timedelta(days=start_days)
+  date_to = dt.strftime(DATE_FORMAT)
+
   gads_filters = data['gadsFinalFilters']
   yt_view_count_filter = data['ytViewOperator']+data['ytViewValue']
   yt_sub_count_filter = data['ytSubscriberOperator']+data['ytSubscriberValue']
@@ -311,7 +323,6 @@ def get_customr_ids():
 def get_all_mcc_ids():
   credentials = refresh_credentials()
   mcc_list = {}
-  print(credentials)
   if not isinstance(credentials, str):
     mcc_list = get_mcc_ids(credentials, fb_read_settings())
   return _build_response(json.dumps(mcc_list))

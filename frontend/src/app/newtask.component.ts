@@ -57,6 +57,7 @@ export class NewtaskComponent implements OnInit {
   gads_error_msg = "";
   customer_id_error = false;
   lookback_error = false;
+  from_lookback_error = false;
   gads_filter_error = false;
   yt_subscribers_error = false;
   yt_view_error = false;
@@ -141,7 +142,8 @@ export class NewtaskComponent implements OnInit {
     this.gadsForm = this.fb.group({
       taskName: [''],
       gadsCustomerId: [''],
-      daysAgo: [''],
+      fromDaysAgo: [''],
+      lookbackDays: [''],
       schedule: [''],
       gadsField: [''],
       gadsOperator: [''],
@@ -162,7 +164,8 @@ export class NewtaskComponent implements OnInit {
       includeYouTube: ['true']
     });
 
-    this.gadsForm.controls['daysAgo'].setValue(7);
+    this.gadsForm.controls['lookbackDays'].setValue(7);
+    this.gadsForm.controls['fromDaysAgo'].setValue(0);
     this.gadsForm.controls['schedule'].setValue(0);
 
     this.paginationForm = this.fb.group({
@@ -233,8 +236,14 @@ export class NewtaskComponent implements OnInit {
       if (k == 'customer_id') {
         this.gadsForm.controls['gadsCustomerId'].setValue(v);
       }
-      if (k == 'days_ago') {
-        this.gadsForm.controls['daysAgo'].setValue(v);
+      if (k == 'from_days_ago') {
+        this.gadsForm.controls['fromDaysAgo'].setValue(v);
+      }
+      if (k == 'lookback_days') {
+        this.gadsForm.controls['lookbackDays'].setValue(v);
+      }
+      else if(k == 'days_ago') { //To be backwards compatible for older tasks
+        this.gadsForm.controls['lookbackDays'].setValue(v);
       }
       if (k == 'schedule') {
         this.gadsForm.controls['schedule'].setValue(v);
@@ -307,7 +316,8 @@ export class NewtaskComponent implements OnInit {
       let formRawValue = {
         'excludeYt': auto_exclude,
         'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value,
-        'daysAgo': this.gadsForm.controls['daysAgo'].value,
+        'fromDaysAgo': this.gadsForm.controls['fromDaysAgo'].value,
+        'lookbackDays': this.gadsForm.controls['lookbackDays'].value,
         'gadsFinalFilters': this.finalGadsFilter,
         'ytSubscriberOperator': this.gadsForm.controls['ytSubscriberOperator'].value,
         'ytSubscriberValue': this.gadsForm.controls['ytSubscriberValue'].value,
@@ -456,7 +466,8 @@ export class NewtaskComponent implements OnInit {
       'task_id': task_id,
       'task_name': this.gadsForm.controls['taskName'].value,
       'customer_id': this.gadsForm.controls['gadsCustomerId'].value,
-      'days_ago': this.gadsForm.controls['daysAgo'].value,
+      'from_days_ago': this.gadsForm.controls['fromDaysAgo'].value,
+      'lookback_days': this.gadsForm.controls['lookbackDays'].value,
       'schedule': this.gadsForm.controls['schedule'].value,
       'gads_filter': this.finalGadsFilter,
       'yt_subscriber_operator': this.gadsForm.controls['ytSubscriberOperator'].value,
@@ -557,6 +568,7 @@ export class NewtaskComponent implements OnInit {
     this.yt_video_error = false;
     this.yt_language_error = false;
     this.yt_country_error = false;
+    this.from_lookback_error = false;
     if (full) {
       if ((this.gadsForm.controls['taskName'].value).length == 0) {
         this.task_name_error = true;
@@ -570,11 +582,14 @@ export class NewtaskComponent implements OnInit {
       this.gads_filter_error = true;
       error_count++;
     }
-    
-    if (isNaN(Number(this.gadsForm.controls['daysAgo'].value)) || this.gadsForm.controls['daysAgo'].value=="" || Number(this.gadsForm.controls['daysAgo'].value) >90) {
+    if (isNaN(Number(this.gadsForm.controls['lookbackDays'].value)) || this.gadsForm.controls['lookbackDays'].value=="" || Number(this.gadsForm.controls['lookbackDays'].value) >90) {
     this.lookback_error = true;
       error_count++;
     }
+    if (isNaN(Number(this.gadsForm.controls['fromDaysAgo'].value)) || this.gadsForm.controls['fromDaysAgo'].value=="" || Number(this.gadsForm.controls['fromDaysAgo'].value) >90) {
+      this.from_lookback_error = true;
+        error_count++;
+      }
     if (isNaN(Number(cus_id)) || cus_id == "") {
       this.customer_id_error = true;
       error_count++;
