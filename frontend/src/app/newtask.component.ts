@@ -165,7 +165,7 @@ export class NewtaskComponent implements OnInit {
     });
 
     this.gadsForm.controls['lookbackDays'].setValue(7);
-    this.gadsForm.controls['fromDaysAgo'].setValue(0);
+    this.gadsForm.controls['fromDaysAgo'].setValue("0");
     this.gadsForm.controls['schedule'].setValue(0);
 
     this.paginationForm = this.fb.group({
@@ -583,13 +583,13 @@ export class NewtaskComponent implements OnInit {
       error_count++;
     }
     if (isNaN(Number(this.gadsForm.controls['lookbackDays'].value)) || this.gadsForm.controls['lookbackDays'].value=="" || Number(this.gadsForm.controls['lookbackDays'].value) >90) {
-    this.lookback_error = true;
+      this.lookback_error = true;
       error_count++;
     }
     if (isNaN(Number(this.gadsForm.controls['fromDaysAgo'].value)) || this.gadsForm.controls['fromDaysAgo'].value=="" || Number(this.gadsForm.controls['fromDaysAgo'].value) >90) {
       this.from_lookback_error = true;
-        error_count++;
-      }
+      error_count++;
+    }
     if (isNaN(Number(cus_id)) || cus_id == "") {
       this.customer_id_error = true;
       error_count++;

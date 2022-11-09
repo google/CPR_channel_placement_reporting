@@ -130,7 +130,8 @@ def run_automatic_excluder_from_task_id(task_id:str):
       yt_country_filter, 
       yt_language_filter,
       yt_standard_characters_filter,
-      include_yt_data
+      include_yt_data,
+      False
     )
     
     yt_exclusions=get_youtube_channel_id_name_list(response_data)
@@ -228,7 +229,8 @@ def server_run_excluder():
     yt_country_filter, 
     yt_language_filter,
     yt_standard_characters_filter,
-    include_yt_data
+    include_yt_data,
+    True
   )
   
   return _build_response(json.dumps(response_data))
