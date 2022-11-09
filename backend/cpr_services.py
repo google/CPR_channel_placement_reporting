@@ -21,9 +21,8 @@ from gads_make_client import make_client
 from gads_api import get_gads_mcc_ids, get_placement_data, get_youtube_data, append_youtube_data, get_youtube_channel_id_list, exclude_youtube_channels, get_gads_customer_ids
 
 def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, customer_id: str, 
-    date_from: str, date_to: str, gads_filters: str,
-    view_count: str, sub_count: str, video_count: str, 
-    country: str, language: str, isEnglish: str, include_yt_data: bool) -> dict:
+    date_from: str, date_to: str, gads_filters: str, view_count: str, sub_count: str,
+    video_count: str, country: str, language: str, isEnglish: str, include_yt_data: bool, reporting: bool) -> dict:
     try:
         mcc_id = config_file.get('mcc_id')
         developer_token = config_file.get('dev_token')
@@ -32,8 +31,12 @@ def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, custo
         client = make_client(mcc_id, developer_token, creds)
         ga_service = client.get_service("GoogleAdsService")
         full_data_set = get_placement_data(client, ga_service, customer_id, date_from, date_to, gads_filters)
-        
-        if include_yt_data:
+
+        pull_yt=True
+        if not reporting and view_count=="" and sub_count=="" and video_count=="" and country=="" and language=="" and isEnglish=="":
+            pull_yt=False
+
+        if include_yt_data and pull_yt:
             yt_data = get_youtube_data(credentials, [d.get('group_placement_view_placement') for d in full_data_set.values()])
             full_data_set = append_youtube_data(full_data_set, yt_data, view_count, sub_count, video_count, country, language, isEnglish)
 
