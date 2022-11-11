@@ -8,6 +8,12 @@
             h1 {
                 color: #009879;
             }
+            .green_text {
+                color: green;
+            }
+            .red_text {
+                color: red;
+            }
 
             .authentication {
                 font-size: 25px;
@@ -21,7 +27,7 @@
     <body>
         <h1>Google API Authorisation completed</h1>
         <p>Please following these next steps:
-            <li>The code has already been copied to your clipboard or you can copy the code below manually (Ctrl+C)</li>
+            <li>Click the copy button to copy the code. If this fails, manually copy it (ctrl+c) and ensure there are no spaces at the beginning or end of the code</li>
             <li>Go back to the main app (you can just close this tab)</li>
             <li>Click the orange "Finish Authentication" button and paste the copied code in to the popup box<br><br>
                 <div class="authentication">
@@ -30,12 +36,24 @@
             const urlParams = new URLSearchParams(queryString);
             const code = urlParams.get('code');
             document.write(code);
-            navigator.clipboard.writeText(code);
-            if(navigator.clipboard.read() == code) 
-            {
-                window.close(); 
-            }
         </script>
-    </div>
+    </div><br>
+    <button onclick="copyCode()">Copy Code</button>
+    <div id="success" class='green_text' hidden=true>Successfully copied the code! You can close the window and finish your authentication</div>
+    <div id="fail" class='red_text' hidden=true>Code copy failed! Please manually copy the code before you close the window and finish your authentication</div>
+    <script>
+        function copyCode()
+        {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const code = urlParams.get('code');
+                navigator.clipboard.writeText(code).then(function() {
+                document.getElementById("success").hidden=false;
+                }, function(err) {
+                    document.getElementById("fail").hidden=false;
+                });
+        }
+        
+    </script>
     </body>
 </html>

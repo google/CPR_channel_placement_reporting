@@ -22,6 +22,7 @@ from typing import List
 import googleapiclient.errors
 
 from googleapiclient.discovery import build
+from firebase_server import fb_read_allowlist
 
 API_SERVICE_NAME = "youtube"
 API_VERSION = "v3"
@@ -87,7 +88,8 @@ date_from: str, date_to: str, conditions: str) -> dict:
                         'metrics_average_cpm': row.metrics.average_cpm / MICRO_CONV,
                         'metrics_ctr': row.metrics.ctr,
                         'excluded_already': 'No',
-                        'excludeFromYt': 'true'
+                        'excludeFromYt': 'true',
+                        'allowlist': False
                     }
                     if (sys.getsizeof(all_data_set)/1000000) > ENGINE_SIZE:
                         MEMORY_WARNING=True
@@ -112,6 +114,12 @@ date_from: str, date_to: str, conditions: str) -> dict:
                         row = row._pb
                         if row.customer_negative_criterion.youtube_channel.channel_id in all_data_set.keys():
                             all_data_set[row.customer_negative_criterion.youtube_channel.channel_id].update({'excluded_already':'Yes'})
+
+                allowlist = fb_read_allowlist()
+                if allowlist:
+                    for channel in allowlist:
+                        if channel in all_data_set.keys():
+                            all_data_set[channel].update({'allowlist': True})
         return all_data_set
 
 
@@ -161,14 +169,42 @@ def exclude_youtube_channels(client, customer_id: str, channelsToRemove: list) -
                 operations=exclude_operations
             )
 
+def remove_channel_id_from_gads(client, ga_service, customer_id: str, channel_id:str):
+    query = f"""
+            SELECT
+                customer_negative_criterion.id
+            FROM customer_negative_criterion
+            WHERE customer_negative_criterion.youtube_channel.channel_id='{channel_id}'
+            """
+    search_request = client.get_type("SearchGoogleAdsStreamRequest")
+    search_request.customer_id = customer_id
+    search_request.query = query
+    stream = ga_service.search_stream(search_request)
+    for batch in stream:
+        for row in batch.results:
+            row = row._pb
+            criterion_id=row.customer_negative_criterion.id
+
+            exclude_operations=[]
+            placement_criterion_op = client.get_type("CustomerNegativeCriterionOperation")
+            placement_criterion_op.remove = f"customers/7935681790/customerNegativeCriteria/{criterion_id}"
+            exclude_operations.append(placement_criterion_op)
+
+            customer_negative_criterion_service = client.get_service("CustomerNegativeCriterionService")
+
+            customer_negative_criterion_service.mutate_customer_negative_criteria(
+            customer_id=customer_id,
+            operations=exclude_operations
+            )
+
 
 def get_youtube_channel_id_list(full_data_set: dict) -> dict:
-    ytList = [d.get('group_placement_view_placement') for d in full_data_set.values() if d.get('excludeFromYt') == 'true' and d.get('excluded_already') == 'No']
+    ytList = [d.get('group_placement_view_placement') for d in full_data_set.values() if d.get('excludeFromYt') == 'true' and d.get('excluded_already') == 'No' and d.get('allowlist')==False]
     return ytList
 
 
 def get_youtube_channel_id_name_list(full_data_set: dict) -> dict:
-    ytList = [(d.get('group_placement_view_placement'), d.get('group_placement_view_display_name')) for d in full_data_set.values() if d.get('excludeFromYt') == 'true' and d.get('excluded_already') == 'No']
+    ytList = [(d.get('group_placement_view_placement'), d.get('group_placement_view_display_name')) for d in full_data_set.values() if d.get('excludeFromYt') == 'true' and d.get('excluded_already') == 'No' and d.get('allowlist')==False]
     return ytList
 
 

@@ -30,6 +30,7 @@ db = firestore.client()
 
 COLLECTION_TASKS='tasks'
 COLLECTION_CONFIG='config'
+COLLECTION_STORAGE='storage'
 
 
 def fb_save_token(data):
@@ -51,6 +52,18 @@ def fb_read_client_secret() -> dict:
     cs_ref = db.collection(COLLECTION_CONFIG).document('client_secret')
     return cs_ref.get().to_dict()
 
+def fb_add_to_allowlist(channel_id: str):
+    doc_ref = db.collection(COLLECTION_STORAGE).document('allowlist')
+    doc_ref.set({channel_id:channel_id}, merge=True)
+
+def fb_remove_from_allowlist(channel_id: str):
+    doc_ref = db.collection(COLLECTION_STORAGE).document('allowlist')
+    fp = db.field_path(channel_id)
+    doc_ref.update({fp: firestore.DELETE_FIELD})
+
+def fb_read_allowlist() -> dict:
+    config_ref = db.collection(COLLECTION_STORAGE).document('allowlist')
+    return config_ref.get().to_dict()
 
 def fb_save_settings(data):
     doc_ref = db.collection(COLLECTION_CONFIG).document('settings')
