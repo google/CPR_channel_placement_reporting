@@ -18,7 +18,22 @@ import logging
 from typing import List
 
 from gads_make_client import make_client
-from gads_api import get_gads_mcc_ids, get_placement_data, get_youtube_data, append_youtube_data, get_youtube_channel_id_list, exclude_youtube_channels, get_gads_customer_ids
+from gads_api import get_gads_mcc_ids, get_placement_data, get_youtube_data, append_youtube_data, get_youtube_channel_id_list, exclude_youtube_channels, get_gads_customer_ids, remove_channel_id_from_gads
+
+def remove_channel_id(credentials, config_file, customer_id: str, channel_id:str) -> str:
+    try:
+        mcc_id = config_file.get('mcc_id')
+        developer_token = config_file.get('dev_token')
+        
+        creds = json.loads(credentials.to_json())
+        client = make_client(mcc_id, developer_token, creds)
+        ga_service = client.get_service("GoogleAdsService")
+
+        remove_channel_id_from_gads(client, ga_service, customer_id, channel_id)
+
+        return f"success"
+    except ValueError:
+        logging.info("Error on running channel removal!")
 
 def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, customer_id: str, 
     date_from: str, date_to: str, gads_filters: str, view_count: str, sub_count: str,

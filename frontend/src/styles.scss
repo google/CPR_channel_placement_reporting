@@ -30,7 +30,7 @@ table th {
   position: -webkit-sticky; // this is for all Safari (Desktop & iOS), not for Chrome
   position: sticky;
   top: 0;
-  z-index: 99; // any positive value, layer order is global
+  z-index: 2; // any positive value, layer order is global
   background: #009879; // any bg-color to overlap
 }
 
@@ -67,8 +67,16 @@ a:hover {
   border-bottom: 1px solid #009879;
 }
 
+.grey_icon {
+  color: gray;
+}
+
 .green_icon {
   color:rgb(102, 192, 107);
+}
+
+.gold_icon {
+  color: goldenrod;
 }
 
 .red_icon {
@@ -140,6 +148,11 @@ a:hover {
 .alreadyexcluded {
   background-color: #e8e8e8;
   color: #a1a1a1;
+}
+
+.allowlisted {
+  background-color: #faf7ac;
+  color: goldenrod
 }
 
 input[type='checkbox'] {

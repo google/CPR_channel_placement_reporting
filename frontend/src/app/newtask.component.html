@@ -25,7 +25,7 @@
             </div>
 
             <div class="label-input-block top-centre-form">
-                <label for="fromDaysAgo">Start Days Ago</label><br>
+                <label for="fromDaysAgo">From Days Ago</label><br>
                 <input type="text" [className]="from_lookback_error ? 'smallErrorElement' : 'smallInputElement'" formControlName="fromDaysAgo" name="fromDaysAgo"><br>
                 <span class="error_text" *ngIf=from_lookback_error>Must be number <= 90</span>
             </div>
@@ -264,6 +264,7 @@
         <tr>
             <th class="hrlink"><a (click)="sort_table('default')">Exclude</a></th>
             <th class="hrlink"><a (click)="sort_table('excluded_already')">Excluded Already</a></th>
+            <th class="hrlink"><a (click)="sort_table('allowlist')">Allowlist</a></th>
             <th class="hrlink"><a (click)="sort_table('group_placement_view_display_name')">Placement Name</a></th>
             <th class="hrlink"><a (click)="sort_table('group_placement_view_placement')">YouTube ID</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_impressions')">Impressions</a></th>
@@ -285,12 +286,18 @@
     </thead>
     <tbody>
         <tr *ngFor="let data of table_result | slice:pagination_start:pagination_start+pagination_rpp"
-        [className]="row_class(data.excluded_already, data.excludeFromYt)">
+        [className]="row_class(data.excluded_already, data.excludeFromYt, data.allowlist)">
             <td><input [value]="data.group_placement_view_placement" type="checkbox"
                     (change)="excludeCheckChange(data.group_placement_view_placement)"
                     [checked]="data.excludeFromYt == 'true' && data.excluded_already == 'No'" 
-                    [disabled]="data.excluded_already == 'Yes'"/></td>
+                    [disabled]="row_disabled(data.excluded_already, data.allowlist)"/></td>
             <td>{{data.excluded_already}}</td>        
+            <td><span *ngIf="!data.allowlist"><a class="grey_icon" (click)="addToAllowlist(data.group_placement_view_placement)" 
+                target="_self" matTooltip="Add YouTube channel to allowlist so it is never excluded"><mat-icon>add_circle_outline</mat-icon></a></span>
+                
+                <span *ngIf="data.allowlist"><a (click)="removeFromAllowlist(data.group_placement_view_placement)" 
+                    target="_self" matTooltip="Remove YouTube channel from allowlist so it can be excluded"><mat-icon class="gold_icon">stars</mat-icon></a></span>
+                </td>
             <td>{{data.group_placement_view_display_name}}</td>
             <td><a href="https://{{ data.group_placement_view_target_url }}" target="_blank">{{
                     data.group_placement_view_placement }}</a></td>

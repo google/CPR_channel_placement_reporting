@@ -398,7 +398,7 @@ export class NewtaskComponent implements OnInit {
   run_manual_excluder_form() {
     let yt_exclusion_list = [];
     for (let data of this.table_result) {
-      if (data.excludeFromYt == 'true' && data.excluded_already == 'No') {
+      if (data.excludeFromYt == 'true' && data.excluded_already == 'No' && data.allowlist == false) {
         yt_exclusion_list.push(data.group_placement_view_placement);
       }
     }
@@ -521,7 +521,8 @@ export class NewtaskComponent implements OnInit {
     this.memory_error = false;
     for (let i in this.table_result) {
       if (this.table_result[i]['excludeFromYt'] == 'true' && 
-        this.table_result[i]['excluded_already'] == 'No') {
+        this.table_result[i]['excluded_already'] == 'No' &&
+        this.table_result[i]['allowlist'] == false) {
           this.exclude_count++;
           if(edit_table=='true') {
             this.table_result[i]['excluded_already'] = 'Yes';
@@ -532,11 +533,14 @@ export class NewtaskComponent implements OnInit {
         this.memory_error = true;
       }
     }
-    this.sort_table("default");
+    //this.sort_table("default");
   }
 
-  row_class(excluded_already: string, excludeFromYt: string)
+  row_class(excluded_already: string, excludeFromYt: string, allowlist: boolean)
   {
+    if(allowlist) {
+      return "allowlisted";
+    }
     if(excluded_already == 'Yes') {
       return "alreadyexcluded";
     }
@@ -545,6 +549,16 @@ export class NewtaskComponent implements OnInit {
     }
     else {
       return "";
+    }
+  }
+
+  row_disabled(excluded_already: string, allowlist: boolean){
+    if(excluded_already== 'Yes' || allowlist) {
+      return true;
+    }
+    else
+    {
+      return false;
     }
   }
 
@@ -757,6 +771,44 @@ export class NewtaskComponent implements OnInit {
 
     var blob = new Blob([csvArray], {type: 'text/csv' })
     saveAs(blob, "cpr_export.csv");
+  }
+
+  async addToAllowlist(youTubeChannelId: string)
+  {
+    this.loading=true;
+    let channel_id = { 'channel_id': youTubeChannelId, 'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value };
+    (await this.service.add_to_allowlist(JSON.stringify(channel_id)))
+      .subscribe({
+        next: (response: ReturnPromise) => this.loading = false,
+        error: (err) => this.openSnackBar("Unknown error adding to allowlist", "Dismiss", "error-snackbar"),
+        complete: () => this.loading = false
+      });
+
+    for (let i in this.table_result) {
+      if (this.table_result[i]['group_placement_view_placement'] == youTubeChannelId) {
+        this.table_result[i]['allowlist'] = true;
+        this.table_result[i]['excluded_already'] = 'No';
+      }
+    }
+    this._run_exclude_count('false');
+  }
+
+  async removeFromAllowlist(youTubeChannelId: string)
+  {
+    let channel_id = { 'channel_id': youTubeChannelId };
+    (await this.service.remove_from_allowlist(JSON.stringify(channel_id)))
+      .subscribe({
+        next: (response: ReturnPromise) => this.loading = false,
+        error: (err) => this.openSnackBar("Unknown error removing from allowlist", "Dismiss", "error-snackbar"),
+        complete: () => this.loading = false
+      });
+
+    for (let i in this.table_result) {
+      if (this.table_result[i]['group_placement_view_placement'] == youTubeChannelId) {
+        this.table_result[i]['allowlist'] = false;
+      }
+    }
+    this._run_exclude_count('false');
   }
 
 }

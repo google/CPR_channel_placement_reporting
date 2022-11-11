@@ -111,4 +111,16 @@ export class PostService {
     return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getMccIds");
   }
 
+  async add_to_allowlist(channel_id: string) {
+    const headers = new HttpHeaders();
+    headers.set('Content-Type', 'application/json; charset=utf-8');
+    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/addToAllowlist", channel_id, {headers: headers});
+  }
+  
+  async remove_from_allowlist(channel_id: string) {
+    const headers = new HttpHeaders();
+    headers.set('Content-Type', 'application/json; charset=utf-8');
+    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/removeFromAllowlist", channel_id, {headers: headers});
+  }
+
 }
