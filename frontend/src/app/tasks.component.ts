@@ -123,7 +123,7 @@ export class TasksComponent implements OnInit {
 
   async _run_task_from_file_success(response: ReturnPromise) {
     this.loading = false;
-    this.openSnackBar("Successfully excluded " + response + " YouTube channels", "Dismiss", "success-snackbar");
+    this.openSnackBar("Successfully excluded " + response + " placement(s)", "Dismiss", "success-snackbar");
   }
 
   async _run_task_from_file_error() {

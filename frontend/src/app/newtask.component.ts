@@ -55,6 +55,7 @@ export class NewtaskComponent implements OnInit {
   task_name_error = false;
   gads_error = false;
   gads_error_msg = "";
+  gads_data_error = false;
   customer_id_error = false;
   lookback_error = false;
   from_lookback_error = false;
@@ -66,6 +67,8 @@ export class NewtaskComponent implements OnInit {
   yt_country_error = false;
   memory_error = false;
   gads_filter_lock=true;
+  gads_data_youtube: boolean = true;
+  gads_data_display: boolean = true;
 
   pagination_start = 0;
   pagination_rpp = 10;
@@ -145,6 +148,8 @@ export class NewtaskComponent implements OnInit {
       fromDaysAgo: [''],
       lookbackDays: [''],
       schedule: [''],
+      gadsDataYouTube: [''],
+      gadsDataDisplay: [''],
       gadsField: [''],
       gadsOperator: [''],
       gadsValue: [''],
@@ -160,8 +165,8 @@ export class NewtaskComponent implements OnInit {
       ytCountryOperator: [''],
       ytCountryValue: [''],
       ytStandardCharValue: [''],
-      emailAlerts: ['false'],
-      includeYouTube: ['true']
+      emailAlerts: false,
+      includeYouTube: true
     });
 
     this.gadsForm.controls['lookbackDays'].setValue(7);
@@ -294,6 +299,12 @@ export class NewtaskComponent implements OnInit {
       if (k == 'include_youtube') {
         this.gadsForm.controls['includeYouTube'].setValue(v);
       }
+      if (k == 'gads_data_youtube') {
+        this.gadsForm.controls['gadsDataYouTube'].setValue(v);
+      }
+      if (k == 'gads_data_display') {
+        this.gadsForm.controls['gadsDataDisplay'].setValue(v);
+      }
     }));
     this.scheduleChange();
     this.loading = false;
@@ -310,14 +321,16 @@ export class NewtaskComponent implements OnInit {
     });
   }
 
-  run_auto_excluder_form(auto_exclude: string) {
+  run_auto_excluder_form(auto_exclude: boolean) {
     if (this.validate_fields(false)) {
       this.pagination_start = 0;
       let formRawValue = {
-        'excludeYt': auto_exclude,
+        'excludeChannels': auto_exclude,
         'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value,
         'fromDaysAgo': this.gadsForm.controls['fromDaysAgo'].value,
         'lookbackDays': this.gadsForm.controls['lookbackDays'].value,
+        'gadsDataYouTube': this.gads_data_youtube,
+        'gadsDataDisplay': this.gads_data_display,
         'gadsFinalFilters': this.finalGadsFilter,
         'ytSubscriberOperator': this.gadsForm.controls['ytSubscriberOperator'].value,
         'ytSubscriberValue': this.gadsForm.controls['ytSubscriberValue'].value,
@@ -348,7 +361,7 @@ export class NewtaskComponent implements OnInit {
     }
   }
 
-  async _call_auto_service(formRawValue: string, auto_exclude: string) {
+  async _call_auto_service(formRawValue: string, auto_exclude: boolean) {
     this.loading = true;
     this.subs = (await this.service.run_auto_excluder(formRawValue))
       .subscribe({
@@ -358,15 +371,15 @@ export class NewtaskComponent implements OnInit {
       });
   }
 
-  _call_auto_service_success(response: ReturnPromise, auto_exclude: string) {
+  _call_auto_service_success(response: ReturnPromise, auto_exclude: boolean) {
     this.table_result = Object.values(response);
     if (this.table_result.length > 0) {
       this.sort_table("default");
      
       this.no_data = false;
-      if (auto_exclude == 'true') {
-        this._run_exclude_count('false');
-        this.openSnackBar("Successfully excluded " + this.exclude_count + " YouTube channels", "Dismiss", "success-snackbar");
+      if (auto_exclude) {
+        this._run_exclude_count(false);
+        this.openSnackBar("Successfully excluded " + this.exclude_count + " placement(s)", "Dismiss", "success-snackbar");
       }
       this._run_exclude_count(auto_exclude);
     }
@@ -381,7 +394,8 @@ export class NewtaskComponent implements OnInit {
 
   sort_table(element: string) {
     if(element=="default") {
-      this.table_result.sort((a, b) => (a.excludeFromYt > b.excludeFromYt) ? 1 : -1);
+      this.table_result.sort((a, b) => (a.allowlist > b.allowlist) ? 1 : -1);
+      this.table_result.sort((a, b) => (a.exclude_from_account > b.exclude_from_account) ? 1 : -1);
       this.table_result.sort((a, b) => (a.excluded_already > b.excluded_already) ? 1 : -1);
       this.revSort = "";
     }
@@ -396,16 +410,16 @@ export class NewtaskComponent implements OnInit {
   }
 
   run_manual_excluder_form() {
-    let yt_exclusion_list = [];
+    let exclusion_list = [];
     for (let data of this.table_result) {
-      if (data.excludeFromYt == 'true' && data.excluded_already == 'No' && data.allowlist == false) {
-        yt_exclusion_list.push(data.group_placement_view_placement);
+      if (data.exclude_from_account && !data.excluded_already && !data.allowlist) {
+        exclusion_list.push([data.group_placement_view_placement_type, data.group_placement_view_placement]);
       }
     }
-    if (yt_exclusion_list.length > 0) {
+    if (exclusion_list.length > 0) {
       let formRawValue = {
         'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value,
-        'ytExclusionList': yt_exclusion_list
+        'allExclusionList': exclusion_list
       }
       this._call_manual_service(JSON.stringify(formRawValue));
     }
@@ -422,8 +436,8 @@ export class NewtaskComponent implements OnInit {
   }
 
   _call_manual_service_success(response: ReturnPromise) {
-    this._run_exclude_count('true');
-    this.openSnackBar("Successfully excluded " + response + " YouTube channels", "Dismiss", "success-snackbar");
+    this._run_exclude_count(true);
+    this.openSnackBar("Successfully excluded " + response + " placement(s)", "Dismiss", "success-snackbar");
     this.loading = false;
   }
 
@@ -469,6 +483,8 @@ export class NewtaskComponent implements OnInit {
       'from_days_ago': this.gadsForm.controls['fromDaysAgo'].value,
       'lookback_days': this.gadsForm.controls['lookbackDays'].value,
       'schedule': this.gadsForm.controls['schedule'].value,
+      'gads_data_youtube': this.gads_data_youtube,
+      'gads_data_display': this.gads_data_display,
       'gads_filter': this.finalGadsFilter,
       'yt_subscriber_operator': this.gadsForm.controls['ytSubscriberOperator'].value,
       'yt_subscriber_value': this.gadsForm.controls['ytSubscriberValue'].value,
@@ -516,16 +532,16 @@ export class NewtaskComponent implements OnInit {
     this.openSnackBar("Unable to save task", "Dismiss", "error-snackbar");
   }
 
-  _run_exclude_count(edit_table: string) {
+  _run_exclude_count(edit_table: boolean) {
     this.exclude_count = 0;
     this.memory_error = false;
     for (let i in this.table_result) {
-      if (this.table_result[i]['excludeFromYt'] == 'true' && 
-        this.table_result[i]['excluded_already'] == 'No' &&
-        this.table_result[i]['allowlist'] == false) {
+      if (this.table_result[i]['exclude_from_account'] && 
+        !this.table_result[i]['excluded_already'] &&
+        !this.table_result[i]['allowlist']) {
           this.exclude_count++;
-          if(edit_table=='true') {
-            this.table_result[i]['excluded_already'] = 'Yes';
+          if(edit_table) {
+            this.table_result[i]['excluded_already'] = true;
             this.exclude_count--;
           }
       }
@@ -536,15 +552,15 @@ export class NewtaskComponent implements OnInit {
     //this.sort_table("default");
   }
 
-  row_class(excluded_already: string, excludeFromYt: string, allowlist: boolean)
+  row_class(excluded_already: boolean, exclude_from_account: boolean, allowlist: boolean)
   {
     if(allowlist) {
       return "allowlisted";
     }
-    if(excluded_already == 'Yes') {
+    if(excluded_already) {
       return "alreadyexcluded";
     }
-    else if(excludeFromYt=='true') {
+    else if(exclude_from_account) {
       return "tobeexcluded";
     }
     else {
@@ -552,8 +568,8 @@ export class NewtaskComponent implements OnInit {
     }
   }
 
-  row_disabled(excluded_already: string, allowlist: boolean){
-    if(excluded_already== 'Yes' || allowlist) {
+  row_disabled(excluded_already: boolean, allowlist: boolean){
+    if(excluded_already || allowlist) {
       return true;
     }
     else
@@ -565,10 +581,10 @@ export class NewtaskComponent implements OnInit {
   excludeCheckChange(ytChannelId: string) {
     for (let i in this.table_result) {
       if (this.table_result[i]['group_placement_view_placement'] == ytChannelId) {
-        this.table_result[i]['excludeFromYt'] = String(!(this.table_result[i]['excludeFromYt'] == 'true'));
+        this.table_result[i]['exclude_from_account'] = !this.table_result[i]['exclude_from_account'];
       }
     }
-    this._run_exclude_count('false');
+    this._run_exclude_count(false);
   }
 
   validate_fields(full: boolean) {
@@ -583,6 +599,7 @@ export class NewtaskComponent implements OnInit {
     this.yt_language_error = false;
     this.yt_country_error = false;
     this.from_lookback_error = false;
+    this.gads_data_error = false;
     if (full) {
       if ((this.gadsForm.controls['taskName'].value).length == 0) {
         this.task_name_error = true;
@@ -606,6 +623,11 @@ export class NewtaskComponent implements OnInit {
     }
     if (isNaN(Number(cus_id)) || cus_id == "") {
       this.customer_id_error = true;
+      error_count++;
+    }
+    if(!this.gads_data_display && !this.gads_data_youtube)
+    {
+      this.gads_data_error = true;
       error_count++;
     }
     if (isNaN(Number(this.gadsForm.controls['ytSubscriberValue'].value)) 
@@ -773,10 +795,10 @@ export class NewtaskComponent implements OnInit {
     saveAs(blob, "cpr_export.csv");
   }
 
-  async addToAllowlist(youTubeChannelId: string)
+  async addToAllowlist(channelType: string, channelId: string)
   {
     this.loading=true;
-    let channel_id = { 'channel_id': youTubeChannelId, 'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value };
+    let channel_id = { 'type': channelType, 'channel_id': channelId, 'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value };
     (await this.service.add_to_allowlist(JSON.stringify(channel_id)))
       .subscribe({
         next: (response: ReturnPromise) => this.loading = false,
@@ -785,17 +807,17 @@ export class NewtaskComponent implements OnInit {
       });
 
     for (let i in this.table_result) {
-      if (this.table_result[i]['group_placement_view_placement'] == youTubeChannelId) {
+      if (this.table_result[i]['group_placement_view_placement'] == channelId) {
         this.table_result[i]['allowlist'] = true;
-        this.table_result[i]['excluded_already'] = 'No';
+        this.table_result[i]['excluded_already'] = false;
       }
     }
-    this._run_exclude_count('false');
+    this._run_exclude_count(false);
   }
 
-  async removeFromAllowlist(youTubeChannelId: string)
+  async removeFromAllowlist(channelId: string)
   {
-    let channel_id = { 'channel_id': youTubeChannelId };
+    let channel_id = { 'channel_id': channelId };
     (await this.service.remove_from_allowlist(JSON.stringify(channel_id)))
       .subscribe({
         next: (response: ReturnPromise) => this.loading = false,
@@ -804,11 +826,11 @@ export class NewtaskComponent implements OnInit {
       });
 
     for (let i in this.table_result) {
-      if (this.table_result[i]['group_placement_view_placement'] == youTubeChannelId) {
+      if (this.table_result[i]['group_placement_view_placement'] == channelId) {
         this.table_result[i]['allowlist'] = false;
       }
     }
-    this._run_exclude_count('false');
+    this._run_exclude_count(false);
   }
 
 }

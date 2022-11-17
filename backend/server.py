@@ -31,7 +31,7 @@ from google.appengine.api import wrap_wsgi_app
 from google.appengine.api.mail import send_mail
 
 from cpr_services import get_mcc_ids, run_auto_excluder, run_manual_excluder, get_customer_ids, remove_channel_id
-from gads_api import get_youtube_channel_id_name_list
+from gads_api import get_channel_id_name_list
 from cloud_api import get_schedule_list, update_cloud_schedule
 from firebase_server import fb_get_task, fb_save_client_secret, fb_save_task, fb_get_tasks_list, fb_delete_task, fb_save_settings, fb_read_settings, fb_read_client_secret, fb_save_token, fb_read_token, fb_clear_token, fb_add_to_allowlist, fb_remove_from_allowlist
 
@@ -57,23 +57,33 @@ scopes_array = [
 
 flow: Flow
 
-
 def send_email(ytList: list, task_id:str, customer_id:str):
   config = fb_read_settings()
   count = len(ytList)
+
   ytListToPrint = ""
+  dspListToPrint = ""
   for yt in ytList:
-    ytListToPrint += f"{yt[1]} - https://www.youtube.com/channel/{yt[0]}\n"
-  
+    if yt[0]==6:
+      ytListToPrint += f"{yt[2]} - https://www.youtube.com/channel/{yt[1]}\n"
+
+    else:
+      dspListToPrint += f"{yt[2]}\n"
+
   send_mail(sender=f"exclusions@{PROJECT_ID}.appspotmail.com",
             to=config['email_address'],
             subject=f"CPR Task ID {task_id} has added {count} Channel Exclusions",
-              body=f"""
+body=f"""
 CPR Task ID: {task_id}
 Customer ID: {customer_id}
 {count} channel exclusions added to your account\n
+
+YouTube Exclusions:
 {ytListToPrint}
-                 """)
+
+Display Exclusions:
+{dspListToPrint}
+                """)
 
 def refresh_credentials():
   credentials = get_oauth()
@@ -85,7 +95,7 @@ def run_automatic_excluder_from_task_id(task_id:str):
   file_contents = fb_get_task(task_id)
 
   if(file_contents):
-    exclude_yt = 'true'
+
     customer_id = file_contents['customer_id']
     minus_days: int = int(file_contents['lookback_days'])
     start_days: int = int(file_contents['from_days_ago'])
@@ -97,6 +107,8 @@ def run_automatic_excluder_from_task_id(task_id:str):
     dt = date.today() - timedelta(days=start_days)
     date_to = dt.strftime(DATE_FORMAT)
 
+    gads_data_youtube = file_contents['gads_data_youtube']
+    gads_data_display = file_contents['gads_data_display']
     gads_filters = file_contents['gads_filter']
     yt_view_count_filter = file_contents['yt_view_operator']+file_contents['yt_view_value']
     yt_sub_count_filter = file_contents['yt_subscriber_operator']+file_contents['yt_subscriber_value']
@@ -119,10 +131,12 @@ def run_automatic_excluder_from_task_id(task_id:str):
     response_data = run_auto_excluder(
       credentials,
       fb_read_settings(),
-      exclude_yt,
+      True,
       customer_id,
       date_from,
       date_to,
+      gads_data_youtube,
+      gads_data_display,
       gads_filters, 
       yt_view_count_filter,
       yt_sub_count_filter,
@@ -134,11 +148,12 @@ def run_automatic_excluder_from_task_id(task_id:str):
       False
     )
     
-    yt_exclusions=get_youtube_channel_id_name_list(response_data)
-    if yt_exclusions and file_contents['email_alerts']:
-      send_email(yt_exclusions, task_id, customer_id)
+    all_exclusions=get_channel_id_name_list(response_data)
+    if all_exclusions and file_contents['email_alerts']:
+      print("sending email")
+      send_email(all_exclusions, task_id, customer_id)
 
-    return _build_response(json.dumps(f"{len(yt_exclusions)}"))
+    return _build_response(json.dumps(f"{len(all_exclusions)}"))
   else:
     return _build_response(json.dumps("Config doesn't exist"))
 
@@ -185,7 +200,7 @@ def run_task_from_task_id():
 def server_run_excluder():
   credentials = refresh_credentials()
   data = request.get_json(force = True)
-  exclude_yt = data['excludeYt']
+  exclude_yt = data['excludeChannels']
   customer_id = data['gadsCustomerId']
   minus_days: int = int(data['lookbackDays'])
   start_days: int = int(data['fromDaysAgo'])
@@ -197,6 +212,8 @@ def server_run_excluder():
   dt = date.today() - timedelta(days=start_days)
   date_to = dt.strftime(DATE_FORMAT)
 
+  gads_data_youtube = data['gadsDataYouTube']
+  gads_data_display = data['gadsDataDisplay']
   gads_filters = data['gadsFinalFilters']
   yt_view_count_filter = data['ytViewOperator']+data['ytViewValue']
   yt_sub_count_filter = data['ytSubscriberOperator']+data['ytSubscriberValue']
@@ -222,6 +239,8 @@ def server_run_excluder():
     customer_id,
     date_from,
     date_to,
+    gads_data_youtube,
+    gads_data_display,
     gads_filters, 
     yt_view_count_filter,
     yt_sub_count_filter,
@@ -242,9 +261,9 @@ def server_run_manual_excluder():
   credentials = refresh_credentials()
   data = request.get_json(force = True)
   customer_id = data['gadsCustomerId']
-  exclude_yt = data['ytExclusionList']
+  exclusion_list = data['allExclusionList']
 
-  response_data = run_manual_excluder(credentials, fb_read_settings(), customer_id, exclude_yt)
+  response_data = run_manual_excluder(credentials, fb_read_settings(), customer_id, exclusion_list)
 
   return _build_response(json.dumps(response_data))
 
@@ -390,11 +409,12 @@ def add_to_allowlist():
   data = request.get_json(force = True)
   credentials = refresh_credentials()
   customer_id = data['gadsCustomerId']
+  channel_type = data['type']
   channel_id = data['channel_id']
   config = fb_read_settings()
 
   fb_add_to_allowlist(channel_id)
-  remove_channel_id(credentials, config, customer_id, channel_id)
+  remove_channel_id(credentials, config, customer_id, channel_type, channel_id)
 
   return _build_response(json.dumps(channel_id))
 
