@@ -45,7 +45,14 @@
         </div>
         <!-- Google Filters -->
         <div class="filterBorder">
-            <b>Google Ads Filters</b><br>
+            <b>Google Ads Filters</b><br><br>
+            <div [className]="gads_data_error ? 'label-input-block largeErrorElement' : 'label-input-block'">
+                YouTube <mat-slide-toggle name="gadsDataYouTube" [(ngModel)]="gads_data_youtube" formControlName="gadsDataYouTube" id="gadsDataYouTube">
+                </mat-slide-toggle> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                Display <mat-slide-toggle name="gadsDataDisplay" [(ngModel)]="gads_data_display" formControlName="gadsDataDisplay" id="gadsDataDisplay">
+                </mat-slide-toggle> 
+                <span class="error_text" *ngIf=gads_data_error>You must select at least one data type to retrieve</span>
+            </div><br><br>
             <div class="label-input-block ">
                 <label for="gadsField">Metric</label><br>
                 <select name="gadsField" formControlName="gadsField" class="inputElement" id="gadsField">
@@ -81,13 +88,12 @@
                     &nbsp;<input [className]="gads_filter_error ? 'errorElement extrawide' : 'inputElement extrawide'"
                         type="text" [(ngModel)]=finalGadsFilter formControlName="gadsFinalFilters" name="gadsFinalFilters"
                         value="{{finalGadsFilter}}" [readonly]=gads_filter_lock>
-                    <br><span class="error_text" *ngIf=gads_filter_error>Errors in format. Do not end with OR or
-                        AND</span>
+                    <br><span class="error_text" *ngIf=gads_filter_error>Errors in format. Do not end with OR or AND</span>
                 </div>
                 <div class="label-input-block">
                     <button type="button" id="unlockFilter" class="bigicon" (click)="unlockFilter()" matTooltip="Unlock/lock filter for free text">
-                        <mat-icon class="red_icon" *ngIf="gads_filter_lock==true;">lock</mat-icon> 
-                        <mat-icon class="green_icon" *ngIf="gads_filter_lock==false;">lock_open</mat-icon>
+                        <mat-icon class="red_icon" *ngIf="gads_filter_lock">lock</mat-icon> 
+                        <mat-icon class="green_icon" *ngIf="!gads_filter_lock">lock_open</mat-icon>
                     </button>
                     <button type="button" id="clearGadsFilter" class="deleteButton" (click)="clearFilter()" matTooltip="Clear current GAds filters">
                         <mat-icon>delete_forever</mat-icon>
@@ -208,7 +214,7 @@
         <div class="label-input-block formSubmits">
             <div class="float-left">
             <div class="label-input-block">
-                <button type="button" class="secondaryButton" (click)="run_auto_excluder_form('false')"
+                <button type="button" class="secondaryButton" (click)="run_auto_excluder_form(false)"
                     value="Preview">Preview Results</button>
             </div>
             <div class="label-input-block">
@@ -263,10 +269,11 @@
     <thead>
         <tr>
             <th class="hrlink"><a (click)="sort_table('default')">Exclude</a></th>
-            <th class="hrlink"><a (click)="sort_table('excluded_already')">Excluded Already</a></th>
+            <th class="hrlink"><a (click)="sort_table('excluded_already')">Status</a></th>
             <th class="hrlink"><a (click)="sort_table('allowlist')">Allowlist</a></th>
+            <th class="hrlink"><a (click)="sort_table('group_placement_view_placement_type')">Type</a></th>
             <th class="hrlink"><a (click)="sort_table('group_placement_view_display_name')">Placement Name</a></th>
-            <th class="hrlink"><a (click)="sort_table('group_placement_view_placement')">YouTube ID</a></th>
+            <th class="hrlink"><a (click)="sort_table('group_placement_view_placement')">Channel/URL</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_impressions')">Impressions</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_clicks')">Clicks</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_video_views')">Video Views</a></th>
@@ -286,20 +293,23 @@
     </thead>
     <tbody>
         <tr *ngFor="let data of table_result | slice:pagination_start:pagination_start+pagination_rpp"
-        [className]="row_class(data.excluded_already, data.excludeFromYt, data.allowlist)">
+        [className]="row_class(data.excluded_already, data.exclude_from_account, data.allowlist)">
             <td><input [value]="data.group_placement_view_placement" type="checkbox"
                     (change)="excludeCheckChange(data.group_placement_view_placement)"
-                    [checked]="data.excludeFromYt == 'true' && data.excluded_already == 'No'" 
+                    [checked]="data.exclude_from_account && !data.excluded_already && !data.allowlist" 
                     [disabled]="row_disabled(data.excluded_already, data.allowlist)"/></td>
-            <td>{{data.excluded_already}}</td>        
-            <td><span *ngIf="!data.allowlist"><a class="grey_icon" (click)="addToAllowlist(data.group_placement_view_placement)" 
-                target="_self" matTooltip="Add YouTube channel to allowlist so it is never excluded"><mat-icon>add_circle_outline</mat-icon></a></span>
+            <td *ngIf="data.excluded_already"><mat-icon matTooltip="Excluded">block</mat-icon></td>
+            <td *ngIf="!data.excluded_already"><mat-icon matTooltip="Active" class="green_icon">check_circle</mat-icon></td>       
+            <td><span *ngIf="!data.allowlist"><a class="grey_icon" (click)="addToAllowlist(data.group_placement_view_placement_type, data.group_placement_view_placement)" 
+                target="_self" matTooltip="Add placement to allowlist so it is never excluded"><mat-icon>add_circle_outline</mat-icon></a></span>
                 
                 <span *ngIf="data.allowlist"><a (click)="removeFromAllowlist(data.group_placement_view_placement)" 
-                    target="_self" matTooltip="Remove YouTube channel from allowlist so it can be excluded"><mat-icon class="gold_icon">stars</mat-icon></a></span>
+                    target="_self" matTooltip="Remove placement from allowlist so it can be excluded"><mat-icon class="gold_icon">stars</mat-icon></a></span>
                 </td>
+            <td *ngIf="data.group_placement_view_placement_type==2"><mat-icon matTooltip="Display">picture_in_picture</mat-icon></td>
+            <td *ngIf="data.group_placement_view_placement_type==6"><mat-icon matTooltip="YouTube">video_library</mat-icon></td>
             <td>{{data.group_placement_view_display_name}}</td>
-            <td><a href="https://{{ data.group_placement_view_target_url }}" target="_blank">{{
+            <td><a href="https://{{data.group_placement_view_target_url}}" target="_blank">{{
                     data.group_placement_view_placement }}</a></td>
             <td>{{data.metrics_impressions | number}}</td>
             <td>{{data.metrics_clicks | number}}</td>

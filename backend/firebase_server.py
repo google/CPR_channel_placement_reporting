@@ -94,6 +94,8 @@ def fb_save_task(data) -> str:
         'from_days_ago': data['from_days_ago'],
         'lookback_days': data['lookback_days'],
         'schedule': data['schedule'],
+        'gads_data_youtube': data['gads_data_youtube'],
+        'gads_data_display': data['gads_data_display'],
         'gads_filter': data['gads_filter'],
         'yt_subscriber_operator': data['yt_subscriber_operator'],
         'yt_subscriber_value': data['yt_subscriber_value'],

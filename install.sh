@@ -69,8 +69,10 @@ cd ..
 
 cd backend/static
 mkdir template
+mkdir img
 cd ..
 cp template/authdone.html static/template/authdone.html
+cp img/gtechlogo.png static/img/gtechlogo.png
 
 echo -e "${COLOR}Deploying app to GAE...${NC}"
 # next command often fails in new projects with "NOT_FOUND: Unable to retrieve P4SA" error, just wait and run again afterwards

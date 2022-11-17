@@ -51,8 +51,10 @@ cd ..
 
 cd backend/static
 mkdir template
+mkdir img
 cd ..
 cp template/authdone.html static/template/authdone.html
+cp img/gtechlogo.png static/img/gtechlogo.png
 
 echo -e "${COLOR}Updating app on GAE...${NC}"
 gcloud app deploy -q

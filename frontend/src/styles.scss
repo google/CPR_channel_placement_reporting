@@ -210,6 +210,16 @@ input[type='checkbox'] {
   margin-bottom: 5px;
   resize: vertical;
 }
+.largeErrorElement {
+  width: 550px;
+  border: 1px solid red;
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  resize: vertical;
+}
 
 /* Style the submit button with a specific background color etc */
 .focusButton {
