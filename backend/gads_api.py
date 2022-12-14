@@ -210,7 +210,7 @@ def remove_channel_id_from_gads(client, ga_service, customer_id: str, channel_ty
 
             exclude_operations=[]
             placement_criterion_op = client.get_type("CustomerNegativeCriterionOperation")
-            placement_criterion_op.remove = f"customers/7935681790/customerNegativeCriteria/{criterion_id}"
+            placement_criterion_op.remove = f"customers/{customer_id}/customerNegativeCriteria/{criterion_id}"
             exclude_operations.append(placement_criterion_op)
 
             customer_negative_criterion_service = client.get_service("CustomerNegativeCriterionService")
