@@ -371,8 +371,17 @@ export class NewtaskComponent implements OnInit {
       });
   }
 
-  _call_auto_service_success(response: ReturnPromise, auto_exclude: boolean) {
-    this.table_result = Object.values(response);
+  _call_auto_service_success(response: ReturnPromise, auto_exclude: boolean) {    
+    const raw_response = Object.values(response);
+    const flattened_raw_response = [];
+    for (const raw_data_row of raw_response){
+      const account_level_data = raw_data_row["account_level_data"];
+      const yt_data = raw_data_row["yt_data"];
+      for (const ad_group_level_data of raw_data_row["ad_group_level_array"]){
+        flattened_raw_response.push({...ad_group_level_data, ...account_level_data, ...yt_data});
+      }
+    }
+    this.table_result = flattened_raw_response;
     if (this.table_result.length > 0) {
       this.sort_table("default");
      
@@ -512,7 +521,7 @@ export class NewtaskComponent implements OnInit {
         complete: () => this.loading = false
       });
   }
-
+  
   async _call_save_task_success(response: ReturnPromise) {
     let schedule_text = "";
     if (this.gadsForm.controls['schedule'].value != "0") {

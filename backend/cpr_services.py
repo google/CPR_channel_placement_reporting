@@ -48,17 +48,24 @@ def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, custo
         client = make_client(mcc_id, developer_token, creds)
         ga_service = client.get_service("GoogleAdsService")
         full_data_set = get_placement_data(client, ga_service, customer_id, date_from, date_to, gads_data_youtube, gads_data_display, gads_filters)
-
         pull_yt=True
         if not reporting and view_count=="" and sub_count=="" and video_count=="" and country=="" and language=="" and isEnglish=="":
             pull_yt=False
 
         if include_yt_data and pull_yt:
-            yt_data = get_youtube_data(credentials, [d.get('group_placement_view_placement') for d in full_data_set.values() if d.get('group_placement_view_placement_type')==YOUTUBE_CHANNEL_ID])
+            channel_ids = []
+            for value in full_data_set.values():
+                ad_group_level_list = value['ad_group_level_array']
+                channel_ids.extend([ad_group_level_item.get('group_placement_view_placement') for ad_group_level_item in ad_group_level_list if ad_group_level_item.get('group_placement_view_placement_type')==YOUTUBE_CHANNEL_ID])
+            
+            yt_data = get_youtube_data(credentials,channel_ids)
+            
             full_data_set = append_youtube_data(full_data_set, yt_data, view_count, sub_count, video_count, country, language, isEnglish)
+            
 
         if exclude_from_youtube:
             exclude_channels(client, customer_id, get_channel_id_list(full_data_set))
+
         return full_data_set
             
     except ValueError:
