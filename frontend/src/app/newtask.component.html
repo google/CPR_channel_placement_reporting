@@ -14,7 +14,6 @@
                 <input type="text" [className]="task_name_error ? 'errorElement' : 'inputElement'" formControlName="taskName" name="taskName"><br>
                 <span class="error_text" *ngIf=task_name_error>Must have a name to save</span>
             </div>
-
             <div class="label-input-block top-centre-form">
                 <label for="gadsCustomerId">Customer ID <a (click)="switch_cid()" class="smalltext">{{cid_choice}}</a><br>
                 <select [className]="customer_id_error ? 'errorElement' : 'inputElement'" *ngIf="!manual_cid" name="gadsCustomerId" class="inputElement" formControlName="gadsCustomerId" id="gadsCustomerId">
@@ -23,19 +22,16 @@
                 <input *ngIf="manual_cid" type="text" [className]="customer_id_error ? 'errorElement' : 'inputElement'" formControlName="gadsCustomerId" name="gadsCustomerId"><br>
                 <span class="error_text" *ngIf=customer_id_error>Needs a valid CID</span></label>
             </div>
-
             <div class="label-input-block top-centre-form">
                 <label for="fromDaysAgo">From Days Ago</label><br>
                 <input type="text" [className]="from_lookback_error ? 'smallErrorElement' : 'smallInputElement'" formControlName="fromDaysAgo" name="fromDaysAgo"><br>
                 <span class="error_text" *ngIf=from_lookback_error>Must be number <= 90</span>
             </div>
-
             <div class="label-input-block top-centre-form">
                 <label for="lookbackDays">Lookback Days</label><br>
                 <input type="text" [className]="lookback_error ? 'smallErrorElement' : 'smallInputElement'" formControlName="lookbackDays" name="lookbackDays"><br>
                 <span class="error_text" *ngIf=lookback_error>Must be number <= 90</span>
             </div>
-
             <div class="label-input-block top-centre-form">
                 <label for="schedule">Schedule</label><br>
                 <select name="schedule" class="inputElement" formControlName="schedule" id="schedule" (change)="scheduleChange()">
@@ -45,7 +41,7 @@
         </div>
         <!-- Google Filters -->
         <div class="filterBorder">
-            <b>Google Ads Filters</b><br><br>
+            <b>Google Ads Filters</b> (per placemnet & ad-group)<br><br>
             <div [className]="gads_data_error ? 'label-input-block largeErrorElement' : 'label-input-block'">
                 YouTube <mat-slide-toggle name="gadsDataYouTube" [(ngModel)]="gads_data_youtube" formControlName="gadsDataYouTube" id="gadsDataYouTube">
                 </mat-slide-toggle> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -208,7 +204,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Form End -->
         <br>
         <div class="label-input-block formSubmits">
@@ -264,7 +259,6 @@
     </form>
 </div>
 </div>
-
 <table *ngIf="table_result.length > 0" class="styled-table newtask-width">
     <thead>
         <tr>
@@ -274,6 +268,7 @@
             <th class="hrlink"><a (click)="sort_table('group_placement_view_placement_type')">Type</a></th>
             <th class="hrlink"><a (click)="sort_table('group_placement_view_display_name')">Placement Name</a></th>
             <th class="hrlink"><a (click)="sort_table('group_placement_view_placement')">Channel/URL</a></th>
+            <th class="hrlink"><a (click)="sort_table('ad_group_id')"></a>Ad Group Id</th>
             <th class="hrlink"><a (click)="sort_table('metrics_impressions')">Impressions</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_clicks')">Clicks</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_video_views')">Video Views</a></th>
@@ -311,6 +306,7 @@
             <td>{{data.group_placement_view_display_name}}</td>
             <td><a href="https://{{data.group_placement_view_target_url}}" target="_blank">{{
                     data.group_placement_view_placement }}</a></td>
+            <td>{{data.group_placement_view_ad_group_id}}</td>        
             <td>{{data.metrics_impressions | number}}</td>
             <td>{{data.metrics_clicks | number}}</td>
             <td>{{data.metrics_video_views | number}}</td>
@@ -330,5 +326,4 @@
     </tbody>
 </table>
 <div *ngIf="no_data" class="empty-table">No data matches your Google Ads filters!</div>
-
 <app-loading [showSpinner]=loading></app-loading>
