@@ -31,6 +31,7 @@
    subs: any;
    hideAuth = true;
    mcc_list: any[] = [];
+   dev_token_error = false;
  
    horizontalPosition: MatSnackBarHorizontalPosition = 'center';
    verticalPosition: MatSnackBarVerticalPosition = 'top';
@@ -57,6 +58,22 @@
        });
    }
  
+
+   validate_fields() {
+    let error_count = 0;
+    this.dev_token_error = false;
+    if (this.settingsForm.controls['gadsDevToken'].value.length > 30) {
+      this.dev_token_error = true;
+      error_count++;
+    }
+     if (error_count == 0) { return true; }
+    else {
+      this.openSnackBar("Error in some of your fields. Please review and correct them", "Dismiss", "error-snackbar");
+      return false;
+    }
+  }
+
+
   _parse_config(response: ReturnPromise) {
      let config = (Object.entries(response).find(([k, v]) => {
        if(k=='dev_token') {
@@ -90,6 +107,7 @@
    }
  
    async save_settings() {
+     if (!this.validate_fields()) return;
      this.loading=true
      let mcc_id = this.settingsForm.controls['gadsMccId'].value;
      mcc_id = (mcc_id.replace(new RegExp('-', 'g'), '')).trim();
