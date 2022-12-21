@@ -31,7 +31,7 @@ from google.appengine.api import wrap_wsgi_app
 from google.appengine.api.mail import send_mail
 
 from cpr_services import get_mcc_ids, run_auto_excluder, run_manual_excluder, get_customer_ids, remove_channel_id
-from gads_api import get_channel_id_name_list
+from gads_api import get_channel_id_name_list, is_localhost_run
 from cloud_api import get_schedule_list, update_cloud_schedule
 from firebase_server import fb_get_task, fb_save_client_secret, fb_save_task, fb_get_tasks_list, fb_delete_task, fb_save_settings, fb_read_settings, fb_read_client_secret, fb_save_token, fb_read_token, fb_clear_token, fb_add_to_allowlist, fb_remove_from_allowlist
 
@@ -164,8 +164,10 @@ def run_automatic_excluder_from_task_id(task_id: str):
                 False
             )
         except Exception as e:
-            error_msg = f"run_automatic_excluder_from_task_id failed.\nTask-id: {task_id}\nStacktrace: {str(e)}"
-            send_error_email(error_msg, customer_id)
+            error_msg = f"run_automatic_excluder_from_task_id failed.\nTask-id: {task_id}"
+            print(e)
+            if not is_localhost_run:
+                send_error_email(error_msg, customer_id)
             return _build_response(json.dumps(error_msg))
 
         all_exclusions = get_channel_id_name_list(response_data)
@@ -278,8 +280,10 @@ def server_run_excluder():
             True
         )
     except Exception as e:
-        error_msg = f"server_run_excluder failed.\nStacktrace: {str(e)}"
-        send_error_email(error_msg, customer_id)
+        error_msg = f"server_run_excluder failed."
+        print(e)
+        if not is_localhost_run:
+            send_error_email(error_msg, customer_id)
         return _build_response(json.dumps(error_msg))
 
     return _build_response(json.dumps(response_data))
