@@ -25,10 +25,12 @@ import googleapiclient.errors
 from googleapiclient.discovery import build
 from firebase_server import fb_read_allowlist
 
+is_localhost_run = False
+
 API_SERVICE_NAME = "youtube"
 API_VERSION = "v3"
 MICRO_CONV = 1000000
-ENGINE_SIZE = float(getenv('GAE_MEMORY_MB'))*0.95
+ENGINE_SIZE = 1e6 if is_localhost_run else float(getenv('GAE_MEMORY_MB'))*0.95
 MEMORY_WARNING = False
 
 
@@ -143,14 +145,15 @@ def get_placement_data(client, ga_service, customer_id: str,
                 search_request.query = query
                 stream = ga_service.search_stream(search_request)
                 for batch in stream:
-                    for row in batch.results:
+                   for row in batch.results:
                         row = row._pb
                         if row.customer_negative_criterion.youtube_channel.channel_id in all_data_set.keys():
                             key = row.customer_negative_criterion.youtube_channel.channel_id
-                        elif row.customer_negative_criterion.placement.url in all_data_set.keys():
-                            key = row.customer_negative_criterion.placement.url
-                        all_data_set[key]['placement_level_data'].update(
-                            {'excluded_already': True})
+                        else:
+                            key = row.customer_negative_criterion.placement.url                        
+                        if key in all_data_set:                        
+                            all_data_set[key]['placement_level_data'].update(
+                                {'excluded_already': True})
                 allowlist = fb_read_allowlist()
                 if allowlist:
                     for channel in allowlist:
