@@ -54,17 +54,17 @@ def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, custo
 
         if include_yt_data and pull_yt:
             channel_ids = []
-            for value in full_data_set.values():
+            for value in full_data_set["data"].values():
                 ad_group_level_list = value['ad_group_level_array']
                 channel_ids.extend([ad_group_level_item.get('group_placement_view_placement') for ad_group_level_item in ad_group_level_list if ad_group_level_item.get('group_placement_view_placement_type')==YOUTUBE_CHANNEL_ID])
             
             yt_data = get_youtube_data(credentials,channel_ids)
             
-            full_data_set = append_youtube_data(full_data_set, yt_data, view_count, sub_count, video_count, country, language, isEnglish)
+            full_data_set["data"] = append_youtube_data(full_data_set["data"], yt_data, view_count, sub_count, video_count, country, language, isEnglish)
             
 
         if exclude_from_youtube:
-            exclude_channels(client, customer_id, get_channel_id_list(full_data_set))
+            exclude_channels(client, customer_id, get_channel_id_list(full_data_set["data"]))
 
         return full_data_set
             

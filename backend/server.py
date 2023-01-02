@@ -169,7 +169,7 @@ def run_automatic_excluder_from_task_id(task_id: str):
             return response
 
 
-        all_exclusions = get_channel_id_name_list(response_data)
+        all_exclusions = get_channel_id_name_list(response_data["data"])
         if all_exclusions and file_contents['email_alerts']:
             print("sending email")
             send_CPR_email(all_exclusions, task_id, customer_id)

@@ -74,6 +74,9 @@ export class NewtaskComponent implements OnInit {
   pagination_rpp = 10;
   excluded_only = false;
 
+  date_from ="";
+  date_to= "";
+
   horizontalPosition: MatSnackBarHorizontalPosition = 'center';
   verticalPosition: MatSnackBarVerticalPosition = 'top';
 
@@ -166,7 +169,9 @@ export class NewtaskComponent implements OnInit {
       ytCountryValue: [''],
       ytStandardCharValue: [''],
       emailAlerts: false,
-      includeYouTube: true
+      includeYouTube: true,
+      date_from : "",
+      date_to : ""
     });
 
     this.gadsForm.controls['lookbackDays'].setValue(7);
@@ -372,15 +377,19 @@ export class NewtaskComponent implements OnInit {
   }
 
   _call_auto_service_success(response: ReturnPromise, auto_exclude: boolean) {    
-    const raw_response = Object.values(response);
+    const jsonResponse = JSON.parse(JSON.stringify(response));
     const flattened_raw_response = [];
-    for (const raw_data_row of raw_response){
+    for (const raw_data_row_obj of Object.values(jsonResponse.data)){
+      let raw_data_row = JSON.parse(JSON.stringify(raw_data_row_obj));
       const account_level_data = raw_data_row["account_level_data"];
       const yt_data = raw_data_row["yt_data"];
       for (const ad_group_level_data of raw_data_row["ad_group_level_array"]){
-        flattened_raw_response.push({...ad_group_level_data, ...account_level_data, ...yt_data});
+        flattened_raw_response.push({ ...ad_group_level_data, ...account_level_data, ...yt_data});        
       }
     }
+    const dates = jsonResponse["dates"];
+    this.date_from = dates["date_from"];
+    this.date_to = dates["date_to"];
     this.table_result = flattened_raw_response;
     if (this.table_result.length > 0) {
       this.sort_table("default");
