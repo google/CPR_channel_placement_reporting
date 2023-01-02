@@ -50,6 +50,7 @@ def get_placement_data(client, ga_service, customer_id: str,
             condition = condition.replace(")", "")
             query = f"""
             SELECT
+                ad_group.name,
                 group_placement_view.resource_name,
                 group_placement_view.placement_type,
                 group_placement_view.display_name,
@@ -85,22 +86,12 @@ def get_placement_data(client, ga_service, customer_id: str,
                 for row in batch.results:
                     row = row._pb
                     placement_name = row.group_placement_view.placement
-
-                    # customers/{customer_id}/groupPlacementViews/{ad_group_id}~{base64_placement}
-                    resource_name_parts = row.group_placement_view.resource_name.split(
-                        "/")
-
-                    # /{ad_group_id}~{base64_placement}
-                    ad_group_id_placement = resource_name_parts[len(resource_name_parts)-1]
-                    placement_id = ad_group_id_placement.split("~")[0]
-                    ad_group_id = ad_group_id_placement.split("~")[1]
-
                     if not placement_name in all_data_set:
                         all_data_set[placement_name] = {
                             'yt_data': {}, 'ad_group_level_array': [], 'placement_level_data': {}}
 
                     all_data_set[placement_name]['ad_group_level_array'].append({
-                        'group_placement_view_ad_group_id': ad_group_id,
+                        'ad_group_name': row.ad_group.name,
                         'group_placement_view_placement_type': row.group_placement_view.placement_type,
                         'group_placement_view_display_name': row.group_placement_view.display_name,
                         'group_placement_view_placement': row.group_placement_view.placement,
@@ -277,7 +268,6 @@ def append_youtube_data(
             It also checks the filters for YouTube as it itterates through the records at
             the same time and if all provided criteria match, it is flagged as 'exclude'
         """
-    print(f"'yt data  = {yt_data}'")
     for yd_data_entry in yt_data:
         filter_count = 0
         matches_count = 0

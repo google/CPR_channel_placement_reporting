@@ -19,6 +19,7 @@ import math
 from os import environ, path, listdir, remove, getenv
 import os
 import pickle
+import traceback
 
 from flask import Flask, request, render_template
 from flask_cors import CORS
@@ -167,6 +168,9 @@ def run_automatic_excluder_from_task_id(task_id: str):
             error_msg = f"run_automatic_excluder_from_task_id failed.\nTask-id: {task_id}\nStacktrace: {str(e)}"
             send_error_email(error_msg, customer_id)
             return _build_response(json.dumps(error_msg))
+            response = handle_exception(customer_id)
+            return response
+
 
         all_exclusions = get_channel_id_name_list(response_data)
         if all_exclusions and file_contents['email_alerts']:
@@ -176,6 +180,15 @@ def run_automatic_excluder_from_task_id(task_id: str):
         return _build_response(json.dumps(f"{len(all_exclusions)}"))
     else:
         return _build_response(json.dumps("Config doesn't exist"))
+
+def handle_exception(customer_id):
+    error_msg = f"server_run_excluder failed."
+    stack_trace = traceback.format_exc()
+    full_error_msg = f"error_msg={error_msg}\n stack_trace={stack_trace}"
+    print(stack_trace)
+    if not is_localhost_run:
+        send_error_email(full_error_msg, customer_id)
+    return _build_response(json.dumps(full_error_msg))
 
 
 @app.route("/", methods=['GET'])
@@ -281,6 +294,8 @@ def server_run_excluder():
         error_msg = f"server_run_excluder failed.\nStacktrace: {str(e)}"
         send_error_email(error_msg, customer_id)
         return _build_response(json.dumps(error_msg))
+        response = handle_exception(customer_id)
+        return response
 
     return _build_response(json.dumps(response_data))
 
