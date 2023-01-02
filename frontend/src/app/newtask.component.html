@@ -268,7 +268,7 @@
             <th class="hrlink"><a (click)="sort_table('group_placement_view_placement_type')">Type</a></th>
             <th class="hrlink"><a (click)="sort_table('group_placement_view_display_name')">Placement Name</a></th>
             <th class="hrlink"><a (click)="sort_table('group_placement_view_placement')">Channel/URL</a></th>
-            <th class="hrlink"><a (click)="sort_table('ad_group_id')"></a>Ad Group Id</th>
+            <th class="hrlink"><a (click)="sort_table('ad_group_name')"></a>Ad Group Name</th>
             <th class="hrlink"><a (click)="sort_table('metrics_impressions')">Impressions</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_clicks')">Clicks</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_video_views')">Video Views</a></th>
@@ -306,7 +306,7 @@
             <td>{{data.group_placement_view_display_name}}</td>
             <td><a href="https://{{data.group_placement_view_target_url}}" target="_blank">{{
                     data.group_placement_view_placement }}</a></td>
-            <td>{{data.group_placement_view_ad_group_id}}</td>        
+            <td>{{data.ad_group_name}}</td>        
             <td>{{data.metrics_impressions | number}}</td>
             <td>{{data.metrics_clicks | number}}</td>
             <td>{{data.metrics_video_views | number}}</td>
