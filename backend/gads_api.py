@@ -51,6 +51,7 @@ def get_placement_data(client, ga_service, customer_id: str,
             query = f"""
             SELECT
                 ad_group.name,
+                campaign.name,
                 group_placement_view.resource_name,
                 group_placement_view.placement_type,
                 group_placement_view.display_name,
@@ -91,6 +92,7 @@ def get_placement_data(client, ga_service, customer_id: str,
                             'yt_data': {}, 'ad_group_level_array': [], 'placement_level_data': {}}
 
                     all_data_set[placement_name]['ad_group_level_array'].append({
+                        'campaign_name': row.campaign.name,
                         'ad_group_name': row.ad_group.name,
                         'group_placement_view_placement_type': row.group_placement_view.placement_type,
                         'group_placement_view_display_name': row.group_placement_view.display_name,
@@ -109,9 +111,9 @@ def get_placement_data(client, ga_service, customer_id: str,
                     })
 
                     all_data_set[placement_name]['placement_level_data'].update({'excluded_already': False,
-                                                                         'exclude_from_account': True,
-                                                                         'allowlist': False})
-                    
+                                                                                 'exclude_from_account': True,
+                                                                                 'allowlist': False})
+
                     if (sys.getsizeof(all_data_set)/1000000) > ENGINE_SIZE:
                         MEMORY_WARNING = True
                         all_data_set[placement_name]['placement_level_data'].update(
@@ -138,17 +140,18 @@ def get_placement_data(client, ga_service, customer_id: str,
                         row = row._pb
                         if row.customer_negative_criterion.youtube_channel.channel_id in all_data_set.keys():
                             key = row.customer_negative_criterion.youtube_channel.channel_id
-                        elif row.customer_negative_criterion.placement.url in all_data_set.keys():
-                            key = row.customer_negative_criterion.placement.url
-                        all_data_set[key]['placement_level_data'].update(
-                            {'excluded_already': True})
+                        else:
+                            key = row.customer_negative_criterion.placement.url                        
+                        if key in all_data_set:                        
+                            all_data_set[key]['placement_level_data'].update(
+                                {'excluded_already': True})
                 allowlist = fb_read_allowlist()
                 if allowlist:
                     for channel in allowlist:
                         if channel in all_data_set.keys():
                             all_data_set[channel]['placement_level_data'].update(
                                 {'allowlist': True})
-        return all_data_set
+        return {'data': all_data_set, 'dates': {'date_from': date_from, 'date_to': date_to}};
 
 
 def get_youtube_data(credentials, channel_ids: list) -> list:
@@ -229,8 +232,9 @@ def remove_channel_id_from_gads(client, ga_service, customer_id: str, channel_ty
             placement_criterion_op = client.get_type(
                 "CustomerNegativeCriterionOperation")
 
-            exclude_operations=[]
-            placement_criterion_op = client.get_type("CustomerNegativeCriterionOperation")
+            exclude_operations = []
+            placement_criterion_op = client.get_type(
+                "CustomerNegativeCriterionOperation")
             placement_criterion_op.remove = f"customers/{customer_id}/customerNegativeCriteria/{criterion_id}"
             exclude_operations.append(placement_criterion_op)
 
@@ -273,19 +277,19 @@ def append_youtube_data(
         matches_count = 0
 
         filter_count, matches_count = update_yt_data_2(full_data_set, ytf_view_count,
-                                                     yd_data_entry, 'statistics', 'viewCount', filter_count, matches_count)
+                                                       yd_data_entry, 'statistics', 'viewCount', filter_count, matches_count)
 
         filter_count, matches_count = update_yt_data_2(full_data_set, ytf_sub_count,
-                                                     yd_data_entry, 'statistics', 'subscriberCount', filter_count, matches_count)
+                                                       yd_data_entry, 'statistics', 'subscriberCount', filter_count, matches_count)
 
         filter_count, matches_count = update_yt_data_2(full_data_set, ytf_video_count,
-                                                     yd_data_entry, 'statistics', 'videoCount', filter_count, matches_count)
+                                                       yd_data_entry, 'statistics', 'videoCount', filter_count, matches_count)
 
         filter_count, matches_count = update_yt_data_3(full_data_set, ytf_country,
-                                                     yd_data_entry, 'brandingSettings', 'channel', 'country', filter_count, matches_count)
+                                                       yd_data_entry, 'brandingSettings', 'channel', 'country', filter_count, matches_count)
 
         filter_count, matches_count = update_yt_data_3(full_data_set, ytf_language,
-                                                     yd_data_entry, 'brandingSettings', 'channel', 'defaultLanguage', filter_count, matches_count)
+                                                       yd_data_entry, 'brandingSettings', 'channel', 'defaultLanguage', filter_count, matches_count)
 
         full_data_set[yd_data_entry['id']].update(
             {'asciiTitle': is_ascii_title(yd_data_entry['brandingSettings']['channel']['title'])})
@@ -294,7 +298,7 @@ def append_youtube_data(
             if eval(is_ascii_title(yd_data_entry['brandingSettings']['channel']['title']) + ytf_isAscii):
                 matches_count += 1
 
-        #Does satisfies all yt filters
+        # Does satisfies all yt filters
         full_data_set[yd_data_entry['id']]['placement_level_data'].update(
             {'exclude_from_account': (filter_count == matches_count)})
 
@@ -310,8 +314,8 @@ def update_yt_data_2(full_data_set, user_yt_filter, yt_data_entry, yt_first_cate
             {yt_data_second_category: yt_value})
     else:
         full_data_set[yt_data_entry['id']]['yt_data'].update(
-            {yt_data_second_category: '-'})    
-    
+            {yt_data_second_category: '-'})
+
     if user_yt_filter:
         filter_count += 1
         if eval(f"'{yt_value}'{user_yt_filter}"):
@@ -320,15 +324,15 @@ def update_yt_data_2(full_data_set, user_yt_filter, yt_data_entry, yt_first_cate
 
 
 def update_yt_data_3(full_data_set, user_yt_filter, entry, yt_first_category, yt_data_second_category, yt_data_third_category, filter_count, matches_count):
-    if entry[yt_first_category][yt_data_second_category].get(yt_data_third_category ):
+    if entry[yt_first_category][yt_data_second_category].get(yt_data_third_category):
         yt_value = entry[yt_first_category][yt_data_second_category][yt_data_third_category]
         full_data_set[entry['id']]['yt_data'].update(
             {yt_data_third_category: yt_value})
 
     else:
         full_data_set[entry['id']]['yt_data'].update(
-            {yt_data_third_category: '-'})    
-    
+            {yt_data_third_category: '-'})
+
     if user_yt_filter:
         filter_count += 1
         if eval(yt_value + " " + user_yt_filter):
