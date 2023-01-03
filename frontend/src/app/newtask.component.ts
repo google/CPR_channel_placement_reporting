@@ -376,9 +376,17 @@ export class NewtaskComponent implements OnInit {
       });
   }
 
-  _call_auto_service_success(response: ReturnPromise, auto_exclude: boolean) {    
+  _call_auto_service_success(response: ReturnPromise, auto_exclude: boolean) {
+    if (!response){
+      this.handleEmptyTable("Server returned no result. Contact admin for details (an empty 'response')");
+      return;
+    }
     const jsonResponse = JSON.parse(JSON.stringify(response));
     const flattened_raw_response = [];
+    if (!jsonResponse.data){
+      this.handleEmptyTable("Server returned no result. Contact admin for details (an empty 'jsonResponse.data')");
+      return;
+    }
     for (const raw_data_row_obj of Object.values(jsonResponse.data)){
       let raw_data_row = JSON.parse(JSON.stringify(raw_data_row_obj));
       const account_level_data = raw_data_row["account_level_data"];
@@ -402,13 +410,18 @@ export class NewtaskComponent implements OnInit {
       this._run_exclude_count(auto_exclude);
     }
     else {
-      this.no_data = true;
-      this.exclude_count = 0;
-      this.openSnackBar("Successful run, but no data matches criteria", "Dismiss", "success-snackbar");
+      this.handleEmptyTable("Successful run, but no data matches criteria");
     }
     this.loading = false;
   }
 
+
+  private handleEmptyTable(message: string) {
+    this.no_data = true;
+    this.exclude_count = 0;
+    this.openSnackBar(message, "Dismiss", "success-snackbar");
+    this.loading = false;
+  }
 
   sort_table(element: string) {
     if(element=="default") {
