@@ -1,0 +1,6 @@
+frontend/.gitignore
+backend/__pycache__/cloud_api.cpython-310.pyc
+backend/__pycache__/cpr_services.cpython-310.pyc
+backend/__pycache__/firebase_server.cpython-310.pyc
+backend/__pycache__/gads_api.cpython-310.pyc
+backend/__pycache__/gads_make_client.cpython-310.pyc
