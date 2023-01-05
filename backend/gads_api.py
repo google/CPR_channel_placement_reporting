@@ -91,15 +91,11 @@ def get_placement_data(client, ga_service, customer_id: str,
                     placement_name = row.group_placement_view.placement
                     if not placement_name in all_data_set:
                         all_data_set[placement_name] = {
-                            'yt_data': {}, 'ad_group_level_array': [], 'placement_level_data': {}}
-
-                    all_data_set[placement_name]['ad_group_level_array'].append({
+                            'yt_data': {}, 'ad_group_placement_level_array': [], 'placement_level_data': {}}
+                    #campaign, ad-group, metrics
+                    all_data_set[placement_name]['ad_group_placement_level_array'].append({
                         'campaign_name': row.campaign.name,
                         'ad_group_name': row.ad_group.name,
-                        'group_placement_view_placement_type': row.group_placement_view.placement_type,
-                        'group_placement_view_display_name': row.group_placement_view.display_name,
-                        'group_placement_view_placement': row.group_placement_view.placement,
-                        'group_placement_view_target_url': row.group_placement_view.target_url,
                         'metrics_impressions': row.metrics.impressions,
                         'metrics_cost': row.metrics.cost_micros / MICRO_CONV,
                         'metrics_cost_per_conversion': row.metrics.cost_per_conversion / MICRO_CONV,
@@ -111,12 +107,17 @@ def get_placement_data(client, ga_service, customer_id: str,
                         'metrics_average_cpm': row.metrics.average_cpm / MICRO_CONV,
                         'metrics_average_cpm': row.metrics.average_cpc / MICRO_CONV,
                         'metrics_ctr': row.metrics.ctr,
-                         'metric_conversions_from_interactions_rate': row.conversions_from_interactions_rate,
+                        'metric_conversions_from_interactions_rate': row.conversions_from_interactions_rate,
                     })
-
-                    all_data_set[placement_name]['placement_level_data'].update({'excluded_already': False,
-                                                                                 'exclude_from_account': True,
-                                                                                 'allowlist': False})
+                    # placement metadata
+                    all_data_set[placement_name]['placement_level_data'].update({
+                        'group_placement_view_placement_type': row.group_placement_view.placement_type,
+                        'group_placement_view_display_name': row.group_placement_view.display_name,
+                        'group_placement_view_placement': row.group_placement_view.placement,
+                        'group_placement_view_target_url': row.group_placement_view.target_url,
+                        'excluded_already': False,
+                        'exclude_from_account': True,
+                        'allowlist': False})
 
                     if (sys.getsizeof(all_data_set)/1000000) > ENGINE_SIZE:
                         MEMORY_WARNING = True
@@ -155,7 +156,7 @@ def get_placement_data(client, ga_service, customer_id: str,
                         if channel in all_data_set.keys():
                             all_data_set[channel]['placement_level_data'].update(
                                 {'allowlist': True})
-        return {'data': all_data_set, 'dates': {'date_from': date_from, 'date_to': date_to}};
+        return {'data': all_data_set, 'dates': {'date_from': date_from, 'date_to': date_to}}
 
 
 def get_youtube_data(credentials, channel_ids: list) -> list:
@@ -194,10 +195,11 @@ def exclude_channels(client, customer_id: str, channelsToRemove: list) -> _void:
                 placement_criterion_op = client.get_type(
                     "CustomerNegativeCriterionOperation")
                 placement_criterion = placement_criterion_op.create
-                if channel[0] == 2:
-                    placement_criterion.placement.url = channel[1]
+                if channel["group_placement_view_placement_type"] == 2:
+                    placement_criterion.placement.url = channel["group_placement_view_placement"]
                 else:
-                    placement_criterion.youtube_channel.channel_id = channel[1]
+                    placement_criterion.youtube_channel.channel_id = channel[
+                        "group_placement_view_placement"]
 
                 exclude_operations.append(placement_criterion_op)
 
@@ -295,7 +297,7 @@ def append_youtube_data(
         filter_count, matches_count = update_yt_data_3(full_data_set, ytf_language,
                                                        yd_data_entry, 'brandingSettings', 'channel', 'defaultLanguage', filter_count, matches_count)
 
-        full_data_set[yd_data_entry['id']].update(
+        full_data_set[yd_data_entry['id']]['placement_level_data'].update(
             {'asciiTitle': is_ascii_title(yd_data_entry['brandingSettings']['channel']['title'])})
         if ytf_isAscii:
             filter_count += 1
