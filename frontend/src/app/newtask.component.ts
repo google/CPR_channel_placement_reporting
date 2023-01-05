@@ -111,7 +111,7 @@ export class NewtaskComponent implements OnInit {
     ["metrics.view_through_conversions", "View-Through Conversions"],
     ["metrics.video_views", "Video Views"],
     ["metrics.video_view_rate", "Video View Rate"],
-    ["metrics.conversions_from_interactions_rate", "Conversions from Interactions Rate"]
+    ["metrics.conversions_from_interactions_rate", "Conversions Rate"]
   ];
 
   gadsOperatorsArray = [
@@ -391,10 +391,10 @@ export class NewtaskComponent implements OnInit {
     }
     for (const raw_data_row_obj of Object.values(jsonResponse.data)){
       let raw_data_row = JSON.parse(JSON.stringify(raw_data_row_obj));
-      const account_level_data = raw_data_row["account_level_data"];
+      const placement_level_data = raw_data_row["placement_level_data"];
       const yt_data = raw_data_row["yt_data"];
-      for (const ad_group_level_data of raw_data_row["ad_group_level_array"]){
-        flattened_raw_response.push({ ...ad_group_level_data, ...account_level_data, ...yt_data});        
+      for (const ad_group_placement_level_array of raw_data_row["ad_group_placement_level_array"]){
+        flattened_raw_response.push({ ...ad_group_placement_level_array, ...placement_level_data, ...yt_data});        
       }
     }
     const dates = jsonResponse["dates"];
