@@ -105,11 +105,13 @@ export class NewtaskComponent implements OnInit {
     ["metrics.ctr", "CTR"],
     ["metrics.cost_micros", "Cost"],
     ["metrics.average_cpm", "Avg. CPM"],
+    ["metrics.average_cpm", "Avg. CPC"],
     ["metrics.conversions", "Conversions"],
     ["metrics.cost_per_conversion", "CPA"],
     ["metrics.view_through_conversions", "View-Through Conversions"],
     ["metrics.video_views", "Video Views"],
-    ["metrics.video_view_rate", "Video View Rate"]
+    ["metrics.video_view_rate", "Video View Rate"],
+    ["metrics.conversions_from_interactions_rate", "Conversions from Interactions Rate"]
   ];
 
   gadsOperatorsArray = [
