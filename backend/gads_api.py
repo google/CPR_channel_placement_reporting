@@ -68,7 +68,9 @@ def get_placement_data(client, ga_service, customer_id: str,
                 metrics.cost_per_conversion,
                 metrics.view_through_conversions,
                 metrics.video_views,
-                metrics.video_view_rate
+                metrics.video_view_rate,
+                metrics.conversions_from_interactions_rate,
+                metrics.average_cpc,
             FROM group_placement_view
             WHERE
                 campaign.status='ENABLED'
@@ -109,7 +111,9 @@ def get_placement_data(client, ga_service, customer_id: str,
                         'metrics_video_view_rate': row.metrics.video_view_rate,
                         'metrics_clicks': row.metrics.clicks,
                         'metrics_average_cpm': row.metrics.average_cpm / MICRO_CONV,
-                        'metrics_ctr': row.metrics.ctr
+                        'metrics_average_cpm': row.metrics.average_cpc / MICRO_CONV,
+                        'metrics_ctr': row.metrics.ctr,
+                         'metric_conversions_from_interactions_rate': row.conversions_from_interactions_rate,
                     })
 
                     all_data_set[placement_name]['placement_level_data'].update({'excluded_already': False,
