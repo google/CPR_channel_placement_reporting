@@ -58,19 +58,19 @@ def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, custo
 
         if include_yt_data and pull_yt:
             channel_ids = []
-            for value in full_data_set["data"].values():
-                placement_level_data = value['placement_level_data']
-                channel_ids.extend([placement_level_data_item.get('group_placement_view_placement')
-                                   for placement_level_data_item in placement_level_data if placement_level_data_item.get('group_placement_view_placement_type') == YOUTUBE_CHANNEL_ID])
+            for value_per_placement in full_data_set["data"].values():
+                placement_level_data_value_obj = value_per_placement['placement_level_data']
+                if placement_level_data_value_obj.get('group_placement_view_placement_type') == YOUTUBE_CHANNEL_ID:
+                    channel_ids.extend([placement_level_data_value_obj.get('group_placement_view_placement')])
 
-            yt_data = get_youtube_data(credentials, channel_ids)
+            yt_data_from_api = get_youtube_data(credentials, channel_ids)
 
             full_data_set["data"] = append_youtube_data(
-                full_data_set["data"], yt_data, view_count, sub_count, video_count, country, language, isEnglish)
+                full_data_set["data"], yt_data_from_api, view_count, sub_count, video_count, country, language, isEnglish)
 
         if exclude_from_youtube:
             exclude_channels(client, customer_id, get_channel_id_list(
-                full_data_set["data"]["placement_level_data"]))
+                full_data_set["data"]))
 
         return full_data_set
 

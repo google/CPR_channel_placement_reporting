@@ -379,16 +379,12 @@ export class NewtaskComponent implements OnInit {
   }
 
   _call_auto_service_success(response: ReturnPromise, auto_exclude: boolean) {
-    if (!response){
-      this.handleEmptyTable("Server returned no result. Contact admin for details (an empty 'response')");
+    const jsonResponse = JSON.parse(JSON.stringify(response));    
+    if (!jsonResponse.data){      
+      this.handleEmptyTable("Server error, please investigate the cloud logs", "error-snackbar");
       return;
     }
-    const jsonResponse = JSON.parse(JSON.stringify(response));
     const flattened_raw_response = [];
-    if (!jsonResponse.data){
-      this.handleEmptyTable("Server returned no result. Contact admin for details (an empty 'jsonResponse.data')");
-      return;
-    }
     for (const raw_data_row_obj of Object.values(jsonResponse.data)){
       let raw_data_row = JSON.parse(JSON.stringify(raw_data_row_obj));
       const placement_level_data = raw_data_row["placement_level_data"];
@@ -412,16 +408,16 @@ export class NewtaskComponent implements OnInit {
       this._run_exclude_count(auto_exclude);
     }
     else {
-      this.handleEmptyTable("Successful run, but no data matches criteria");
+      this.handleEmptyTable("Successful run, but no data matches criteria", "success-snackbar");
     }
     this.loading = false;
   }
 
 
-  private handleEmptyTable(message: string) {
+  private handleEmptyTable(message: string, css_class:string) {
     this.no_data = true;
     this.exclude_count = 0;
-    this.openSnackBar(message, "Dismiss", "success-snackbar");
+    this.openSnackBar(message, "Dismiss", css_class);
     this.loading = false;
   }
 
@@ -646,7 +642,7 @@ export class NewtaskComponent implements OnInit {
       this.gads_filter_error = true;
       error_count++;
     }
-    if (isNaN(Number(this.gadsForm.controls['lookbackDays'].value)) || this.gadsForm.controls['lookbackDays'].value=="" || Number(this.gadsForm.controls['lookbackDays'].value) >90) {
+    if (isNaN(Number(this.gadsForm.controls['lookbackDays'].value)) || this.gadsForm.controls['lookbackDays'].value=="" || Number(this.gadsForm.controls['lookbackDays'].value) >900) {
       this.lookback_error = true;
       error_count++;
     }
