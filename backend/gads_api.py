@@ -70,7 +70,7 @@ def get_placement_data(client, ga_service, customer_id: str,
                 metrics.video_views,
                 metrics.video_view_rate,
                 metrics.conversions_from_interactions_rate,
-                metrics.average_cpc,
+                metrics.average_cpc
             FROM group_placement_view
             WHERE
                 campaign.status='ENABLED'
@@ -109,7 +109,7 @@ def get_placement_data(client, ga_service, customer_id: str,
                         'metrics_average_cpm': row.metrics.average_cpm / MICRO_CONV,
                         'metrics_average_cpm': row.metrics.average_cpc / MICRO_CONV,
                         'metrics_ctr': row.metrics.ctr,
-                        'metric_conversions_from_interactions_rate': row.conversions_from_interactions_rate,
+                        'metric_conversions_from_interactions_rate': row.metrics.conversions_from_interactions_rate
                     })
                     # placement metadata
                     all_data_set[placement_name]['placement_level_data'].update({
@@ -188,7 +188,7 @@ def get_youtube_data(credentials, channel_ids: list) -> list:
     return yt_items
 
 
-def exclude_channels(client, customer_id: str, channelsToRemove: list) -> _void:
+def exclude_channels(client, customer_id: str, channelsToRemove: List[dict]) -> _void:
     if len(channelsToRemove) > 0:
         exclude_operations = []
         for channel in channelsToRemove:
@@ -197,11 +197,10 @@ def exclude_channels(client, customer_id: str, channelsToRemove: list) -> _void:
                 placement_criterion_op = client.get_type(
                     "CustomerNegativeCriterionOperation")
                 placement_criterion = placement_criterion_op.create
-                if channel["group_placement_view_placement_type"] == 2:
-                    placement_criterion.placement.url = channel["group_placement_view_placement"]
+                if channel[0] == 2:
+                    placement_criterion.placement.url = channel[1]
                 else:
-                    placement_criterion.youtube_channel.channel_id = channel[
-                        "group_placement_view_placement"]
+                    placement_criterion.youtube_channel.channel_id = channel[1]
 
                 exclude_operations.append(placement_criterion_op)
 
@@ -255,20 +254,33 @@ def remove_channel_id_from_gads(client, ga_service, customer_id: str, channel_ty
             )
 
 
-def get_channel_id_list(full_data_set: dict) -> dict:
-    ytList = [(d.get('group_placement_view_placement_type'), d.get('group_placement_view_placement')) for d in full_data_set.values(
-    ) if d.get('exclude_from_account') == True and d.get('excluded_already') == False and d.get('allowlist') == False]
-    return ytList
+def get_items(full_data_set: dict, keys: List[str]) -> List[dict]:
+    items = []
+    for placement_data in full_data_set.values():
+        placement_level_data = placement_data["placement_level_data"]
+        if placement_level_data.get('exclude_from_account') == True and placement_level_data.get('excluded_already') == False and placement_level_data.get('allowlist') == False:
+            item = {}
+            for key in keys:
+                item[key] = placement_level_data[key]
+            items.append(item)
+    return items
 
 
-def get_channel_id_name_list(full_data_set: dict) -> dict:
-    ytList = [(d.get('group_placement_view_placement_type'), d.get('group_placement_view_placement'), d.get('group_placement_view_display_name'))
-              for d in full_data_set.values() if d.get('exclude_from_account') == True and d.get('excluded_already') == False and d.get('allowlist') == False]
-    return ytList
+
+def get_channel_id_list(full_data_set: dict) -> List[dict]:
+    keys = ["group_placement_view_placement_type",
+            "group_placement_view_placement"]
+    return get_items(full_data_set, keys)
+
+
+def get_channel_id_name_list(full_data_set: dict) -> List[dict]:
+    keys = ["group_placement_view_placement_type",
+            "group_placement_view_placement", "group_placement_view_display_name"]
+    return get_items(full_data_set, keys)
 
 
 def append_youtube_data(
-        full_data_set: dict, yt_data: dict, ytf_view_count: int,
+        full_data_set: dict, yt_data_from_api: dict, ytf_view_count: int,
         ytf_sub_count: int, ytf_video_count: int, ytf_country: string,
         ytf_language: string, ytf_isAscii: string) -> dict:
     """Method for appending YouTube statistics to the Google Ads data for exclusion
@@ -280,7 +292,7 @@ def append_youtube_data(
             It also checks the filters for YouTube as it itterates through the records at
             the same time and if all provided criteria match, it is flagged as 'exclude'
         """
-    for yd_data_entry in yt_data:
+    for yd_data_entry in yt_data_from_api:
         filter_count = 0
         matches_count = 0
 
