@@ -336,7 +336,7 @@ def update_yt_data_2(full_data_set, user_yt_filter, yt_data_entry, yt_first_cate
 
     if user_yt_filter:
         filter_count += 1
-        if eval(f"'{yt_value}'{user_yt_filter}"):
+        if eval(f"{yt_value}{user_yt_filter}"):
             matches_count += 1
     return filter_count, matches_count
 
