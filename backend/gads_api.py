@@ -294,19 +294,19 @@ def append_youtube_data(
         filter_count = 0
         matches_count = 0
 
-        filter_count, matches_count = update_yt_data_2(full_data_set, ytf_view_count,
+        filter_count, matches_count = update_yt_data_statistics(full_data_set, ytf_view_count,
                                                        yd_data_entry, 'statistics', 'viewCount', filter_count, matches_count)
 
-        filter_count, matches_count = update_yt_data_2(full_data_set, ytf_sub_count,
+        filter_count, matches_count = update_yt_data_statistics(full_data_set, ytf_sub_count,
                                                        yd_data_entry, 'statistics', 'subscriberCount', filter_count, matches_count)
 
-        filter_count, matches_count = update_yt_data_2(full_data_set, ytf_video_count,
+        filter_count, matches_count = update_yt_data_statistics(full_data_set, ytf_video_count,
                                                        yd_data_entry, 'statistics', 'videoCount', filter_count, matches_count)
 
-        filter_count, matches_count = update_yt_data_3(full_data_set, ytf_country,
+        filter_count, matches_count = update_yt_data_settings(full_data_set, ytf_country,
                                                        yd_data_entry, 'brandingSettings', 'channel', 'country', filter_count, matches_count)
 
-        filter_count, matches_count = update_yt_data_3(full_data_set, ytf_language,
+        filter_count, matches_count = update_yt_data_settings(full_data_set, ytf_language,
                                                        yd_data_entry, 'brandingSettings', 'channel', 'defaultLanguage', filter_count, matches_count)
 
         full_data_set[yd_data_entry['id']]['placement_level_data'].update(
@@ -325,7 +325,8 @@ def append_youtube_data(
     return full_data_set
 
 
-def update_yt_data_2(full_data_set, user_yt_filter, yt_data_entry, yt_first_category, yt_data_second_category, filter_count, matches_count):
+def update_yt_data_statistics(full_data_set, user_yt_filter, yt_data_entry, yt_first_category, yt_data_second_category, filter_count, matches_count):
+    yt_value = None
     if yt_data_entry[yt_first_category].get(yt_data_second_category):
         yt_value = yt_data_entry[yt_first_category][yt_data_second_category]
         full_data_set[yt_data_entry['id']]['yt_data'].update(
@@ -334,14 +335,15 @@ def update_yt_data_2(full_data_set, user_yt_filter, yt_data_entry, yt_first_cate
         full_data_set[yt_data_entry['id']]['yt_data'].update(
             {yt_data_second_category: '-'})
 
-    if user_yt_filter:
-        filter_count += 1
-        if eval(f"{yt_value}{user_yt_filter}"):
-            matches_count += 1
+        if user_yt_filter and yt_value:
+            filter_count += 1
+            if eval(f"{yt_value}{user_yt_filter}"):
+                matches_count += 1
     return filter_count, matches_count
 
 
-def update_yt_data_3(full_data_set, user_yt_filter, entry, yt_first_category, yt_data_second_category, yt_data_third_category, filter_count, matches_count):
+def update_yt_data_settings(full_data_set, user_yt_filter, entry, yt_first_category, yt_data_second_category, yt_data_third_category, filter_count, matches_count):
+    yt_value = None
     if entry[yt_first_category][yt_data_second_category].get(yt_data_third_category):
         yt_value = entry[yt_first_category][yt_data_second_category][yt_data_third_category]
         full_data_set[entry['id']]['yt_data'].update(
@@ -351,9 +353,9 @@ def update_yt_data_3(full_data_set, user_yt_filter, entry, yt_first_category, yt
         full_data_set[entry['id']]['yt_data'].update(
             {yt_data_third_category: '-'})
 
-    if user_yt_filter:
+    if user_yt_filter and yt_value:
         filter_count += 1
-        if eval(yt_value + " " + user_yt_filter):
+        if eval(f"'{yt_value}'{user_yt_filter}"):
             matches_count += 1
     return filter_count, matches_count
 
