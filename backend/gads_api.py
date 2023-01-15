@@ -14,7 +14,6 @@
 # limitations under the License.
 
 from inspect import _void
-import resource
 import string
 import sys
 from os import getenv
@@ -191,26 +190,30 @@ def get_youtube_data(credentials, channel_ids: list) -> list:
 def exclude_channels(client, customer_id: str, channelsToRemove: List[dict]) -> _void:
     if len(channelsToRemove) > 0:
         exclude_operations = []
-        for channel in channelsToRemove:
+        try:
+            for channel in channelsToRemove:
+                if channel:
+                    placement_criterion_op = client.get_type(
+                        "CustomerNegativeCriterionOperation")
+                    placement_criterion = placement_criterion_op.create
+                    if channel[0] == 2:
+                        placement_criterion.placement.url = channel[1]
+                    else:
+                        placement_criterion.youtube_channel.channel_id = channel[1]
 
-            if channel:
-                placement_criterion_op = client.get_type(
-                    "CustomerNegativeCriterionOperation")
-                placement_criterion = placement_criterion_op.create
-                if channel[0] == 2:
-                    placement_criterion.placement.url = channel[1]
-                else:
-                    placement_criterion.youtube_channel.channel_id = channel[1]
+                    exclude_operations.append(placement_criterion_op)
 
-                exclude_operations.append(placement_criterion_op)
+            customer_negative_criterion_service = client.get_service(
+                "CustomerNegativeCriterionService")
 
-        customer_negative_criterion_service = client.get_service(
-            "CustomerNegativeCriterionService")
-
-        customer_negative_criterion_service.mutate_customer_negative_criteria(
-            customer_id=customer_id,
-            operations=exclude_operations
-        )
+            customer_negative_criterion_service.mutate_customer_negative_criteria(
+                customer_id=customer_id,
+                operations=exclude_operations
+            )
+        except Exception as e:
+            print(f"channel that caused exception == {channel}")
+            print("An exception occurred:", e)
+            raise e           
 
 
 def remove_channel_id_from_gads(client, ga_service, customer_id: str, channel_type: str, channel_id: str):
