@@ -77,6 +77,9 @@ export class NewtaskComponent implements OnInit {
   date_from ="";
   date_to= "";
 
+  isCheckAll: boolean = false;
+  selectedTickers: any[] = [];
+
   horizontalPosition: MatSnackBarHorizontalPosition = 'center';
   verticalPosition: MatSnackBarVerticalPosition = 'top';
 
@@ -196,7 +199,7 @@ export class NewtaskComponent implements OnInit {
       }
       );
 
-      this._populate_customer_list();
+    this._populate_customer_list();    
   }
 
   ngAfterViewInit(): void {
@@ -398,9 +401,9 @@ export class NewtaskComponent implements OnInit {
     this.date_to = dates["date_to"];
     this.table_result = flattened_raw_response;
     if (this.table_result.length > 0) {
-      this.sort_table("default");
-     
+      this.sort_table("default");     
       this.no_data = false;
+      this.fillTickerLists();
       if (auto_exclude) {
         this._run_exclude_count(false);
         this.openSnackBar("Successfully excluded " + this.exclude_count + " placement(s)", "Dismiss", "success-snackbar");
@@ -606,15 +609,60 @@ export class NewtaskComponent implements OnInit {
       return false;
     }
   }
+  
+  checkAll() {
+    this.selectedTickers.forEach(i => {
+      this.table_result[i]['exclude_from_account'] = true;
+    });
+  }
+  
+  uncheckAll() {
+    this.selectedTickers.forEach(i => {
+      this.table_result[i]['exclude_from_account'] = false;
+    });
+  }
+  
+  toggleCheckAll() {
+    this.isCheckAll = !this.isCheckAll;
+    if (this.isCheckAll) {
+      this.checkAll();
+    } else {
+      this.uncheckAll();
+    }
+  }
+
+  fillTickerLists() {
+    for (let i in this.table_result) {
+    if (this.table_result[i]['exclude_from_account']) {
+        this.addTicker(i);
+    } else {
+        this.removeTicker(i);
+    }
+  }
+}
+
 
   excludeCheckChange(ytChannelId: string) {
     for (let i in this.table_result) {
       if (this.table_result[i]['group_placement_view_placement'] == ytChannelId) {
         this.table_result[i]['exclude_from_account'] = !this.table_result[i]['exclude_from_account'];
       }
+    if (this.table_result[i]['exclude_from_account']) {
+        this.addTicker(i);
+    } else {
+        this.removeTicker(i);
     }
     this._run_exclude_count(false);
   }
+}
+
+addTicker(i: any) {
+    this.selectedTickers.push(i);
+}
+
+removeTicker(i: any) {
+    this.selectedTickers.splice(this.selectedTickers.indexOf(i), 1);
+}
 
   validate_fields(full: boolean) {
     let error_count = 0;

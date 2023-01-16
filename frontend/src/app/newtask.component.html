@@ -260,8 +260,11 @@
 </div>
 </div>
 <span *ngIf="table_result.length > 0">
-From:{{this.date_from}} &nbsp;&nbsp;&nbsp;To:{{this.date_to}}
+From:&nbsp;{{this.date_from}} &nbsp;&nbsp;&nbsp;To:&nbsp;{{this.date_to}}
 </span>
+<br><br>
+<input *ngIf="table_result.length > 0" type="checkbox" [(ngModel)]="isCheckAll" (ngModelChange)="isCheckAll ? checkAll() : uncheckAll()">
+<span *ngIf="table_result.length > 0">Un/check all</span>
 <table *ngIf="table_result.length > 0" class="styled-table newtask-width">
     <thead>
         <tr>
@@ -293,12 +296,15 @@ From:{{this.date_from}} &nbsp;&nbsp;&nbsp;To:{{this.date_to}}
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let data of table_result | slice:pagination_start:pagination_start+pagination_rpp"
+        <tr *ngFor="let data of table_result | slice:pagination_start:pagination_start+pagination_rpp; let i =index"
         [className]="row_class(data.excluded_already, data.exclude_from_account, data.allowlist)">
-            <td><input [value]="data.group_placement_view_placement" type="checkbox"
-                    (change)="excludeCheckChange(data.group_placement_view_placement)"
+            <td>
+                <input [value]="data.group_placement_view_placement" type="checkbox"
+                    (change)="data.exclude_from_account && !data.excluded_already && !data.allowlist ? excludeCheckChange(data.group_placement_view_placement) : null"
                     [checked]="data.exclude_from_account && !data.excluded_already && !data.allowlist" 
-                    [disabled]="row_disabled(data.excluded_already, data.allowlist)"/></td>
+                    [disabled]="row_disabled(data.excluded_already, data.allowlist)"
+                    (ngModelChange)="data.group_placement_view_placement.exclude_from_account ? addTicker(i) : removeTicker(i)"
+                    [(ngModel)]="data.group_placement_view_placement.exclude_from_account"/></td>
             <td *ngIf="data.excluded_already"><mat-icon matTooltip="Excluded">block</mat-icon></td>
             <td *ngIf="!data.excluded_already"><mat-icon matTooltip="Active" class="green_icon">check_circle</mat-icon></td>       
             <td><span *ngIf="!data.allowlist"><a class="grey_icon" (click)="addToAllowlist(data.group_placement_view_placement_type, data.group_placement_view_placement)" 
