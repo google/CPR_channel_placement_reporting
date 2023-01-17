@@ -108,7 +108,7 @@ export class NewtaskComponent implements OnInit {
     ["metrics.ctr", "CTR"],
     ["metrics.cost_micros", "Cost"],
     ["metrics.average_cpm", "Avg. CPM"],
-    ["metrics.average_cpm", "Avg. CPC"],
+    ["metrics.average_cpc", "Avg. CPC"],
     ["metrics.conversions", "Conversions"],
     ["metrics.cost_per_conversion", "CPA"],
     ["metrics.view_through_conversions", "View-Through Conversions"],
