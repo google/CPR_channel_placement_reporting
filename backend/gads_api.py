@@ -213,7 +213,7 @@ def exclude_channels(client, customer_id: str, channelsToRemove: List[dict]) -> 
         except Exception as e:
             print(f"channel that caused exception == {channel}")
             print("An exception occurred:", e)
-            raise e           
+            raise e
 
 
 def remove_channel_id_from_gads(client, ga_service, customer_id: str, channel_type: str, channel_id: str):
@@ -256,30 +256,21 @@ def remove_channel_id_from_gads(client, ga_service, customer_id: str, channel_ty
                 operations=exclude_operations
             )
 
-
-def get_items(full_data_set: dict, keys: List[str]) -> List[dict]:
-    items = []
-    for placement_data in full_data_set.values():
-        placement_level_data = placement_data["placement_level_data"]
-        if placement_level_data.get('exclude_from_account') == True and placement_level_data.get('excluded_already') == False and placement_level_data.get('allowlist') == False:
-            item = {}
-            for key in keys:
-                item[key] = placement_level_data[key]
-            items.append(item)
-    return items
-
-
-
-def get_channel_id_list(full_data_set: dict) -> List[dict]:
-    keys = ["group_placement_view_placement_type",
-            "group_placement_view_placement"]
-    return get_items(full_data_set, keys)
+def get_channel_id_list(full_data_set: dict, display_name=False) -> dict:
+    ytList = []    
+    for d in full_data_set.values():        
+        if (d.get('exclude_from_account') and
+                not d.get('excluded_already') and
+                not d.get('allowlist')):
+            if display_name:
+                ytList.append((d.get('group_placement_view_placement_type'), d.get('group_placement_view_placement'), d.get('group_placement_view_display_name')))
+            else:
+                ytList.append((d.get('group_placement_view_placement_type'), d.get('group_placement_view_placement')))
+    return ytList
 
 
-def get_channel_id_name_list(full_data_set: dict) -> List[dict]:
-    keys = ["group_placement_view_placement_type",
-            "group_placement_view_placement", "group_placement_view_display_name"]
-    return get_items(full_data_set, keys)
+def get_channel_id_name_list(full_data_set: dict) -> dict:
+    return get_channel_id_list(full_data_set, display_name=True)
 
 
 def append_youtube_data(
@@ -300,19 +291,19 @@ def append_youtube_data(
         matches_count = 0
 
         filter_count, matches_count = update_yt_data_statistics(full_data_set, ytf_view_count,
-                                                       yd_data_entry, 'statistics', 'viewCount', filter_count, matches_count)
+                                                                yd_data_entry, 'statistics', 'viewCount', filter_count, matches_count)
 
         filter_count, matches_count = update_yt_data_statistics(full_data_set, ytf_sub_count,
-                                                       yd_data_entry, 'statistics', 'subscriberCount', filter_count, matches_count)
+                                                                yd_data_entry, 'statistics', 'subscriberCount', filter_count, matches_count)
 
         filter_count, matches_count = update_yt_data_statistics(full_data_set, ytf_video_count,
-                                                       yd_data_entry, 'statistics', 'videoCount', filter_count, matches_count)
+                                                                yd_data_entry, 'statistics', 'videoCount', filter_count, matches_count)
 
         filter_count, matches_count = update_yt_data_settings(full_data_set, ytf_country,
-                                                       yd_data_entry, 'brandingSettings', 'channel', 'country', filter_count, matches_count)
+                                                              yd_data_entry, 'brandingSettings', 'channel', 'country', filter_count, matches_count)
 
         filter_count, matches_count = update_yt_data_settings(full_data_set, ytf_language,
-                                                       yd_data_entry, 'brandingSettings', 'channel', 'defaultLanguage', filter_count, matches_count)
+                                                              yd_data_entry, 'brandingSettings', 'channel', 'defaultLanguage', filter_count, matches_count)
 
         full_data_set[yd_data_entry['id']]['placement_level_data'].update(
             {'asciiTitle': is_ascii_title(yd_data_entry['brandingSettings']['channel']['title'])})
