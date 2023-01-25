@@ -258,14 +258,13 @@ def remove_channel_id_from_gads(client, ga_service, customer_id: str, channel_ty
 
 def get_channel_id_list(full_data_set: dict, display_name=False) -> dict:
     ytList = []    
-    for d in full_data_set.values():        
-        if (d.get('exclude_from_account') and
-                not d.get('excluded_already') and
-                not d.get('allowlist')):
+    for data in full_data_set.values():        
+        placement_level_data = data["placement_level_data"]
+        if (placement_level_data.get('exclude_from_account') and not placement_level_data.get('excluded_already') and not placement_level_data.get('allowlist')):
             if display_name:
-                ytList.append((d.get('group_placement_view_placement_type'), d.get('group_placement_view_placement'), d.get('group_placement_view_display_name')))
+                ytList.append((placement_level_data.get('group_placement_view_placement_type'), placement_level_data.get('group_placement_view_placement'), placement_level_data.get('group_placement_view_display_name')))
             else:
-                ytList.append((d.get('group_placement_view_placement_type'), d.get('group_placement_view_placement')))
+                ytList.append((placement_level_data.get('group_placement_view_placement_type'), placement_level_data.get('group_placement_view_placement')))
     return ytList
 
 
