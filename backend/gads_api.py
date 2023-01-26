@@ -104,7 +104,7 @@ def get_placement_data(client, ga_service, customer_id: str,
                         'metrics_video_view_rate': row.metrics.video_view_rate,
                         'metrics_clicks': row.metrics.clicks,
                         'metrics_average_cpm': row.metrics.average_cpm / MICRO_CONV,
-                        'metrics_average_cpm': row.metrics.average_cpc / MICRO_CONV,
+                        'metrics_average_cpc': row.metrics.average_cpc / MICRO_CONV,
                         'metrics_ctr': row.metrics.ctr,
                         'metric_conversions_from_interactions_rate': row.metrics.conversions_from_interactions_rate
                     })
