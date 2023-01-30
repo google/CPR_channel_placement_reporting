@@ -113,7 +113,10 @@ export class NewtaskComponent implements OnInit {
       ["metrics.view_through_conversions", "View-Through Conversions"],
       ["metrics.video_views", "Video Views"],
       ["metrics.video_view_rate", "Video View Rate"],
-      ["metrics.conversions_from_interactions_rate", "Conversions Rate"]
+      ["metrics.conversions_from_interactions_rate", "Conversions Rate"],
+      ["metrics.all_conversions_from_interactions_rate", "All Conversions Rate"],
+      ["metrics.all_conversions", "All Conversions"],
+      ["metrics.cost_per_all_conversions", "Cost per All Converions"]
   ];
 
   gadsOperatorsArray = [
@@ -709,7 +712,8 @@ export class NewtaskComponent implements OnInit {
           let finalValue = this.gadsForm.controls['gadsValue'].value;
           if (this.gadsForm.controls['gadsField'].value == "metrics.average_cpm" ||
               this.gadsForm.controls['gadsField'].value == "metrics.cost_micros" ||
-              this.gadsForm.controls['gadsField'].value == "metrics.cost_per_conversion") {
+              this.gadsForm.controls['gadsField'].value == "metrics.cost_per_conversion" ||
+              this.gadsForm.controls['gadsField'].value == "metrics.cost_per_all_conversion") {
               finalValue = finalValue * 1000000;
           }
           if (!this.finalGadsFilter.endsWith("(") && this.finalGadsFilter != "") {

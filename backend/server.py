@@ -43,9 +43,12 @@ app = Flask(__name__, static_url_path='',
 app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
 CORS(app)
 
+debug_location = ""
+
 DATE_FORMAT = '%Y-%m-%d'
 PROJECT_ID = getenv('GOOGLE_CLOUD_PROJECT')
-LOCATION = "europe-west1"
+LOCATION = "europe-west1" if debug_location == "" else debug_location
+ 
 _REDIRECT_URI = f"https://{PROJECT_ID}.ew.r.appspot.com/authdone"
 
 credentials = None

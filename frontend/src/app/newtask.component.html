@@ -279,14 +279,17 @@ From:&nbsp;{{this.date_from}} &nbsp;&nbsp;&nbsp;To:&nbsp;{{this.date_to}}
             <th class="hrlink"><a (click)="sort_table('metrics_impressions')">Impressions</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_clicks')">Clicks</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_video_views')">Video Views</a></th>
-            <th class="hrlink"><a (click)="sort_table('metrics_cost')">Cost</a></th>
-            <th class="hrlink"><a (click)="sort_table('metrics_conversions')">Conversions</a></th>
+            <th class="hrlink"><a (click)="sort_table('metrics_cost')">Cost</a></th>            
+            <th class="hrlink"><a (click)="sort_table('metrics_conversions')">Conversions</a></th>            
             <th class="hrlink"><a (click)="sort_table('metrics_cost_per_conversion')">CPA</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_view_through_conversions')">View-Through Conversions</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_average_cpm')">Avg. CPM</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_average_cpc')">Avg. CPC</a></th>            
             <th class="hrlink"><a (click)="sort_table('metrics_ctr')">CTR</a></th>
             <th class="hrlink"><a (click)="sort_table('metrics_conversion_from_interaction_rate')">Conversion Rate</a></th>
+            <th class="hrlink"><a (click)="sort_table('metrics_all_conversion_from_interactions_rate')">All Conversions Rate</a></th>
+            <th class="hrlink"><a (click)="sort_table('metrics_all_conversions')">All Conversions</a></th>
+            <th class="hrlink"><a (click)="sort_table('metrics_cost_per_all_conversions')">Cost per All Conversions</a></th>
             <th class="hrlink"><a (click)="sort_table('subscriberCount')">YouTube Subscribers</a></th>
             <th class="hrlink"><a (click)="sort_table('viewCount')">YouTube View Count</a></th>
             <th class="hrlink"><a (click)="sort_table('videoCount')">YouTube Video Count</a></th>
@@ -322,13 +325,16 @@ From:&nbsp;{{this.date_from}} &nbsp;&nbsp;&nbsp;To:&nbsp;{{this.date_to}}
             <td>{{data.metrics_clicks | number}}</td>
             <td>{{data.metrics_video_views | number}}</td>
             <td>{{data.metrics_cost | number : '1.2-2'}}</td>
-            <td>{{data.metrics_conversions | number}}</td>
-            <td>{{data.metrics_cost_per_conversion | number : '1.2-2'}}</td>
+            <td>{{data.metrics_conversions | number}}</td>  
+            <td>{{data.metrics_cost_per_conversion | number : '1.2-2'}}</td>            
             <td>{{data.metrics_view_through_conversions | number}}</td>
             <td>{{data.metrics_average_cpm | number : '1.2-2'}}</td>
             <td>{{data.metrics_average_cpc | number : '1.2-2'}}</td>
             <td>{{(data.metrics_ctr * 100) | number : '1.2-2'}}%</td>
             <td>{{data.metrics_conversion_from_interaction_rate | number : '1.2-2'}}</td>
+            <td>{{data.metrics_all_conversions_from_interactions_rate | number}}</td>
+            <td>{{data.metrics_all_conversions | number}}</td>     
+            <td>{{data.metrics_cost_per_all_conversions | number : '1.2-2'}}</td>       
             <td>{{data.subscriberCount | number}}</td>
             <td>{{data.viewCount | number}}</td>
             <td>{{data.videoCount | number}}</td>

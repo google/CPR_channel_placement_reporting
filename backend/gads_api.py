@@ -61,14 +61,17 @@ def get_placement_data(client, ga_service, customer_id: str,
                 metrics.impressions,
                 metrics.clicks,
                 metrics.cost_micros,
+                metrics.cost_per_conversion,
+                metrics.cost_per_all_conversions,
                 metrics.average_cpm,
                 metrics.ctr,
                 metrics.conversions,
-                metrics.cost_per_conversion,
+                metrics.all_conversions,                
                 metrics.view_through_conversions,
                 metrics.video_views,
                 metrics.video_view_rate,
                 metrics.conversions_from_interactions_rate,
+                metrics.all_conversions_from_interactions_rate,
                 metrics.average_cpc
             FROM group_placement_view
             WHERE
@@ -84,6 +87,7 @@ def get_placement_data(client, ga_service, customer_id: str,
             search_request = client.get_type("SearchGoogleAdsStreamRequest")
             search_request.customer_id = customer_id
 
+            print (f"query === {query}")
             search_request.query = query
             stream = ga_service.search_stream(search_request)
             for batch in stream:
@@ -108,7 +112,10 @@ def get_placement_data(client, ga_service, customer_id: str,
                         'metrics_average_cpm': row.metrics.average_cpm / MICRO_CONV,
                         'metrics_average_cpc': row.metrics.average_cpc / MICRO_CONV,
                         'metrics_ctr': row.metrics.ctr,
-                        'metric_conversions_from_interactions_rate': row.metrics.conversions_from_interactions_rate
+                        'metric_conversions_from_interactions_rate': row.metrics.conversions_from_interactions_rate,
+                        'metrics_all_conversions': row.metrics.all_conversions,
+                        'metrics_all_conversions_from_interactions_rate': row.metrics.all_conversions_from_interactions_rate,
+                        'metrics_cost_per_all_conversions': row.metrics.cost_per_all_conversions / MICRO_CONV
                     })
                     # placement metadata
                     all_data_set[placement_name]['placement_level_data'].update({
@@ -242,9 +249,6 @@ def remove_channel_id_from_gads(client, ga_service, customer_id: str, channel_ty
             placement_criterion_op = client.get_type(
                 "CustomerNegativeCriterionOperation")
 
-            exclude_operations = []
-            placement_criterion_op = client.get_type(
-                "CustomerNegativeCriterionOperation")
             placement_criterion_op.remove = f"customers/{customer_id}/customerNegativeCriteria/{criterion_id}"
             exclude_operations.append(placement_criterion_op)
 
@@ -257,14 +261,16 @@ def remove_channel_id_from_gads(client, ga_service, customer_id: str, channel_ty
             )
 
 def get_channel_id_list(full_data_set: dict, display_name=False) -> dict:
-    ytList = []    
-    for data in full_data_set.values():        
+    ytList = []
+    for data in full_data_set.values():
         placement_level_data = data["placement_level_data"]
         if (placement_level_data.get('exclude_from_account') and not placement_level_data.get('excluded_already') and not placement_level_data.get('allowlist')):
             if display_name:
-                ytList.append((placement_level_data.get('group_placement_view_placement_type'), placement_level_data.get('group_placement_view_placement'), placement_level_data.get('group_placement_view_display_name')))
+                ytList.append((placement_level_data.get('group_placement_view_placement_type'), placement_level_data.get(
+                    'group_placement_view_placement'), placement_level_data.get('group_placement_view_display_name')))
             else:
-                ytList.append((placement_level_data.get('group_placement_view_placement_type'), placement_level_data.get('group_placement_view_placement')))
+                ytList.append((placement_level_data.get('group_placement_view_placement_type'),
+                              placement_level_data.get('group_placement_view_placement')))
     return ytList
 
 
