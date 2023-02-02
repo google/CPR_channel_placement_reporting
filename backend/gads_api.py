@@ -110,7 +110,7 @@ def get_placement_data(client, ga_service, customer_id: str,
                         'metrics_average_cpm': row.metrics.average_cpm / MICRO_CONV,
                         'metrics_average_cpc': row.metrics.average_cpc / MICRO_CONV,
                         'metrics_ctr': row.metrics.ctr,
-                        'metric_conversions_from_interactions_rate': row.metrics.conversions_from_interactions_rate,
+                        'metrics_conversions_from_interactions_rate': row.metrics.conversions_from_interactions_rate,
                         'metrics_all_conversions': row.metrics.all_conversions,
                         'metrics_all_conversions_from_interactions_rate': row.metrics.all_conversions_from_interactions_rate,
                         'metrics_cost_per_all_conversions': row.metrics.cost_per_all_conversions / MICRO_CONV
