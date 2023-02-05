@@ -19,11 +19,13 @@ import { RouterModule, Routes } from '@angular/router';
 import { TasksComponent } from './tasks.component';
 import { NewtaskComponent } from './newtask.component';
 import { SettingsComponent } from './settings.component';
+import { ReleasenotesComponent } from './releasenotes.component';
 
 const routes: Routes = [
   { path: '', component: TasksComponent },
   { path: 'newtask', component: NewtaskComponent },
   { path: 'settings', component: SettingsComponent },
+  { path: 'releasenotes', component: ReleasenotesComponent },
 ];
 
 @NgModule({
