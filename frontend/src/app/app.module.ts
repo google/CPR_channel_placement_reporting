@@ -35,17 +35,19 @@ import { NewtaskComponent } from './newtask.component';
 import { SettingsComponent } from './settings.component';
 import { LoadingComponent } from './components/loading.component';
 import { ConfirmDialogComponent } from './components/confirm-dialog.component';
+import { ReleasenotesComponent } from './releasenotes.component';
 
 @NgModule({
-  declarations: [
+  declarations: [	
     AppComponent,
     NavbarComponent,
     TasksComponent,
     NewtaskComponent,
     SettingsComponent,
     LoadingComponent,
-    ConfirmDialogComponent
-  ],
+    ConfirmDialogComponent,
+    ReleasenotesComponent
+   ],
   imports: [
     BrowserModule,
     AppRoutingModule,

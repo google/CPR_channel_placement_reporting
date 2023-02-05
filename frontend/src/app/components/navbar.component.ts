@@ -25,20 +25,7 @@ export class NavbarComponent implements OnInit {
   nowString : string = "";
 
   constructor() { }
-
-  ngOnInit(): void {
-    const now = new Date();
-    const options: Intl.DateTimeFormatOptions = {
-      day: 'numeric',
-      month: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      timeZoneName: 'short'
-  };
-    const formatter = new Intl.DateTimeFormat("he-IL", options);
-    this.nowString = formatter.format(now)
+  ngOnInit(): void {    
   }
 
 }
