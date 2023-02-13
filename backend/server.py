@@ -46,9 +46,10 @@ CORS(app)
 debug_project_id = ""
 
 DATE_FORMAT = '%Y-%m-%d'
-PROJECT_ID = getenv('GOOGLE_CLOUD_PROJECT') if not debug_project_id else debug_project_id
-LOCATION = "europe-west1" 
- 
+PROJECT_ID = getenv(
+    'GOOGLE_CLOUD_PROJECT') if not debug_project_id else debug_project_id
+LOCATION = "europe-west1"
+
 _REDIRECT_URI = f"https://{PROJECT_ID}.ew.r.appspot.com/authdone"
 
 credentials = None
@@ -174,15 +175,21 @@ def run_automatic_excluder_from_task_id(task_id: str):
             response = handle_exception(customer_id)
             return response
 
-
         all_exclusions = get_channel_id_name_list(response_data["data"])
         if all_exclusions and file_contents['email_alerts']:
             print("sending email")
-            send_CPR_email(all_exclusions, task_id, customer_id)
-            
+            count = len(all_exclusions)
+            send_CPR_email(f"CPR Task ID {task_id} has added {count} Channel Exclusions",
+                           f"""CPR Task ID: {task_id}
+                Customer ID: {customer_id}
+                {count} channel exclusions added to your account
+                Exclusions:
+                {all_exclusions}""")
+
         return _build_response(json.dumps(f"{len(all_exclusions)}"))
     else:
         return _build_response(json.dumps("Config doesn't exist"))
+
 
 def handle_exception(customer_id):
     error_msg = f"server_run_excluder failed."
