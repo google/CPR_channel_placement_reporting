@@ -28,7 +28,7 @@ is_localhost_run = False
 
 API_SERVICE_NAME = "youtube"
 API_VERSION = "v3"
-MICRO_CONV = 1000000
+MICRO_CONV = 1e6
 ENGINE_SIZE = 1e6 if is_localhost_run else float(getenv('GAE_MEMORY_MB'))*0.95
 MEMORY_WARNING = False
 

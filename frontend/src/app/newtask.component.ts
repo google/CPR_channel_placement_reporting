@@ -711,10 +711,12 @@ export class NewtaskComponent implements OnInit {
           this.conditionEnabled) {
           let finalValue = this.gadsForm.controls['gadsValue'].value;
           if (this.gadsForm.controls['gadsField'].value == "metrics.average_cpm" ||
+              this.gadsForm.controls['gadsField'].value == "metrics.average_cpc" ||
               this.gadsForm.controls['gadsField'].value == "metrics.cost_micros" ||
               this.gadsForm.controls['gadsField'].value == "metrics.cost_per_conversion" ||
+              this.gadsForm.controls['gadsField'].value == "metrics.cost_per_conversion" ||
               this.gadsForm.controls['gadsField'].value == "metrics.cost_per_all_conversion") {
-              finalValue = finalValue * 1000000;
+              finalValue = finalValue * 1e6;
           }
           if (!this.finalGadsFilter.endsWith("(") && this.finalGadsFilter != "") {
               this.finalGadsFilter += " ";
