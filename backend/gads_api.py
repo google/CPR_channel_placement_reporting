@@ -27,7 +27,7 @@ from firebase_server import fb_read_allowlist
 API_SERVICE_NAME = "youtube"
 API_VERSION = "v3"
 MICRO_CONV = 1000000
-ENGINE_SIZE = float(getenv('GAE_MEMORY_MB'))*0.95
+ENGINE_SIZE = 1e6 if is_localhost_run else float(getenv('GAE_MEMORY_MB'))*0.95
 MEMORY_WARNING = False
 
 
