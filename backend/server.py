@@ -174,9 +174,7 @@ def run_automatic_excluder_from_task_id(task_id: str):
 
         all_exclusions = get_channel_id_name_list(response_data["data"])
         if all_exclusions and file_contents['email_alerts']:
-            print(
-                
-            )
+            print("sending email")
             count = len(all_exclusions)
             send_CPR_email(f"CPR Task ID {task_id} has added {count} Channel Exclusions",
                            f"""CPR Task ID: {task_id}
