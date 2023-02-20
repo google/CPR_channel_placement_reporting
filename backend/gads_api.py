@@ -78,9 +78,10 @@ def get_placement_data(client, ga_service, customer_id: str,
                 campaign.status='ENABLED'
                 AND group_placement_view.target_url != "youtube.com"
                 AND group_placement_view.target_url NOT LIKE '%adsenseformobileapps.com%'
+                AND group_placement_view.target_url NOT LIKE '%mail.google.com%'
                 AND group_placement_view.placement_type IN {type_string}
                 AND group_placement_view.display_name != ""
-            AND segments.date BETWEEN '{date_from}' AND '{date_to}'
+                AND segments.date BETWEEN '{date_from}' AND '{date_to}'
             """
             if condition:
                 query += f" AND {condition}"
