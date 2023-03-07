@@ -14,9 +14,10 @@
 # limitations under the License.
 
 import json
+from typing import Any
 from google.ads.googleads.client import GoogleAdsClient
 
-def make_client(mcc_id, developer_token, credentials: json) -> GoogleAdsClient:
+def make_client(mcc_id: str, developer_token: str, credentials: list) -> GoogleAdsClient:
     creds = {
         "developer_token": developer_token,
         "refresh_token": credentials["refresh_token"],
@@ -29,5 +30,11 @@ def make_client(mcc_id, developer_token, credentials: json) -> GoogleAdsClient:
         google_ads_client.login_customer_id = mcc_id
     return google_ads_client
 
-
-    
+def make_client_from_config(credentials: list, config_file: list) -> GoogleAdsClient:
+    mcc_id = config_file.get('mcc_id')
+    developer_token = config_file.get('dev_token')
+    if not credentials:
+        raise ValueError("Missing credentials")
+    creds = json.loads(credentials.to_json())
+    client = make_client(mcc_id=mcc_id, developer_token=developer_token, credentials=creds)
+    return client

@@ -89,7 +89,7 @@ def get_placement_data(client, ga_service, customer_id: str,
             search_request = client.get_type("SearchGoogleAdsStreamRequest")
             search_request.customer_id = customer_id
 
-            print (f"query === {query}")
+            print(f"query === {query}")
             search_request.query = query
             stream = ga_service.search_stream(search_request)
             for batch in stream:
@@ -196,21 +196,21 @@ def get_youtube_data(credentials, channel_ids: list) -> list:
     return yt_items
 
 
-def exclude_channels(client, customer_id: str, channelsToRemove: List[dict]) -> _void:
-    if len(channelsToRemove) > 0:
+def exclude_channels(client, customer_id: str, channels_to_remove_partial_data: List[dict]) -> _void:
+    if channels_to_remove_partial_data:
         exclude_operations = []
         try:
-            for channel in channelsToRemove:
+            for channel in channels_to_remove_partial_data:
                 if channel:
                     placement_criterion_op = client.get_type(
                         "CustomerNegativeCriterionOperation")
                     placement_criterion = placement_criterion_op.create
-                    if channel[0] == 2:
-                        placement_criterion.placement.url = channel[1]
+                    if channel["placement_type"] == 2:
+                        placement_criterion.placement.url = channel["placement_id"]
                     else:
-                        placement_criterion.youtube_channel.channel_id = channel[1]
-
+                        placement_criterion.youtube_channel.channel_id = channel["placement_id"]
                     exclude_operations.append(placement_criterion_op)
+                    print(f"""url {channel["placement_id"]} is sent to exclusion""")
 
             customer_negative_criterion_service = client.get_service(
                 "CustomerNegativeCriterionService")
@@ -226,7 +226,6 @@ def exclude_channels(client, customer_id: str, channelsToRemove: List[dict]) -> 
 
 
 def remove_channel_id_from_gads(client, ga_service, customer_id: str, channel_type: str, channel_id: str):
-
     if channel_type == 2:
         type_to_use = "placement.url"
     else:
@@ -262,23 +261,17 @@ def remove_channel_id_from_gads(client, ga_service, customer_id: str, channel_ty
                 operations=exclude_operations
             )
 
-def get_channel_id_list(full_data_set: dict, display_name=False) -> dict:
+
+def get_channels_to_remove_partial_data(full_data_set: dict) -> dict:
     ytList = []
     for data in full_data_set.values():
         placement_level_data = data["placement_level_data"]
         if (placement_level_data.get('exclude_from_account') and not placement_level_data.get('excluded_already') and not placement_level_data.get('allowlist')):
-            if display_name:
-                ytList.append((placement_level_data.get('group_placement_view_placement_type'), placement_level_data.get(
-                    'group_placement_view_placement'), placement_level_data.get('group_placement_view_display_name')))
-            else:
-                ytList.append((placement_level_data.get('group_placement_view_placement_type'),
-                              placement_level_data.get('group_placement_view_placement')))
+                ytList.append(
+                    {'placement_type': placement_level_data.get('group_placement_view_placement_type'),
+                     'placement_id': placement_level_data.get('group_placement_view_placement'),
+                     'display_name': placement_level_data.get('group_placement_view_display_name')})            
     return ytList
-
-
-def get_channel_id_name_list(full_data_set: dict) -> dict:
-    return get_channel_id_list(full_data_set, display_name=True)
-
 
 def append_youtube_data(
         full_data_set: dict, yt_data_from_api: dict, ytf_view_count: int,
