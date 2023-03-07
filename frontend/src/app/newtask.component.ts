@@ -335,12 +335,12 @@ export class NewtaskComponent implements OnInit {
       });
   }
 
-  run_auto_excluder_form(auto_exclude: boolean) {
+  previewPlacements() {
       if (this.validate_fields(false)) {
           this.pagination_start = 0;
-          let formRawValue = {
-              'excludeChannels': auto_exclude,
+          let formRawValue = {              
               'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value,
+              'taskName': this.gadsForm.controls['taskName'].value,
               'fromDaysAgo': this.gadsForm.controls['fromDaysAgo'].value,
               'lookbackDays': this.gadsForm.controls['lookbackDays'].value,
               'gadsDataYouTube': this.gads_data_youtube,
@@ -364,27 +364,27 @@ export class NewtaskComponent implements OnInit {
                   .afterClosed().subscribe(res => {
                       if (res) {
                           this.loading = true;
-                          this._call_auto_service(JSON.stringify(formRawValue), auto_exclude);
+                          this._call_auto_service(JSON.stringify(formRawValue));
                       }
                   });
           } else {
               this.loading = true;
-              this._call_auto_service(JSON.stringify(formRawValue), auto_exclude);
+              this._call_auto_service(JSON.stringify(formRawValue));
           }
       }
   }
 
-  async _call_auto_service(formRawValue: string, auto_exclude: boolean) {
+  async _call_auto_service(formRawValue: string) {
       this.loading = true;
-      this.subs = (await this.service.run_auto_excluder(formRawValue))
+      this.subs = (await this.service.preview_form(formRawValue))
           .subscribe({
-              next: (response: ReturnPromise) => this._call_auto_service_success(response, auto_exclude),
+              next: (response: ReturnPromise) => this._call_auto_service_success(response),
               error: (err) => this._call_service_error(err),
               complete: () => console.log("Completed")
           });
   }
 
-  _call_auto_service_success(response: ReturnPromise, auto_exclude: boolean) {
+  _call_auto_service_success(response: ReturnPromise) {
       const jsonResponse = JSON.parse(JSON.stringify(response));
       if (!jsonResponse.data) {
           this.handleEmptyTable("Server error, please investigate the cloud logs", "error-snackbar");
@@ -410,11 +410,6 @@ export class NewtaskComponent implements OnInit {
       if (this.table_result.length > 0) {
           this.sort_table("default");
           this.no_data = false;
-          if (auto_exclude) {
-              this._run_exclude_count(false);
-              this.openSnackBar("Successfully excluded " + this.exclude_count + " placement(s)", "Dismiss", "success-snackbar");
-          }
-          this._run_exclude_count(auto_exclude);
       } else {
           this.handleEmptyTable("Successful run, but no data matches criteria", "success-snackbar");
       }
@@ -444,11 +439,13 @@ export class NewtaskComponent implements OnInit {
       }
   }
 
-  run_manual_excluder_form() {
+  runManualExcludeForm() {
       let exclusion_list = [];
       for (let data of this.table_result) {
           if (data.exclude_from_account && !data.excluded_already && !data.allowlist) {
-              exclusion_list.push([data.group_placement_view_placement_type, data.group_placement_view_placement]);
+              exclusion_list.push(
+                {"placement_type" : data.group_placement_view_placement_type, 
+                 "placement_id" : data.group_placement_view_placement});
           }
       }
       if (exclusion_list.length > 0) {
@@ -460,6 +457,7 @@ export class NewtaskComponent implements OnInit {
       }
   }
 
+  //the call to the server
   async _call_manual_service(formRawValue: string) {
       this.loading = true;
       (await this.service.run_manual_excluder(formRawValue))

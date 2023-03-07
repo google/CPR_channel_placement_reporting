@@ -35,11 +35,11 @@ export class PostService {
       this.baseUrl = 'http://127.0.0.1:5000';
     }
   }
-  async run_auto_excluder(form_data_json: string) {
+  async preview_form(form_data_json: string) {
     const headers = new HttpHeaders();
     headers.set('Content-Type', 'application/json; charset=utf-8');
     let cacheBuster = Date.now();
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/runAutoExcluder?cb=" + cacheBuster, form_data_json, {headers: headers});
+    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/previewPlacements?cb=" + cacheBuster, form_data_json, {headers: headers});
   }
 
   async run_manual_excluder(form_data_json: string) {

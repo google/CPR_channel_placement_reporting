@@ -209,12 +209,12 @@
         <div class="label-input-block formSubmits">
             <div class="float-left">
             <div class="label-input-block">
-                <button type="button" class="secondaryButton" (click)="run_auto_excluder_form(false)"
+                <button type="button" class="secondaryButton" (click)="previewPlacements()"
                     value="Preview">Preview Results</button>
             </div>
             <div class="label-input-block">
                 <button type="button" [className]="exclude_count == 0 ? 'disabledButton' : 'secondaryButton'"
-                    (click)="run_manual_excluder_form()" value="Preview">Manually Exclude ({{ exclude_count }})</button>
+                    (click)="runManualExcludeForm()" value="Preview">Manually Exclude ({{ exclude_count }})</button>
             </div>
         </div>
             <div class="label-input-block" [hidden]="email_alerts_hidden">

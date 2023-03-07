@@ -18,7 +18,7 @@ import logging
 from typing import List
 
 from gads_make_client import make_client
-from gads_api import get_gads_mcc_ids, get_placement_data, get_youtube_data, append_youtube_data, get_channel_id_list, exclude_channels, get_gads_customer_ids, remove_channel_id_from_gads
+from gads_api import get_gads_mcc_ids, get_placement_data, get_youtube_data, append_youtube_data, exclude_channels, get_gads_customer_ids, remove_channel_id_from_gads
 
 YOUTUBE_CHANNEL_ID = 6
 
@@ -35,20 +35,15 @@ def remove_channel_id(credentials, config_file, customer_id: str, channel_type: 
         remove_channel_id_from_gads(
             client, ga_service, customer_id, channel_type, channel_id)
 
-        return f"success"
+        return "success"
     except ValueError:
         logging.info("Error on running channel removal!")
 
 
-def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, customer_id: str,
+def get_placements_full_data(client, credentials, customer_id: str,
                       date_from: str, date_to: str, gads_data_youtube: str, gads_data_display: str, gads_filters: str, view_count: str, sub_count: str,
                       video_count: str, country: str, language: str, isEnglish: str, include_yt_data: bool, reporting: bool) -> dict:
     try:
-        mcc_id = config_file.get('mcc_id')
-        developer_token = config_file.get('dev_token')
-
-        creds = json.loads(credentials.to_json())
-        client = make_client(mcc_id, developer_token, creds)
         ga_service = client.get_service("GoogleAdsService")
         full_data_set = get_placement_data(
             client, ga_service, customer_id, date_from, date_to, gads_data_youtube, gads_data_display, gads_filters)
@@ -61,16 +56,13 @@ def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, custo
             for value_per_placement in full_data_set["data"].values():
                 placement_level_data_value_obj = value_per_placement['placement_level_data']
                 if placement_level_data_value_obj.get('group_placement_view_placement_type') == YOUTUBE_CHANNEL_ID:
-                    channel_ids.extend([placement_level_data_value_obj.get('group_placement_view_placement')])
+                    channel_ids.extend(
+                        [placement_level_data_value_obj.get('group_placement_view_placement')])
 
             yt_data_from_api = get_youtube_data(credentials, channel_ids)
 
             full_data_set["data"] = append_youtube_data(
                 full_data_set["data"], yt_data_from_api, view_count, sub_count, video_count, country, language, isEnglish)
-
-        if exclude_from_youtube:
-            exclude_channels(client, customer_id, get_channel_id_list(
-                full_data_set["data"]))
 
         return full_data_set
 
@@ -78,21 +70,23 @@ def run_auto_excluder(credentials, config_file, exclude_from_youtube: str, custo
         logging.info("Error on running Excluder!")
 
 
-def run_manual_excluder(credentials, config_file, customer_id: str, exclusion_list_ids: list) -> str:
+def run_manual_excluder(credentials, config_file, customer_id: str, partial_data_about_channels_to_remove: list) -> str:
     try:
-        if exclusion_list_ids:
+        if partial_data_about_channels_to_remove:
             mcc_id = config_file.get('mcc_id')
             developer_token = config_file.get('dev_token')
 
             creds = json.loads(credentials.to_json())
             client = make_client(mcc_id, developer_token, creds)
 
-            exclude_channels(client, customer_id, exclusion_list_ids)
+            exclude_channels(client, customer_id,
+                             partial_data_about_channels_to_remove)
 
-            return f"{len(exclusion_list_ids)}"
+            return f"{len(partial_data_about_channels_to_remove)}"
+            # manual exclude - no need for email sending
 
     except ValueError:
-        logging.info("Error on running Excluder!")
+        logging.info("Error on running manual exclude!")
 
 
 def get_customer_ids(credentials, config_file) -> dict:

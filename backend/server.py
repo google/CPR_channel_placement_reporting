@@ -30,9 +30,12 @@ from google_auth_oauthlib.flow import Flow
 
 from google.appengine.api import wrap_wsgi_app
 from google.appengine.api.mail import send_mail
+from gads_make_client import make_client, make_client_from_config
 
 from cpr_services import get_mcc_ids, run_auto_excluder, run_manual_excluder, get_customer_ids, remove_channel_id
 from gads_api import get_channel_id_name_list
+from cpr_services import get_mcc_ids, get_placements_full_data, run_manual_excluder, get_customer_ids, remove_channel_id
+from gads_api import exclude_channels, get_channels_to_remove_partial_data, is_localhost_run
 from cloud_api import get_schedule_list, update_cloud_schedule
 from firebase_server import fb_get_task, fb_save_client_secret, fb_save_task, fb_get_tasks_list, fb_delete_task, fb_save_settings, fb_read_settings, fb_read_client_secret, fb_save_token, fb_read_token, fb_clear_token, fb_add_to_allowlist, fb_remove_from_allowlist
 
@@ -62,45 +65,22 @@ scopes_array = [
 
 flow: Flow
 
-
-def send_CPR_email(subject: str, body: str):
+def send_CPR_email(subject: str, body: str, task_name: str = None, project_id: str = PROJECT_ID):
     config = fb_read_settings()
-    send_mail(sender=f"exclusions@{PROJECT_ID}.appspotmail.com",
-              to=config['email_address'],
+    task_prefix = f"_{task_name}" if task_name is not None else ''
+    sender = f"exclusions{task_prefix}@{project_id}.appspotmail.com"
+    send_mail(sender=sender,
+              to=config['recipient_email_address'],
               subject=subject,
               body=body)
 
 
-def send_error_email(error: str, customer_id: str):
+def send_error_email(error: str, body: str, task_name: str = None):
     send_CPR_email(
-        subject=f"CPR error. Customer-id: {customer_id}",
-        body=f"""
-        Customer ID: {customer_id}\n
-        Error: {error}""")
-
-
-def send_ytList_email(ytList: list, task_id: str, customer_id: str):
-    config = fb_read_settings()
-    count = len(ytList)
-
-    ytListToPrint = ""
-    dspListToPrint = ""
-    for yt in ytList:
-        if yt[0] == 6:
-            ytListToPrint += f"{yt[2]} - https://www.youtube.com/channel/{yt[1]}\n"
-        else:
-            dspListToPrint += f"{yt[2]}\n"
-
-    send_CPR_email(
-        subject=f"CPR Task ID {task_id} has added {count} Channel Exclusions",
-        body=f"""
-        CPR Task ID: {task_id}
-        Customer ID: {customer_id}
-        {count} channel exclusions added to your account\n
-        YouTube Exclusions:
-        {ytListToPrint}
-        Display Exclusions:
-        {dspListToPrint}""")
+        subject=f"CPR error. Customer-id: {body.customer_id}",
+        body=f"""{body}
+        Error: {error}""",
+        task_name=task_name)
 
 
 def refresh_credentials():
@@ -115,6 +95,7 @@ def run_automatic_excluder_from_task_id(task_id: str):
     if (file_contents):
 
         customer_id = file_contents['customer_id']
+        task_name = file_contents['task_name']
         minus_days: int = int(file_contents['lookback_days'])
         start_days: int = int(file_contents['from_days_ago'])
         total_lookback = minus_days + start_days
@@ -149,10 +130,11 @@ def run_automatic_excluder_from_task_id(task_id: str):
         yt_standard_characters_filter = file_contents['yt_std_character']
 
         try:
-            response_data = run_auto_excluder(
+            client = make_client_from_config(
+                credentials, fb_read_settings())
+            response_data = get_placements_full_data(
+                client,
                 credentials,
-                fb_read_settings(),
-                True,
                 customer_id,
                 date_from,
                 date_to,
@@ -168,36 +150,41 @@ def run_automatic_excluder_from_task_id(task_id: str):
                 include_yt_data,
                 False
             )
+
+            all_exclusions = get_channels_to_remove_partial_data(response_data["data"])
+            exclude_channels(client, customer_id, all_exclusions)
+
         except Exception as e:
             error_msg = f"run_automatic_excluder_from_task_id failed.\nTask-id: {task_id}\nStacktrace: {str(e)}"
             send_error_email(error_msg, customer_id)
-            return _build_response(json.dumps(error_msg))
-            response = handle_exception(customer_id)
+            response = handle_exception(
+                "run_automatic_excluder_from_task_id failed", customer_id, task_id, task_name)
             return response
 
-        all_exclusions = get_channel_id_name_list(response_data["data"])
         if all_exclusions and file_contents['email_alerts']:
-            print("sending email")
+            print(f"successfuly exlusluded {all_exclusions}")
+
             count = len(all_exclusions)
-            send_CPR_email(f"CPR Task ID {task_id} has added {count} Channel Exclusions",
-                           f"""CPR Task ID: {task_id}
+            send_CPR_email(subject=f"CPR Task ID {task_id} has added {count} Channel Exclusions",
+                           body=f"""CPR Task: {task_id} {task_name}
                 Customer ID: {customer_id}
                 {count} channel exclusions added to your account
                 Exclusions:
-                {all_exclusions}""")
-
+                {all_exclusions}""", task_name=task_name)
         return _build_response(json.dumps(f"{len(all_exclusions)}"))
     else:
-        return _build_response(json.dumps("Config doesn't exist"))
+        return _build_response(json.dumps("Failed to exclude"))
 
 
-def handle_exception(customer_id):
-    error_msg = f"server_run_excluder failed."
+def handle_exception(error_msg, customer_id, task_id, task_name):
     stack_trace = traceback.format_exc()
     full_error_msg = f"error_msg={error_msg}\n stack_trace={stack_trace}"
     print(stack_trace)
+    body = f'''customer_id= {customer_id}
+                task_name = {task_name}
+                task_id = {task_id}'''
     if not is_localhost_run:
-        send_error_email(full_error_msg, customer_id)
+        send_error_email(full_error_msg, body, task_name)
     return _build_response(json.dumps(full_error_msg))
 
 
@@ -243,12 +230,11 @@ def run_task_from_task_id():
     return run_automatic_excluder_from_task_id(task_id)
 
 
-@app.route("/api/runAutoExcluder", methods=['POST'])
-def server_run_excluder():
-    credentials = refresh_credentials()
+@app.route("/api/previewPlacements", methods=['POST'])
+def preview_placements():
     data = request.get_json(force=True)
-    exclude_yt = data['excludeChannels']
     customer_id = data['gadsCustomerId']
+    task_name = data['taskName']
     minus_days: int = int(data['lookbackDays'])
     start_days: int = int(data['fromDaysAgo'])
     total_lookback = minus_days + start_days
@@ -281,10 +267,12 @@ def server_run_excluder():
     yt_standard_characters_filter = data['ytStandardCharValue']
 
     try:
-        response_data = run_auto_excluder(
+        credentials = refresh_credentials()
+        response_data = get_placements_full_data(
+            make_client_from_config(
+                credentials=credentials,
+                config_file=fb_read_settings()),
             credentials,
-            fb_read_settings(),
-            exclude_yt,
             customer_id,
             date_from,
             date_to,
@@ -301,10 +289,8 @@ def server_run_excluder():
             True
         )
     except Exception as e:
-        error_msg = f"server_run_excluder failed.\nStacktrace: {str(e)}"
-        send_error_email(error_msg, customer_id)
-        return _build_response(json.dumps(error_msg))
-        response = handle_exception(customer_id)
+        response = handle_exception(
+            "submit_new_task_form failed", customer_id, "", task_name)
         return response
 
     return _build_response(json.dumps(response_data))
@@ -316,10 +302,8 @@ def server_run_manual_excluder():
     data = request.get_json(force=True)
     customer_id = data['gadsCustomerId']
     exclusion_list = data['allExclusionList']
-
     response_data = run_manual_excluder(
         credentials, fb_read_settings(), customer_id, exclusion_list)
-
     return _build_response(json.dumps(response_data))
 
 
