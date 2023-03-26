@@ -151,14 +151,15 @@ def run_automatic_excluder_from_task_id(task_id: str):
                 False
             )
 
-            all_exclusions = get_channels_to_remove_partial_data(response_data["data"])
+            all_exclusions = get_channels_to_remove_partial_data(
+                response_data["data"])
             exclude_channels(client, customer_id, all_exclusions)
 
         except Exception as e:
             error_msg = f"run_automatic_excluder_from_task_id failed.\nTask-id: {task_id}\nStacktrace: {str(e)}"
             send_error_email(error_msg, customer_id)
             response = handle_exception(
-                "run_automatic_excluder_from_task_id failed", customer_id, task_id, task_name)
+                f"run_automatic_excluder_from_task_id failed. Dates {date_from}-{date_to}", customer_id, task_id, task_name)
             return response
 
         if all_exclusions and file_contents['email_alerts']:
@@ -167,8 +168,9 @@ def run_automatic_excluder_from_task_id(task_id: str):
             count = len(all_exclusions)
             send_CPR_email(subject=f"CPR Task ID {task_id} has added {count} Channel Exclusions",
                            body=f"""CPR Task: {task_id} {task_name}
-                Customer ID: {customer_id}
-                {count} channel exclusions added to your account
+                           Dates: {date_from} - {date_to}
+                Customer ID: {customer_id} added
+                {count} channel exclusions.
                 Exclusions:
                 {all_exclusions}""", task_name=task_name)
         return _build_response(json.dumps(f"{len(all_exclusions)}"))
@@ -290,7 +292,7 @@ def preview_placements():
         )
     except Exception as e:
         response = handle_exception(
-            "submit_new_task_form failed", customer_id, "", task_name)
+            f"submitting preview_placements failed. Dates {date_from}-{date_to}", customer_id, "", task_name)
         return response
 
     return _build_response(json.dumps(response_data))
