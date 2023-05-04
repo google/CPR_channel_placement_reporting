@@ -379,9 +379,7 @@ def get_gads_customer_ids(client, mcc_id) -> dict:
 
         googleads_service = client.get_service("GoogleAdsService")
 
-        response = googleads_service.search(
-            customer_id=str(mcc_id), query=query
-        )
+        response = googleads_service.search(query=query)
 
         for googleads_row in response:
             customer_client = googleads_row.customer_client
