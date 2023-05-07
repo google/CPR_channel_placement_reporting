@@ -8,12 +8,16 @@
             </div></span>
             <span *ngIf='task_id==undefined || this.task_id==""'>New Task</span>
         </div>
-        <div class="centre-form">
-            <div class="label-input-block top-centre-form">
+
+            <div class="align-left">
                 <label for="taskName">Task Name</label><br>
-                <input type="text" [className]="task_name_error ? 'errorElement' : 'inputElement'" formControlName="taskName" name="taskName"><br>
+                <input type="text" [className]="task_name_error ? 'errorElement extrawide' : 'inputElement extrawide'" formControlName="taskName" name="taskName"><br>
                 <span class="error_text" *ngIf=task_name_error>Must have a name to save</span>
             </div>
+        <div class="label-input-block">
+            <br>
+        </div>
+        <div>
             <div class="label-input-block top-centre-form">
                 <label for="gadsCustomerId">Customer ID <a (click)="switch_cid()" class="smalltext">{{cid_choice}}</a><br>
                 <select [className]="customer_id_error ? 'errorElement' : 'inputElement'" *ngIf="!manual_cid" name="gadsCustomerId" class="inputElement" formControlName="gadsCustomerId" id="gadsCustomerId">
@@ -33,6 +37,12 @@
                 <span class="error_text" *ngIf=lookback_error>Must be number <= 90</span>
             </div>
             <div class="label-input-block top-centre-form">
+                <label for="exclusionLevel">Exclusion Level</label><br>
+                <select name="exclusionLevel" class="smallInputElement" formControlName="exclusionLevel" id="exclusionLevel" [(ngModel)]="selectedExclusionLevel">
+                    <option *ngFor="let item of exclusionLevelArray" [value]="item[0]" [selected]="item[0] === defaultExclusionLevel">{{ item[1] }}</option>
+                  </select>
+            </div>
+            <div class="label-input-block top-centre-form">
                 <label for="schedule">Schedule</label><br>
                 <select name="schedule" class="inputElement" formControlName="schedule" id="schedule" (change)="scheduleChange()">
                     <option *ngFor="let item of scheduleArray" [value]=item[0]>{{ item[1] }}</option>
@@ -41,18 +51,19 @@
         </div>
         <!-- Google Filters -->
         <div class="filterBorder">
-            <b>Google Ads Filters</b> (per placemnet & ad-group)<br><br>
+            <b>Filters</b><br><br>
             <div [className]="gads_data_error ? 'label-input-block largeErrorElement' : 'label-input-block'">
-                YouTube <mat-slide-toggle name="gadsDataYouTube" [(ngModel)]="gads_data_youtube" formControlName="gadsDataYouTube" id="gadsDataYouTube">
-                </mat-slide-toggle> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                Display <mat-slide-toggle name="gadsDataDisplay" [(ngModel)]="gads_data_display" formControlName="gadsDataDisplay" id="gadsDataDisplay">
-                </mat-slide-toggle> 
+                YouTube <mat-slide-toggle name="gadsDataYouTube" [(ngModel)]="data_youtube" formControlName="gadsDataYouTube" id="gadsDataYouTube" (ngModelChange)="onFilterToggleChanged()"></mat-slide-toggle>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                Website Display <mat-slide-toggle name="gadsDataDisplay" [(ngModel)]="data_display" formControlName="gadsDataDisplay" id="gadsDataDisplay" (ngModelChange)="onFilterToggleChanged()"></mat-slide-toggle>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                Mobile <mat-slide-toggle name="gadsDataMobile" [(ngModel)]="data_mobile" formControlName="gadsDataMobile" id="gadsDataMobile" (ngModelChange)="onFilterToggleChanged()"></mat-slide-toggle>
                 <span class="error_text" *ngIf=gads_data_error>You must select at least one data type to retrieve</span>
             </div><br><br>
             <div class="label-input-block ">
-                <label for="gadsField">Metric</label><br>
+                <label for="gadsField">Metric & Dimensions</label><br>
                 <select name="gadsField" formControlName="gadsField" class="inputElement" id="gadsField">
-                    <option *ngFor="let item of gadsFieldsArray" [value]=item[0]>{{ item[1] }}</option>
+                    <option *ngFor="let item of relevantMetricArray" [value]=item[0]>{{ item[1] }}</option>
                 </select>
             </div>
             <div class="label-input-block">
@@ -88,7 +99,7 @@
                 </div>
                 <div class="label-input-block">
                     <button type="button" id="unlockFilter" class="bigicon" (click)="unlockFilter()" matTooltip="Unlock/lock filter for free text">
-                        <mat-icon class="red_icon" *ngIf="gads_filter_lock">lock</mat-icon> 
+                        <mat-icon class="red_icon" *ngIf="gads_filter_lock">lock</mat-icon>
                         <mat-icon class="green_icon" *ngIf="!gads_filter_lock">lock_open</mat-icon>
                     </button>
                     <button type="button" id="clearGadsFilter" class="deleteButton" (click)="clearFilter()" matTooltip="Clear current GAds filters">
@@ -98,112 +109,7 @@
             </div>
         </div>
         <br>
-        <!-- YouTube Filters-->
-        <div class="filterBorder">
-            <div class="label-input-block">
-            <b>YouTube Exclusion Rules (AND only)</b>
-            </div>
-                <div class="label-input-block align-right">
-                    Include YouTube Data <mat-slide-toggle name="includeYouTube" [(ngModel)]="include_youtube" formControlName="includeYouTube" id="includeYouTube">
-                    </mat-slide-toggle> 
-                </div>
-            <br>
-            <br>
-            <div>
-                <div class="label-input-block yt-label">
-                    Subscriber Count
-                </div>
-                <div class="label-input-block">
-                    <label for="ytSubscriberOperator">Operator</label><br>
-                    <select name="ytSubscriberOperator" formControlName="ytSubscriberOperator" class="inputElement"
-                        id="ytSubscriberOperator">
-                        <option *ngFor="let item of ytMetricOperatorsArray" [value]=item[0]>{{ item[1] }}</option>
-                    </select>
-                </div>
-                <div class="label-input-block">
-                    <label for="ytSubscriberValue">Value</label><br>
-                    <input type="text" [className]="yt_subscribers_error ? 'errorElement' : 'inputElement'"
-                        formControlName="ytSubscriberValue" name="ytSubscriberValue">
-                    <span class="error_text" *ngIf=yt_subscribers_error>Needs to be a number</span>
-                </div>
-            </div>
-            <div>
-                <div class="label-input-block yt-label">
-                    View Count
-                </div>
-                <div class="label-input-block">
-                    <select name="ytViewOperator" formControlName="ytViewOperator" class="inputElement"
-                        id="ytViewOperator">
-                        <option *ngFor="let item of ytMetricOperatorsArray" [value]=item[0]>{{ item[1] }}</option>
-                    </select>
-                </div>
-                <div class="label-input-block">
-                    <input type="text" [className]="yt_view_error ? 'errorElement' : 'inputElement'"
-                        formControlName="ytViewValue" name="ytViewValue">
-                    <span class="error_text" *ngIf=yt_view_error>Needs to be a number</span>
-                </div>
-            </div>
-            <div>
-                <div class="label-input-block yt-label">
-                    Video Count
-                </div>
-                <div class="label-input-block">
-                    <select name="ytVideoOperator" formControlName="ytVideoOperator" class="inputElement"
-                        id="ytVideoOperator">
-                        <option *ngFor="let item of ytMetricOperatorsArray" [value]=item[0]>{{ item[1] }}</option>
-                    </select>
-                </div>
-                <div class="label-input-block">
-                    <input type="text" [className]="yt_video_error ? 'errorElement' : 'inputElement'"
-                        formControlName="ytVideoValue" name="ytVideoValue">
-                    <span class="error_text" *ngIf=yt_video_error>Needs to be a number</span>
-                </div>
-            </div>
-            <div>
-                <div class="label-input-block yt-label">
-                    Language
-                </div>
-                <div class="label-input-block">
-                    <select name="ytLanguageOperator" formControlName="ytLanguageOperator" class="inputElement"
-                        id="ytLanguageOperator">
-                        <option *ngFor="let item of ytTextOperatorsArray" [value]=item[0]>{{ item[1] }}</option>
-                    </select>
-                </div>
-                <div class="label-input-block">
-                    <input type="text" [className]="yt_language_error ? 'errorElement' : 'inputElement'"
-                        formControlName="ytLanguageValue" name="ytLanguageValue">
-                    <span class="error_text" *ngIf=yt_language_error>Needs to be a language code (eg. en)</span>
-                </div>
-            </div>
-            <div>
-                <div class="label-input-block yt-label">
-                    Country
-                </div>
-                <div class="label-input-block">
-                    <select name="ytCountryOperator" formControlName="ytCountryOperator" class="inputElement"
-                        id="ytCountryOperator">
-                        <option *ngFor="let item of ytTextOperatorsArray" [value]=item[0]>{{ item[1] }}</option>
-                    </select>
-                </div>
-                <div class="label-input-block">
-                    <input type="text" [className]="yt_country_error ? 'errorElement' : 'inputElement'"
-                        formControlName="ytCountryValue" name="ytCountryValue">
-                    <span class="error_text" *ngIf=yt_country_error>Needs to be a country code (eg.
-                        UK)</span>
-                </div>
-            </div>
-            <div>
-                <div class="label-input-block yt-label">
-                    Standard Title Characters
-                </div>
-                <div class="label-input-block">
-                    <select name="ytStandardCharValue" formControlName="ytStandardCharValue" class="inputElement"
-                        id="ytStandardCharValue">
-                        <option *ngFor="let item of ytYesNoOperatorsArray" [value]=item[0]>{{ item[1] }}</option>
-                    </select>
-                </div>
-            </div>
-        </div>
+        <br>
         <!-- Form End -->
         <br>
         <div class="label-input-block formSubmits">
@@ -217,13 +123,16 @@
                     (click)="runManualExcludeForm()" value="Preview">Manually Exclude ({{ exclude_count }})</button>
             </div>
         </div>
-            <div class="label-input-block" [hidden]="email_alerts_hidden">
-                Email Alerts <mat-slide-toggle name="emailAlerts" [(ngModel)]="email_alerts" formControlName="emailAlerts" id="emailAlerts">
-                </mat-slide-toggle> 
-            </div>
-            <div class="label-input-block">
-                <button type="button" class="saveButton" (click)="save_task()">{{save_button}}</button>
-            </div>
+        <div class="label-input-block" [hidden]="email_alerts_hidden">
+        <label for="taskOutputDrowpDown">Exclude or Notify?</label></div>
+        <div class="label-input-block" [hidden]="email_alerts_hidden">
+                <select name="taskOutputDrowpDown" class="smallInputElement" formControlName="taskOutputDrowpDown" id="taskOutputDrowpDown" [(ngModel)]="selectedTaskOutput">
+                  <option *ngFor="let item of taskOutputArray" [value]="item[0]" [selected]="item[0] === defaultTaskOutput">{{ item[1] }}</option>
+                </select>
+          </div>
+          <div class="label-input-block">
+            <button type="button" class="saveButton" (click)="save_task()">{{save_button}}</button>
+          </div>
         </div>
     </form>
 </div>
@@ -231,7 +140,7 @@
 <!---->
 <div *ngIf="table_result.length > 0" >
     <div class="pagination-left">
-        <span class="error_text" *ngIf=memory_error><mat-icon>warning</mat-icon> Your report is only partial due to memory of your instance being reached</span> 
+        <span class="error_text" *ngIf=memory_error><mat-icon>warning</mat-icon> Your report is only partial due to memory of your instance being reached</span>
         </div>
     <div class="pagination">
     <form [formGroup]="paginationForm">
@@ -271,25 +180,22 @@ From:&nbsp;{{this.date_from}} &nbsp;&nbsp;&nbsp;To:&nbsp;{{this.date_to}}
             <th class="hrlink"><a (click)="sort_table('default')">Exclude</a></th>
             <th class="hrlink"><a (click)="sort_table('excluded_already')">Status</a></th>
             <th class="hrlink"><a (click)="sort_table('allowlist')">Allowlist</a></th>
-            <th class="hrlink"><a (click)="sort_table('group_placement_view_placement_type')">Type</a></th>
-            <th class="hrlink"><a (click)="sort_table('group_placement_view_display_name')">Placement Name</a></th>
-            <th class="hrlink"><a (click)="sort_table('group_placement_view_placement')">Channel/URL</a></th>
+            <th class="hrlink"><a (click)="sort_table('type')">Type</a></th>
+            <th class="hrlink"><a (click)="sort_table('name')">Placement Name</a></th>
+            <th class="hrlink"><a (click)="sort_table('placement')">Channel/URL</a></th>
             <th class="hrlink"><a (click)="sort_table('ad_group_name')"></a>Ad Group Name</th>
             <th class="hrlink"><a (click)="sort_table('campaign_name')"></a>Campaign Name</th>
-            <th class="hrlink"><a (click)="sort_table('metrics_impressions')">Impressions</a></th>
-            <th class="hrlink"><a (click)="sort_table('metrics_clicks')">Clicks</a></th>
-            <th class="hrlink"><a (click)="sort_table('metrics_video_views')">Video Views</a></th>
-            <th class="hrlink"><a (click)="sort_table('metrics_cost')">Cost</a></th>            
-            <th class="hrlink"><a (click)="sort_table('metrics_conversions')">Conversions</a></th>            
-            <th class="hrlink"><a (click)="sort_table('metrics_cost_per_conversion')">CPA</a></th>
-            <th class="hrlink"><a (click)="sort_table('metrics_view_through_conversions')">View-Through Conversions</a></th>
-            <th class="hrlink"><a (click)="sort_table('metrics_average_cpm')">Avg. CPM</a></th>
-            <th class="hrlink"><a (click)="sort_table('metrics_average_cpc')">Avg. CPC</a></th>            
-            <th class="hrlink"><a (click)="sort_table('metrics_ctr')">CTR</a></th>
-            <th class="hrlink"><a (click)="sort_table('metrics_conversion_from_interaction_rate')">Conversion Rate</a></th>
-            <th class="hrlink"><a (click)="sort_table('metrics_all_conversion_from_interactions_rate')">All Conversions Rate</a></th>
-            <th class="hrlink"><a (click)="sort_table('metrics_all_conversions')">All Conversions</a></th>
-            <th class="hrlink"><a (click)="sort_table('metrics_cost_per_all_conversions')">Cost per All Conversions</a></th>
+            <th class="hrlink"><a (click)="sort_table('impressions')">Impressions</a></th>
+            <th class="hrlink"><a (click)="sort_table('clicks')">Clicks</a></th>
+            <th class="hrlink"><a (click)="sort_table('video_views')">Video Views</a></th>
+            <th class="hrlink"><a (click)="sort_table('cost')">Cost</a></th>
+            <th class="hrlink"><a (click)="sort_table('conversions')">Conversions</a></th>
+            <th class="hrlink"><a (click)="sort_table('cost_per_conversion')">CPA</a></th>
+            <th class="hrlink"><a (click)="sort_table('view_through_conversions')">View-Through Conversions</a></th>
+            <th class="hrlink"><a (click)="sort_table('avg_cpm')">Avg. CPM</a></th>
+            <th class="hrlink"><a (click)="sort_table('avg_cpc')">Avg. CPC</a></th>
+            <th class="hrlink"><a (click)="sort_table('ctr')">CTR</a></th>
+            <th class="hrlink"><a (click)="sort_table('conversions_from_interactions_rate')">Conversion Rate</a></th>
             <th class="hrlink"><a (click)="sort_table('subscriberCount')">YouTube Subscribers</a></th>
             <th class="hrlink"><a (click)="sort_table('viewCount')">YouTube View Count</a></th>
             <th class="hrlink"><a (click)="sort_table('videoCount')">YouTube Video Count</a></th>
@@ -302,39 +208,36 @@ From:&nbsp;{{this.date_from}} &nbsp;&nbsp;&nbsp;To:&nbsp;{{this.date_to}}
         <tr *ngFor="let data of table_result | slice:pagination_start:pagination_start+pagination_rpp; let i =index"
         [className]="row_class(data.excluded_already, data.exclude_from_account, data.allowlist)">
             <td>
-                <input [value]="data.group_placement_view_placement" type="checkbox"
-                    (change)="!data.excluded_already && !data.allowlist ? excludeCheckChange(data.group_placement_view_placement, data.exclude_from_account) : null"
-                    [checked]="data.exclude_from_account && !data.excluded_already && !data.allowlist" 
+                <input [value]="data.placement" type="checkbox"
+                    (change)="!data.excluded_already && !data.allowlist ? excludeCheckChange(data.placement) : null"
+                    [checked]="data.exclude_from_account && !data.excluded_already && !data.allowlist"
                     [disabled]="data.excluded_already || data.allowlist"/></td>
             <td *ngIf="data.excluded_already"><mat-icon matTooltip="Excluded">block</mat-icon></td>
-            <td *ngIf="!data.excluded_already"><mat-icon matTooltip="Active" class="green_icon">check_circle</mat-icon></td>       
-            <td><span *ngIf="!data.allowlist"><a class="grey_icon" (click)="addToAllowlist(data.group_placement_view_placement_type, data.group_placement_view_placement)" 
+            <td *ngIf="!data.excluded_already"><mat-icon matTooltip="Active" class="green_icon">check_circle</mat-icon></td>
+            <td><span *ngIf="!data.allowlist"><a class="grey_icon" (click)="addToAllowlist(data.placement_type, data.placement)"
                 target="_self" matTooltip="Add placement to allowlist so it is never excluded"><mat-icon>add_circle_outline</mat-icon></a></span>
-                
-                <span *ngIf="data.allowlist"><a (click)="removeFromAllowlist(data.group_placement_view_placement)" 
+
+                <span *ngIf="data.allowlist"><a (click)="removeFromAllowlist(data.placement)"
                     target="_self" matTooltip="Remove placement from allowlist so it can be excluded"><mat-icon class="gold_icon">stars</mat-icon></a></span>
                 </td>
-            <td *ngIf="data.group_placement_view_placement_type==2"><mat-icon matTooltip="Display">picture_in_picture</mat-icon></td>
-            <td *ngIf="data.group_placement_view_placement_type==6"><mat-icon matTooltip="YouTube">video_library</mat-icon></td>
-            <td>{{data.group_placement_view_display_name}}</td>
-            <td><a href="https://{{data.group_placement_view_target_url}}" target="_blank">{{
-                    data.group_placement_view_placement }}</a></td>
-            <td>{{data.ad_group_name}}</td>   
-            <td>{{data.campaign_name}}</td>       
-            <td>{{data.metrics_impressions | number}}</td>
-            <td>{{data.metrics_clicks | number}}</td>
-            <td>{{data.metrics_video_views | number}}</td>
-            <td>{{data.metrics_cost | number : '1.2-2'}}</td>
-            <td>{{data.metrics_conversions | number}}</td>  
-            <td>{{data.metrics_cost_per_conversion | number : '1.2-2'}}</td>            
-            <td>{{data.metrics_view_through_conversions | number}}</td>
-            <td>{{data.metrics_average_cpm | number : '1.2-2'}}</td>
-            <td>{{data.metrics_average_cpc | number : '1.2-2'}}</td>
-            <td>{{(data.metrics_ctr * 100) | number : '1.2-2'}}%</td>
-            <td>{{data.metrics_conversions_from_interactions_rate | number : '1.2-2'}}</td>
-            <td>{{data.metrics_all_conversions_from_interactions_rate | number}}</td>
-            <td>{{data.metrics_all_conversions | number}}</td>     
-            <td>{{data.metrics_cost_per_all_conversions | number : '1.2-2'}}</td>       
+            <td *ngIf="data.placement_type=='WEBSITE'"><mat-icon matTooltip="Display">picture_in_picture</mat-icon></td>
+            <td *ngIf="data.placement_type=='MOBILE_APPLICATION'"><mat-icon matTooltip="Mobile">video_library</mat-icon></td>
+            <td>{{data.name}}</td>
+            <td><a href="https://{{data.url}}" target="_blank">{{
+                    data.placement }}</a></td>
+            <td>{{data.ad_group_name}}</td>
+            <td>{{data.campaign_name}}</td>
+            <td>{{data.impressions | number}}</td>
+            <td>{{data.clicks | number}}</td>
+            <td>{{data.video_views | number}}</td>
+            <td>{{data.cost | number : '1.2-2'}}</td>
+            <td>{{data.conversions | number}}</td>
+            <td>{{data.cost_per_conversion | number : '1.2-2'}}</td>
+            <td>{{data.view_through_conversions | number}}</td>
+            <td>{{data.avg_cpm | number : '1.2-2'}}</td>
+            <td>{{data.avg_cpc | number : '1.2-2'}}</td>
+            <td>{{(data.ctr * 100) | number : '1.2-2'}}%</td>
+            <td>{{data.conversions_from_interaction_rate | number : '1.2-2'}}</td>
             <td>{{data.subscriberCount | number}}</td>
             <td>{{data.viewCount | number}}</td>
             <td>{{data.videoCount | number}}</td>

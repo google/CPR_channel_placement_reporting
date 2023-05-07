@@ -18,7 +18,7 @@
  import { FormBuilder, FormGroup } from '@angular/forms';
  import { PostService, ReturnPromise } from './services/post.service';
  import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
- 
+
  @Component({
    selector: 'app-settings',
    templateUrl: './settings.component.html',
@@ -32,22 +32,23 @@
    hideAuth = true;
    mcc_list: any[] = [];
    dev_token_error = false;
- 
+
    horizontalPosition: MatSnackBarHorizontalPosition = 'center';
    verticalPosition: MatSnackBarVerticalPosition = 'top';
- 
-   constructor(private snackbar: MatSnackBar, private fb: FormBuilder, private service: PostService) { 
+
+   constructor(private snackbar: MatSnackBar, private fb: FormBuilder, private service: PostService) {
      this.settingsForm = this.fb.group({
        clientFile: [''],
        gadsDevToken: [''],
        gadsMccId: [''],
-       emailAddress: ['']
+       emailAddress: [''],
+       saveToDB: ['']
      });
    }
- 
+
    ngOnInit(): void {
    }
- 
+
    async ngAfterViewInit() {
      this.loading=true
      this.subs = (await ((this.service.get_config())))
@@ -57,7 +58,7 @@
          complete: () => this.loading=false
        });
    }
- 
+
 
    validate_fields() {
     let error_count = 0;
@@ -102,10 +103,10 @@
    _populate_mcc_list(response: ReturnPromise)
    {
     this.mcc_list = Object.entries(response);
-    this.mcc_list.sort((a, b) => (a[1] > b[1]) ? 1 : -1);
+    this.mcc_list.sort((a, b) => (a.account_name.toLowerCase() > b.account_name.toLowerCase()) ? 1 : -1);
     this.loading=false;
    }
- 
+
    async save_settings() {
      if (!this.validate_fields()) return;
      this.loading=true
@@ -120,15 +121,16 @@
      let formRawValue = {
        'dev_token': dev_tok,
        'mcc_id': mcc_id,
-       'email_address': this.settingsForm.controls['emailAddress'].value
+       'email_address': this.settingsForm.controls['emailAddress'].value,
+       'save_to_db': this.settingsForm.controls['saveToDB'].value
      };
- 
+
      this.subs = (await ((this.service.set_config(JSON.stringify(formRawValue)))))
        .subscribe({
          next: (response: ReturnPromise) => this._redirect(response),
          error: (err: any) => this.openSnackBar("Error updating settings", "Dismiss", "error-snackbar"),
          complete: () => this.loading=false
-       });  
+       });
    }
 
    async reauth() {
@@ -138,9 +140,9 @@
       next: (response: ReturnPromise) => this._redirect(response),
       error: (err: any) => this.openSnackBar("Error updating settings", "Dismiss", "error-snackbar"),
       complete: () => this.loading=false
-    });  
+    });
    }
-   
+
    _redirect(response: ReturnPromise) {
     let url = response.toString();
     if(url.includes("http"))
@@ -172,7 +174,7 @@
          error: (err: any) => this.openSnackBar("Error updating settings"+JSON.stringify(err), "Dismiss", "error-snackbar"),
          complete: () => this.loading=false
        });
-       this.hideAuth = true;  
+       this.hideAuth = true;
      }
    }
 
@@ -186,11 +188,13 @@
         this.populate_mcc_ids();
       }
    }
- 
+
    async upload_file(event: any) {
      this.loading=true
      const file:File = event.target.files[0];
-     if (file && file.name.startsWith("client_secret") && file.name.endsWith(".json")) {
+     // TODO: Are we sure we need this?
+     // TODO: Fixed; add validation of a different type
+     if (file && file.name.endsWith(".json")) {
          let fileContents = "";
          let fileReader = new FileReader();
          fileReader.onload = (e) => {
@@ -198,14 +202,14 @@
            this.complete_upload(fileContents);
          }
          fileReader.readAsText(file);
-         
+
      }
      else {
        this.openSnackBar("File must be named 'client_secret_xxxxxxx.json' and be a valid client secret file", "Dismiss", "error-snackbar")
        this.loading=false
      }
    }
- 
+
    async complete_upload(fileContents: string) {
      this.subs = (await (((this.service.file_upload(fileContents)))))
            .subscribe({
@@ -214,7 +218,7 @@
              complete: () => this.loading=false
        });
    }
- 
+
    openSnackBar(message: string, button: string, type: string) {
      this.snackbar.open(message, button, {
        duration: 10000,
@@ -223,6 +227,6 @@
        panelClass: [type]
      });
    }
- 
+
  }
- 
+

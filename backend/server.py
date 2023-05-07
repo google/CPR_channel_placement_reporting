@@ -1,11 +1,10 @@
-# coding=utf-8
-# Copyright 2022 Google LLC..
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,459 +12,219 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import date, datetime, timedelta
-import logging
-import math
-from os import environ, path, listdir, remove, getenv
 import os
-import pickle
-import traceback
-
-from flask import Flask, request, render_template
-from flask_cors import CORS
+from flask import Flask, request, render_template, send_from_directory
 import json
 
-from google.auth.transport.requests import Request
-from google_auth_oauthlib.flow import Flow
+from googleads_housekeeper import bootstrap, views
+from googleads_housekeeper.domain import commands
+from googleads_housekeeper.services import unit_of_work
+from googleads_housekeeper.adapters import publisher
+from google.cloud import datastore, pubsub_v1
 
-from google.appengine.api import wrap_wsgi_app
-from google.appengine.api.mail import send_mail
-from gads_make_client import make_client, make_client_from_config
+app = Flask(__name__)
+STATIC_DIR = os.getenv('STATIC_DIR') or 'static'
 
-from cpr_services import get_mcc_ids, get_placements_full_data, run_manual_excluder, get_customer_ids, remove_channel_id
-from gads_api import exclude_channels, get_channels_to_remove_partial_data, is_localhost_run
-from cloud_api import get_schedule_list, update_cloud_schedule
-from firebase_server import fb_get_task, fb_save_client_secret, fb_save_task, fb_get_tasks_list, fb_delete_task, fb_save_settings, fb_read_settings, fb_read_client_secret, fb_save_token, fb_read_token, fb_clear_token, fb_add_to_allowlist, fb_remove_from_allowlist
+if os.getenv("GCP_DEPLOYMENT"):
+    datastore_client = datastore.Client()
+    pubsub_client = pubsub_v1.PublisherClient()
+    pubsub_publisher = publisher.GoogleCloudPubSubPublisher(
+        client=pubsub_client, project_id=os.getenv("GOOGLE_CLOUD_PROJECT"))
 
-
-app = Flask(__name__, static_url_path='',
-            static_folder='static',
-            template_folder='static')
-app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
-CORS(app)
-
-debug_project_id = ""
-
-DATE_FORMAT = '%Y-%m-%d'
-PROJECT_ID = getenv(
-    'GOOGLE_CLOUD_PROJECT') if not debug_project_id else debug_project_id
-LOCATION = "europe-west1"
-
-_REDIRECT_URI = f"https://{PROJECT_ID}.ew.r.appspot.com/authdone"
-
-credentials = None
-
-scopes_array = [
-    'https://www.googleapis.com/auth/cloud-platform',
-    'https://www.googleapis.com/auth/youtube.readonly',
-    'https://www.googleapis.com/auth/adwords'
-]
-
-flow: Flow
-
-def send_CPR_email(subject: str, body: str, task_name: str = None, project_id: str = PROJECT_ID):
-    config = fb_read_settings()
-    task_prefix = f"_{task_name}" if task_name is not None else ''
-    sender = f"exclusions{task_prefix}@{project_id}.appspotmail.com"
-    send_mail(sender=sender,
-              to=config['recipient_email_address'],
-              subject=subject,
-              body=body)
+    bus = bootstrap.bootstrap(
+        start_orm=False,
+        uow=unit_of_work.DatastoreUnitOfWork(datastore_client),
+        publish_service=pubsub_publisher)
+else:
+    bus = bootstrap.bootstrap()
 
 
-def send_error_email(error: str, body: str, task_name: str = None):
-    send_CPR_email(
-        subject=f"CPR error. Customer-id: {body.customer_id}",
-        body=f"""{body}
-        Error: {error}""",
-        task_name=task_name)
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def catch_all(path):
+    file_requested = os.path.join(app.root_path, STATIC_DIR, path)
+    if not os.path.isfile(file_requested):
+        path = "index.html"
+    max_age = 0 if path == "index.html" else None
+    return send_from_directory(STATIC_DIR, path, max_age=max_age)
 
 
-def refresh_credentials():
-    credentials = get_oauth()
-    return credentials
-
-
-def run_automatic_excluder_from_task_id(task_id: str):
-    credentials = refresh_credentials()
-    file_contents = fb_get_task(task_id)
-
-    if (file_contents):
-
-        customer_id = file_contents['customer_id']
-        task_name = file_contents['task_name']
-        minus_days: int = int(file_contents['lookback_days'])
-        start_days: int = int(file_contents['from_days_ago'])
-        total_lookback = minus_days + start_days
-
-        d = date.today() - timedelta(days=total_lookback)
-        date_from = d.strftime(DATE_FORMAT)
-
-        dt = date.today() - timedelta(days=start_days)
-        date_to = dt.strftime(DATE_FORMAT)
-
-        gads_data_youtube = file_contents['gads_data_youtube']
-        gads_data_display = file_contents['gads_data_display']
-        gads_filters = file_contents['gads_filter']
-        yt_view_count_filter = file_contents['yt_view_operator'] + \
-            file_contents['yt_view_value']
-        yt_sub_count_filter = file_contents['yt_subscriber_operator'] + \
-            file_contents['yt_subscriber_value']
-        yt_video_count_filter = file_contents['yt_video_operator'] + \
-            file_contents['yt_video_value']
-        include_yt_data = file_contents['include_youtube']
-
-        if file_contents['yt_country_operator']:
-            yt_country_filter = f"{file_contents['yt_country_operator']}'{file_contents['yt_country_value'].upper()}'"
-        else:
-            yt_country_filter = ""
-
-        if file_contents['yt_language_operator']:
-            yt_language_filter = f"{file_contents['yt_language_operator']}'{file_contents['yt_language_value'].lower()}'"
-        else:
-            yt_language_filter = ""
-
-        yt_standard_characters_filter = file_contents['yt_std_character']
-
-        try:
-            client = make_client_from_config(
-                credentials, fb_read_settings())
-            response_data = get_placements_full_data(
-                client,
-                credentials,
-                customer_id,
-                date_from,
-                date_to,
-                gads_data_youtube,
-                gads_data_display,
-                gads_filters,
-                yt_view_count_filter,
-                yt_sub_count_filter,
-                yt_video_count_filter,
-                yt_country_filter,
-                yt_language_filter,
-                yt_standard_characters_filter,
-                include_yt_data,
-                False
-            )
-
-            all_exclusions = get_channels_to_remove_partial_data(
-                response_data["data"])
-            exclude_channels(client, customer_id, all_exclusions)
-
-        except Exception as e:
-            response = handle_exception(
-                f"run_automatic_excluder_from_task_id failed. Dates {date_from}-{date_to}", customer_id, task_id, task_name)
-            return response
-
-        if all_exclusions and file_contents['email_alerts']:
-            print(f"successfuly exlusluded {all_exclusions}")
-
-            count = len(all_exclusions)
-            send_CPR_email(subject=f"CPR Task ID {task_id} has added {count} Channel Exclusions",
-                           body=f"""CPR Task: {task_id} {task_name}
-                           Dates: {date_from} - {date_to}
-                Customer ID: {customer_id} added
-                {count} channel exclusions.
-                Exclusions:
-                {all_exclusions}""", task_name=task_name)
-        return _build_response(json.dumps(f"{len(all_exclusions)}"))
+# Commands
+@app.route("/api/previewPlacements", methods=['POST'])
+def preview_placements():
+    config = views.config(bus.uow)
+    if not config:
+        ads_client = bus.dependencies.get("ads_api_client").client
+        if not (mcc_id := ads_client.login_customer_id):
+            mcc_id = ads_client.linked_customer_id
+        cmd = commands.SaveConfig(mcc_id=mcc_id, email_address="", id=None)
+        bus.handle(cmd)
+        config = {"mcc_id": mcc_id, "email_address": ""}
     else:
-        return _build_response(json.dumps("Failed to exclude"))
-
-
-def handle_exception(error_msg, customer_id, task_id, task_name):
-    stack_trace = traceback.format_exc()
-    full_error_msg = f"error_msg={error_msg}\n stack_trace={stack_trace}"
-    print(stack_trace)
-    body = f'''customer_id= {customer_id}
-                task_name = {task_name}
-                task_id = {task_id}'''
-    if not is_localhost_run:
-        send_error_email(full_error_msg, body, task_name)
-    return _build_response(json.dumps(full_error_msg))
-
-
-@app.route("/", methods=['GET'])
-def run_static():
-    return render_template('index.html')
-
-
-@app.route("/api/finishAuth", methods=['POST'])
-def finalise_auth():
+        config = config[0]
     data = request.get_json(force=True)
-    code = data['code']
-
-    fb_save_settings(data)
-    msg = finish_auth(code)
-    return _build_response(json.dumps(msg))
-
-
-@app.route("/authdone", methods=['GET'])
-def run_static_authdone():
-    return render_template('/template/authdone.html')
-
-
-@app.route("/newtask", methods=['GET'])
-def run_static_nt():
-    return render_template('index.html')
+    # TODO (amarkin): Refactor and simplify
+    cmd = commands.PreviewPlacements(
+        exclusion_rule=data["gadsFinalFilters"],
+        placement_types=tuple(data["placement_types"].split(","))
+        if data["placement_types"] else None,
+        customer_ids=data["gadsCustomerId"],
+        from_days_ago=int(data["fromDaysAgo"]),
+        lookback_days=int(data["lookbackDays"]),
+        save_to_db=config.get("save_to_db", True))
+    result = bus.handle(cmd)
+    resp = _build_response(json.dumps(result))
+    return resp
 
 
-@app.route("/settings", methods=['GET'])
-def run_static_st():
-    return render_template('index.html')
-
-
-@app.route("/api/runTaskFromScheduler/<task_id>", methods=['GET'])
-def run_task_from_task_scheduler(task_id):
-    return run_automatic_excluder_from_task_id(task_id)
+@app.route("/api/runManualExcluder", methods=['POST', 'GET'])
+def run_manual_excluder():
+    data = request.get_json(force=True)
+    cmd = commands.RunManualExclusion(customer_ids=data["gadsCustomerId"],
+                                      placements=data["allExclusionList"])
+    result = bus.handle(cmd)
+    resp = _build_response(json.dumps(result))
+    return resp
 
 
 @app.route("/api/runTaskFromTaskId", methods=['POST'])
 def run_task_from_task_id():
+    [config] = views.config(bus.uow)
     data = request.get_json(force=True)
-    task_id = data['task_id']
-    return run_automatic_excluder_from_task_id(task_id)
+    data.update({"save_to_db": config.get("save_to_db", True)})
+    cmd = commands.RunTask(**data)
+    bus.handle(cmd)
+    return "OK", 200
 
 
-@app.route("/api/previewPlacements", methods=['POST'])
-def preview_placements():
-    data = request.get_json(force=True)
-    customer_id = data['gadsCustomerId']
-    task_name = data['taskName']
-    minus_days: int = int(data['lookbackDays'])
-    start_days: int = int(data['fromDaysAgo'])
-    total_lookback = minus_days + start_days
-
-    d = date.today() - timedelta(days=total_lookback)
-    date_from = d.strftime(DATE_FORMAT)
-
-    dt = date.today() - timedelta(days=start_days)
-    date_to = dt.strftime(DATE_FORMAT)
-
-    gads_data_youtube = data['gadsDataYouTube']
-    gads_data_display = data['gadsDataDisplay']
-    gads_filters = data['gadsFinalFilters']
-    yt_view_count_filter = data['ytViewOperator']+data['ytViewValue']
-    yt_sub_count_filter = data['ytSubscriberOperator'] + \
-        data['ytSubscriberValue']
-    yt_video_count_filter = data['ytVideoOperator']+data['ytVideoValue']
-    include_yt_data = data['includeYouTubeData']
-
-    if data['ytCountryOperator'] == "":
-        yt_country_filter = ""
-    else:
-        yt_country_filter = f"{data['ytCountryOperator']}'{data['ytCountryValue'].upper()}'"
-
-    if data['ytLanguageOperator'] == "":
-        yt_language_filter = ""
-    else:
-        yt_language_filter = f"{data['ytLanguageOperator']}'{data['ytLanguageValue'].lower()}'"
-
-    yt_standard_characters_filter = data['ytStandardCharValue']
-
-    try:
-        credentials = refresh_credentials()
-        response_data = get_placements_full_data(
-            make_client_from_config(
-                credentials=credentials,
-                config_file=fb_read_settings()),
-            credentials,
-            customer_id,
-            date_from,
-            date_to,
-            gads_data_youtube,
-            gads_data_display,
-            gads_filters,
-            yt_view_count_filter,
-            yt_sub_count_filter,
-            yt_video_count_filter,
-            yt_country_filter,
-            yt_language_filter,
-            yt_standard_characters_filter,
-            include_yt_data,
-            True
-        )
-    except Exception as e:
-        response = handle_exception(
-            f"submitting preview_placements failed. Dates {date_from}-{date_to}", customer_id, "", task_name)
-        return response
-
-    return _build_response(json.dumps(response_data))
-
-
-@app.route("/api/runManualExcluder", methods=['POST', 'GET'])
-def server_run_manual_excluder():
-    credentials = refresh_credentials()
-    data = request.get_json(force=True)
-    customer_id = data['gadsCustomerId']
-    exclusion_list = data['allExclusionList']
-    response_data = run_manual_excluder(
-        credentials, fb_read_settings(), customer_id, exclusion_list)
-    return _build_response(json.dumps(response_data))
-
-
-@app.route("/api/fileUpload", methods=['POST'])
-def client_secret_upload():
-    data = request.get_json(force=True)
-
-    fb_save_client_secret(data)
-
-    return _build_response(json.dumps("success"))
-
-
-@app.route("/api/getConfig", methods=['GET'])
-def get_config():
-    try:
-        config = fb_read_settings()
-        return _build_response(json.dumps(config))
-    except:
-        return _build_response(json.dumps("x"))
-
-
-@app.route("/api/setReauth", methods=['GET'])
-def set_reauth():
-    global credentials
-    credentials = None
-
-    fb_clear_token()
-
-    creds: str = refresh_credentials()
-    try:
-        if creds.startswith("http"):
-            return _build_response(json.dumps(creds))
-    except:
-        return _build_response(json.dumps("success"))
-
-
-@app.route("/api/setConfig", methods=['POST'])
-def set_config():
-    global credentials
-    credentials = None
-    data = request.get_json(force=True)
-
-    fb_save_settings(data)
-
-    creds: str = refresh_credentials()
-    try:
-        if creds.startswith("http"):
-            return _build_response(json.dumps(creds))
-    except:
-        return _build_response(json.dumps("success"))
+@app.route("/api/runTaskFromScheduler/<task_id>", methods=['GET'])
+def run_task_from_scheduler(task_id):
+    cmd = commands.RunTask(task_id)
+    bus.handle(cmd)
+    return "OK", 200
 
 
 @app.route("/api/saveTask", methods=['POST'])
 def save_task():
-    credentials = refresh_credentials()
     data = request.get_json(force=True)
-
-    task_id = fb_save_task(data)
-
-    update_cloud_schedule(credentials, PROJECT_ID, LOCATION,
-                          task_id, int(data['schedule']))
-
-    return _build_response(json.dumps(task_id))
+    cmd = commands.SaveTask(**data)
+    task_id = bus.handle(cmd)
+    return _build_response(json.dumps(str(task_id)))
 
 
-@app.route("/api/getCustomerIds", methods=['GET'])
-def get_customr_ids():
-    credentials = refresh_credentials()
-    customer_list = {}
-    customer_list = get_customer_ids(credentials, fb_read_settings())
-    return _build_response(json.dumps(customer_list))
+@app.route("/api/deleteTask", methods=['POST'])
+def delete_task():
+    data = request.get_json(force=True)
+    cmd = commands.DeleteTask(**data)
+    bus.handle(cmd)
+    return _build_response(json.dumps(str(cmd.task_id)))
 
 
-@app.route("/api/getMccIds", methods=['GET'])
-def get_all_mcc_ids():
-    credentials = refresh_credentials()
-    mcc_list = {}
-    if not isinstance(credentials, str):
-        mcc_list = get_mcc_ids(credentials, fb_read_settings())
-    return _build_response(json.dumps(mcc_list))
+@app.route("/api/setConfig", methods=['POST'])
+def set_config():
+    result = views.config(bus.uow)
+    data = request.get_json(force=True)
+    if not result:
+        cmd = commands.SaveConfig(**data)
+    else:
+        updated_data = {}
+        for key, value in result[0].items():
+            if not (updated_value := data.get(key)):
+                updated_data[key] = value
+            elif updated_value != value:
+                updated_data[key] = updated_value
+            else:
+                updated_data[key] = value
+        cmd = commands.SaveConfig(**updated_data)
+    bus.handle(cmd)
+    return _build_response(json.dumps("success"))
 
 
+@app.route("/api/addToAllowlist", methods=['POST'])
+def add_to_allowlisting():
+    data = request.get_json(force=True)
+    cmd = commands.AddToAllowlisting(data)
+    result = bus.handle(cmd)
+    return _build_response(json.dumps("success"))
+
+
+@app.route("/api/removeFromAllowlist", methods=['POST'])
+def remove_from_allowlisting():
+    data = request.get_json(force=True)
+    cmd = commands.RemoveFromAllowlisting(data)
+    result = bus.handle(cmd)
+    return _build_response(json.dumps("success"))
+
+
+# Views
 @app.route("/api/getTasksList", methods=['GET'])
 def get_tasks_list():
-    credentials = refresh_credentials()
-    files_data = fb_get_tasks_list()
+    result = views.tasks(bus.uow)
+    return _build_response(json.dumps(result, default=str))
 
-    if files_data:
-        schedule_list = get_schedule_list(credentials, PROJECT_ID, LOCATION)
-        for schedule in schedule_list.values():
-            if schedule['scheduleTime']:
-                sch_date = datetime.fromisoformat(
-                    schedule['scheduleTime'][:-1] + '+00:00').replace(tzinfo=None)
-                now_date = datetime.today()
-                time_difference = sch_date - now_date
-                next_run = f"""
-        {math.floor(time_difference.total_seconds() / 3600)}h 
-        {(math.floor(time_difference.total_seconds() / 60)-(60*math.floor(time_difference.total_seconds() / 3600)))}m
-        """
 
-                if 'status' in schedule and 'code' in schedule['status']:
-                    files_data[(schedule['name'].split("/"))[5]
-                               ].update({'error_code': schedule['status']['code']})
-                else:
-                    files_data[(schedule['name'].split("/"))[5]
-                               ].update({'error_code': '0'})
+@app.route("/api/task/<task_id>", methods=['GET'])
+def get_task_id(task_id):
+    result = views.task(task_id, bus.uow)
+    if not result:
+        return "not found", 404
+    return _build_response(json.dumps(result, default=str))
 
-                files_data[(schedule['name'].split("/"))[5]
-                           ].update({'state': schedule['state']})
-                files_data[(schedule['name'].split("/"))[5]].update(
-                    {'schedule_time': (schedule['scheduleTime'][:-1]).replace("T", " ")})
-                files_data[(schedule['name'].split("/"))[5]
-                           ].update({'next_run': next_run})
 
-    return _build_response(json.dumps(files_data))
+@app.route("/api/task/<task_id>/executions/<execution_id>", methods=['GET'])
+def get_task_execution_id(task_id, execution_id):
+    result = views.executions(task_id, execution_id, bus.uow)
+    if not result:
+        return "not found", 404
+    return _build_response(json.dumps(result, default=str))
 
 
 @app.route("/api/getTask", methods=['POST'])
 def get_task():
     data = request.get_json(force=True)
-    task_id = data['task_id']
-
-    task_data = fb_get_task(task_id)
-
-    return _build_response(json.dumps(task_data))
-
-
-@app.route("/api/deleteTask", methods=['POST'])
-def delete_task():
-    credentials = refresh_credentials()
-    data = request.get_json(force=True)
-    task_id = data['task_id']
-
-    fb_delete_task(task_id)
-
-    update_cloud_schedule(credentials, PROJECT_ID, LOCATION, str(task_id), 0)
-
-    return _build_response(json.dumps(task_id))
+    result = views.task(data["task_id"], bus.uow)
+    if not result:
+        return "not found", 404
+    return _build_response(json.dumps(result, default=str))
 
 
-@app.route("/api/addToAllowlist", methods=['POST'])
-def add_to_allowlist():
-    data = request.get_json(force=True)
-    credentials = refresh_credentials()
-    customer_id = data['gadsCustomerId']
-    channel_type = data['type']
-    channel_id = data['channel_id']
-    config = fb_read_settings()
+@app.route("/api/getConfig", methods=['GET'])
+def get_config():
+    result = views.config(bus.uow)
+    if not result:
+        ads_client = bus.dependencies.get("ads_api_client").client
+        if not (mcc_id := ads_client.login_customer_id):
+            mcc_id = ads_client.linked_customer_id
+        cmd = commands.SaveConfig(mcc_id=mcc_id, email_address="", id=None)
+        bus.handle(cmd)
+        result = {"mcc_id": mcc_id, "email_address": ""}
+    else:
+        result = result[0]
+    return _build_response(json.dumps(result))
 
-    fb_add_to_allowlist(channel_id)
-    remove_channel_id(credentials, config, customer_id,
-                      channel_type, channel_id)
 
-    return _build_response(json.dumps(channel_id))
+@app.route("/api/getMccIds", methods=['GET'])
+def get_all_mcc_ids():
+    mcc_ids = views.mcc_ids(bus.uow)
+    if not mcc_ids:
+        cmd = commands.GetMccIds()
+        mcc_ids = bus.handle(cmd)
+    return _build_response(json.dumps(mcc_ids))
 
 
-@app.route("/api/removeFromAllowlist", methods=['POST'])
-def remove_from_allowlist():
-    data = request.get_json(force=True)
-    channel_id = data['channel_id']
-
-    fb_remove_from_allowlist(channel_id)
-
-    return _build_response(json.dumps(channel_id))
+@app.route("/api/getCustomerIds", methods=['GET'])
+def get_customer_ids():
+    if config := views.config(bus.uow):
+        mcc_id = config[0].get("mcc_id")
+    else:
+        ads_client = bus.dependencies.get("ads_api_client").client
+        if not (mcc_id := ads_client.login_customer_id):
+            mcc_id = ads_client.linked_customer_id
+    result = views.customer_ids(bus.uow, mcc_id)
+    if not result:
+        cmd = commands.GetCustomerIds(mcc_id=mcc_id)
+        result = bus.handle(cmd)
+    return _build_response(json.dumps(result))
 
 
 def _build_response(msg='', status=200, mimetype='application/json'):
@@ -473,43 +232,6 @@ def _build_response(msg='', status=200, mimetype='application/json'):
     response = app.response_class(msg, status=status, mimetype=mimetype)
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
-
-
-def get_oauth():
-    credentials = None
-    try:
-        credentials = pickle.loads(fb_read_token())
-    except:
-        logging.info("No token... refreshing")
-
-    if not credentials or not credentials.valid or credentials == None:
-        if credentials and credentials.expired and credentials.refresh_token:
-            credentials.refresh(Request())
-            fb_save_token(pickle.dumps(credentials))
-            return credentials
-        else:
-            conf = fb_read_client_secret()
-            global flow
-            flow = Flow.from_client_config(conf, scopes=scopes_array)
-            flow.redirect_uri = _REDIRECT_URI
-
-            authorization_url = flow.authorization_url(
-                prompt="consent",
-            )
-            return authorization_url[0]
-    else:
-        return credentials
-
-
-def finish_auth(code: str):
-    # try:
-    flow.fetch_token(code=code)
-    credentials = flow.credentials
-
-    fb_save_token(pickle.dumps(credentials))
-    return "success"
-    # except:
-    #    return "error"
 
 
 if __name__ == '__main__':

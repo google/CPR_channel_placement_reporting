@@ -10,3 +10,17 @@ main.container {
     text-align: center;
   }
 
+  .label-input-block {
+    display: flex;
+    align-items: center;
+  
+    &.top-centre-form {
+      flex-direction: row;
+    }
+  }
+  
+  .dropdown-container {
+    display: flex;
+    align-items: center;
+    margin-right: 10px; // Adjust as needed
+  }

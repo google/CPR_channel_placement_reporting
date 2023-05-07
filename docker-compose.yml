@@ -1,0 +1,72 @@
+version: "3"
+
+networks:
+  cpr:
+    driver: bridge
+
+services:
+  backend:
+    build:
+      context: backend/.
+    image: cpr-backend
+    container_name: cpr_backend
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - YOUTUBE_DATA_API_KEY=${YOUTUBE_DATA_API_KEY}
+      - GOOGLE_ADS_PATH_TO_CONFIG=/google-ads.yaml
+      - DB_HOST=cpr_db
+      - DB_PORT=5432
+      - DB_USER=cpr
+      - DB_PASSWORD=abc123
+      - DB_NAME=cpr
+      - REDIS_HOST=redis
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - GOOGLE_ADS_API_VERSION=v14
+    ports:
+      - "5001:5000"
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:5001"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+    networks:
+      - cpr
+    volumes:
+      - "${GOOGLE_ADS_YAML:-$HOME/google-ads.yaml}:/google-ads.yaml"
+    restart: unless-stopped
+  scheduler:
+    build:
+      context: scheduler/.
+    image: cpr-scheduler
+    container_name: cpr_scheduler
+    restart: on-failure
+    depends_on:
+      - backend
+    links:
+      - backend
+    networks:
+      - cpr
+    restart: unless-stopped
+  postgres:
+    image: postgres:9.6
+    container_name: cpr_db
+    environment:
+      - POSTGRES_USER=cpr
+      - POSTGRES_PASSWORD=abc123
+    ports:
+      - "54321:5432"
+    volumes:
+      - cpr_data:/var/lib/postgresql/data
+    networks:
+      - cpr
+    restart: unless-stopped
+  redis:
+    image: redis:alpine
+    ports:
+      - "63791:6379"
+
+volumes:
+  cpr_data: {}
