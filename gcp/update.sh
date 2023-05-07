@@ -1,10 +1,11 @@
+#!/bin/bash
 # Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,17 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-runtime: python311
-entrypoint: gunicorn -b :$PORT server:app --timeout 0 --workers 2
-
-runtime_config:
-  python_version: 3
-
-app_engine_apis: true
-
-automatic_scaling:
-  max_instances: 1
-instance_class: F4
-env_variables:
-  YOUTUBE_DATA_API_KEY: ""
-  GOOGLE_ADS_PATH_TO_CONFIG: ""
+SCRIPT_PATH=$(readlink -f "$0" | xargs dirname)
+. /$SCRIPT_PATH/install.sh build_frontend deploy_app print_welcome_message

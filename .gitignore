@@ -1,4 +1,5 @@
 backend/__pycache__/*
-cpr/lib/*
-cpr/bin/*
-cpr/*
+tags
+*.pyc
+*.db
+google-ads.yaml

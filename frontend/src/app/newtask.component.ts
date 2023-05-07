@@ -44,7 +44,7 @@ export class NewtaskComponent implements OnInit {
   isChecked: boolean = false;
   save_button = "Save Task";
   task_id: string = "";
-  email_alerts: boolean = false;
+  taskOutput:any[] = [];
   email_alerts_hidden: boolean = true;
   manual_cid: boolean = false;
   cid_choice: string = "Enter manually";
@@ -60,15 +60,11 @@ export class NewtaskComponent implements OnInit {
   lookback_error = false;
   from_lookback_error = false;
   gads_filter_error = false;
-  yt_subscribers_error = false;
-  yt_view_error = false;
-  yt_video_error = false;
-  yt_language_error = false;
-  yt_country_error = false;
   memory_error = false;
   gads_filter_lock = true;
-  gads_data_youtube: boolean = true;
-  gads_data_display: boolean = true;
+  data_youtube: boolean = true;
+  data_display: boolean = true;
+  data_mobile: boolean = true;
 
   pagination_start = 0;
   pagination_rpp = 10;
@@ -91,6 +87,23 @@ export class NewtaskComponent implements OnInit {
       ["500"]
   ];
 
+  exclusionLevelArray = [
+    ["AD_GROUP", "Ad Group"],
+    ["CAMPAIGN", "Campaign"],
+    ["ACCOUNT", "Account"]
+  ];
+  defaultExclusionLevel = this.exclusionLevelArray[0][0];
+  selectedExclusionLevel = this.exclusionLevelArray[0][0];
+
+
+  taskOutputArray = [
+    ["EXCLUDE", "Exclude"],
+    ["NOTIFY", "Notify"],
+    ["EXCLUDE_AND_NOTIFY", "Both"]
+  ];
+  defaultTaskOutput = this.taskOutputArray[2][0];
+  selectedTaskOutput = this.taskOutputArray[2][0];
+
   scheduleArray = [
       ["0", "Do not schedule"],
       ["1", "Every 1 hour"],
@@ -101,52 +114,43 @@ export class NewtaskComponent implements OnInit {
       ["48", "Every 2 days"]
   ];
 
-  gadsFieldsArray = [
-      ["metrics.impressions", "Impressions"],
-      ["metrics.clicks", "Clicks"],
-      ["metrics.ctr", "CTR"],
-      ["metrics.cost_micros", "Cost"],
-      ["metrics.average_cpm", "Avg. CPM"],
-      ["metrics.average_cpc", "Avg. CPC"],
-      ["metrics.conversions", "Conversions"],
-      ["metrics.cost_per_conversion", "CPA"],
-      ["metrics.view_through_conversions", "View-Through Conversions"],
-      ["metrics.video_views", "Video Views"],
-      ["metrics.video_view_rate", "Video View Rate"],
-      ["metrics.conversions_from_interactions_rate", "Conversions Rate"],
-      ["metrics.all_conversions_from_interactions_rate", "All Conversions Rate"],
-      ["metrics.all_conversions", "All Conversions"],
-      ["metrics.cost_per_all_conversions", "Cost per All Converions"]
+  relevantMetricArray: string[][] = [];
+  allMetricArray = [
+    ["GOOGLE_ADS_INFO:campaign_name", "Campaign Name"],
+    ["GOOGLE_ADS_INFO:impressions", "Impressions"],
+    ["GOOGLE_ADS_INFO:clicks", "Clicks"],
+    ["GOOGLE_ADS_INFO:ctr", "CTR"],
+    ["GOOGLE_ADS_INFO:cost", "Cost"],
+    ["GOOGLE_ADS_INFO:avg_cpm", "Avg. CPM"],
+    ["GOOGLE_ADS_INFO:avg_cpc", "Avg. CPC"],
+    ["GOOGLE_ADS_INFO:avg_cpv", "Avg. CPV"],
+    ["GOOGLE_ADS_INFO:conversions", "Conversions"],
+    ["GOOGLE_ADS_INFO:cost_per_conversion", "CPA"],
+    ["GOOGLE_ADS_INFO:view_through_conversions", "View-Through Conversions"],
+    ["GOOGLE_ADS_INFO:video_views", "Video Views"],
+    ["GOOGLE_ADS_INFO:video_view_rate", "Video View Rate"],
+    ["GOOGLE_ADS_INFO:conversions_from_interactions_rate", "Conversions Rate"],
+    ["GOOGLE_ADS_INFO:conversion_name", "Conversion Name"],
+    ["GOOGLE_ADS_INFO:cost_per_conversion_", "----CPA*"],
+    ["YOUTUBE_CHANNEL_INFO:title", "Youtube Channel Title"],
+    ["YOUTUBE_CHANNEL_INFO:description", "Youtube Channel Description"],
+    ["YOUTUBE_CHANNEL_INFO:viewCount", "Youtube Channel Video Views Count"],
+    ["YOUTUBE_CHANNEL_INFO:subscriberCount", "Youtube Channel Subscriber Count"],
+    ["YOUTUBE_CHANNEL_INFO:videoCount", "Youtube Channel Video Count"],
+    ["WEBSITE_INFO:title", "Website Meta Title"],
+    ["WEBSITE_INFO:keywords", "Website Meta Keywords"],
+    ["WEBSITE_INFO:description", "Website Meta Description"],
   ];
 
   gadsOperatorsArray = [
-      ["<", "less than"],
-      [">", "greater than"],
-      ["=", "equal to"],
-      ["!=", "not equal to"]
+    ["<", "less than"],
+    [">", "greater than"],
+    ["=", "equal to"],
+    ["!=", "not equal to"],
+    ["contains", "Contains"],
+    ["regexp", "Match regexp"],
   ];
 
-  ytMetricOperatorsArray = [
-      ["", "any"],
-      ["<", "less than"],
-      [">", "greater than"],
-      ["<=", "less than or equal to"],
-      [">=", "great than or equal to"],
-      ["==", "equal to"],
-      ["!=", "not equal to"]
-  ];
-
-  ytTextOperatorsArray = [
-      ["", "any"],
-      ["==", "equal to"],
-      ["!=", "not equal to"]
-  ];
-
-  ytYesNoOperatorsArray = [
-      ["", "any"],
-      ["==False", "non-standard text"],
-      ["==True", "standard text"]
-  ];
   task_exists: any;
   file_exists: any;
 
@@ -157,32 +161,24 @@ export class NewtaskComponent implements OnInit {
           gadsCustomerId: [''],
           fromDaysAgo: [''],
           lookbackDays: [''],
+          exclusionLevel: [''],
+          task_output: [''],
           schedule: [''],
           gadsDataYouTube: [''],
           gadsDataDisplay: [''],
+          gadsDataMobile: [''],
           gadsField: [''],
           gadsOperator: [''],
           gadsValue: [''],
           gadsFinalFilters: [''],
-          ytSubscriberOperator: [''],
-          ytSubscriberValue: [''],
-          ytViewOperator: [''],
-          ytViewValue: [''],
-          ytVideoOperator: [''],
-          ytVideoValue: [''],
-          ytLanguageOperator: [''],
-          ytLanguageValue: [''],
-          ytCountryOperator: [''],
-          ytCountryValue: [''],
-          ytStandardCharValue: [''],
-          emailAlerts: false,
-          includeYouTube: true,
           date_from: "",
           date_to: ""
       });
 
       this.gadsForm.controls['lookbackDays'].setValue(7);
       this.gadsForm.controls['fromDaysAgo'].setValue("0");
+      this.gadsForm.controls['exclusionLevel'].setValue(0);
+      this.gadsForm.controls['task_output'].setValue("EXCLUDE_AND_NOTIFY");
       this.gadsForm.controls['schedule'].setValue(0);
 
       this.paginationForm = this.fb.group({
@@ -190,7 +186,6 @@ export class NewtaskComponent implements OnInit {
       });
 
       this.paginationForm.controls['paginationValue'].setValue(this.pagination_rpp);
-
   }
 
   ngOnInit(): void {
@@ -243,121 +238,88 @@ export class NewtaskComponent implements OnInit {
   }
 
   async _populate_task_fields(response: ReturnPromise) {
-
       let task_exists = (Object.entries(response).find(([k, v]) => {
           if (k == 'file_name') {
               this.task_id = v;
           }
-          if (k == 'task_name') {
+          if (k == 'name') {
               this.gadsForm.controls['taskName'].setValue(v);
           }
-          if (k == 'customer_id') {
+          if (k == 'customer_ids') {
               this.gadsForm.controls['gadsCustomerId'].setValue(v);
           }
           if (k == 'from_days_ago') {
               this.gadsForm.controls['fromDaysAgo'].setValue(v);
           }
-          if (k == 'lookback_days') {
+          if (k == 'date_range') {
               this.gadsForm.controls['lookbackDays'].setValue(v);
-          } else if (k == 'days_ago') { //To be backwards compatible for older tasks
+          }
+          else if (k == 'date_range') { //To be backwards compatible for older tasks
               this.gadsForm.controls['lookbackDays'].setValue(v);
+          }
+          if (k == 'exclusion_level') {
+            this.gadsForm.controls['exclusionLevel'].setValue(v);
+          }
+          if (k == 'task_output') {
+            this.gadsForm.controls['task_output'].setValue(v);
           }
           if (k == 'schedule') {
               this.gadsForm.controls['schedule'].setValue(v);
           }
-          if (k == 'gads_filter') {
-              this.finalGadsFilter = v;
-              if (v != "") {
-                  this.conditionEnabled = false;
-                  this.orAndEnabled = true;
-              }
+          if (k == 'exclusion_rule') {
+            this.finalGadsFilter = v;
+            if(v != "") {
+              this.conditionEnabled = false;
+              this.orAndEnabled = true;
+            }
           }
-          if (k == 'yt_subscriber_operator') {
-              this.gadsForm.controls['ytSubscriberOperator'].setValue(v);
-          }
-          if (k == 'yt_subscriber_value') {
-              this.gadsForm.controls['ytSubscriberValue'].setValue(v);
-          }
-          if (k == 'yt_view_operator') {
-              this.gadsForm.controls['ytViewOperator'].setValue(v);
-          }
-          if (k == 'yt_view_value') {
-              this.gadsForm.controls['ytViewValue'].setValue(v);
-          }
-          if (k == 'yt_video_operator') {
-              this.gadsForm.controls['ytVideoOperator'].setValue(v);
-          }
-          if (k == 'yt_video_value') {
-              this.gadsForm.controls['ytVideoValue'].setValue(v);
-          }
-          if (k == 'yt_language_operator') {
-              this.gadsForm.controls['ytLanguageOperator'].setValue(v);
-          }
-          if (k == 'yt_language_value') {
-              this.gadsForm.controls['ytLanguageValue'].setValue(v);
-          }
-          if (k == 'yt_country_operator') {
-              this.gadsForm.controls['ytCountryOperator'].setValue(v);
-          }
-          if (k == 'yt_country_value') {
-              this.gadsForm.controls['ytCountryValue'].setValue(v);
-          }
-          if (k == 'yt_std_character') {
-              this.gadsForm.controls['ytStandardCharValue'].setValue(v);
-          }
-          if (k == 'email_alerts') {
-              this.gadsForm.controls['emailAlerts'].setValue(v);
-          }
-          if (k == 'include_youtube') {
-              this.gadsForm.controls['includeYouTube'].setValue(v);
-          }
-          if (k == 'gads_data_youtube') {
-              this.gadsForm.controls['gadsDataYouTube'].setValue(v);
-          }
-          if (k == 'gads_data_display') {
-              this.gadsForm.controls['gadsDataDisplay'].setValue(v);
+          if (k == 'placement_types') {
+            if (!v.includes('YOUTUBE')) {
+                this.gadsForm.controls['gadsDataYouTube'].setValue(false);
+            }
+            if (!v.includes('MOBILE')) {
+                this.gadsForm.controls['gadsDataMobile'].setValue(false);
+            }
+            if (!v.includes('WEBSITE')) {
+                this.gadsForm.controls['gadsDataDisplay'].setValue(false);
+            }
           }
       }));
       this.scheduleChange();
       this.loading = false;
   }
 
+
   openSnackBar(message: string, button: string, type: string) {
-      let dur = 10000;
-      if (type == "error-snackbar") {
-          dur = 0;
-      }
-      this.snackbar.open(message, button, {
-          duration: dur,
-          horizontalPosition: this.horizontalPosition,
-          verticalPosition: this.verticalPosition,
-          panelClass: [type]
-      });
+    let dur = 10000;
+    if(type=="error-snackbar") { dur = 0; }
+    this.snackbar.open(message, button, {
+      duration: dur,
+      horizontalPosition: this.horizontalPosition,
+      verticalPosition: this.verticalPosition,
+      panelClass: [type]
+    });
   }
 
   previewPlacements() {
       if (this.validate_fields(false)) {
           this.pagination_start = 0;
-          let formRawValue = {              
-              'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value,
-              'taskName': this.gadsForm.controls['taskName'].value,
-              'fromDaysAgo': this.gadsForm.controls['fromDaysAgo'].value,
-              'lookbackDays': this.gadsForm.controls['lookbackDays'].value,
-              'gadsDataYouTube': this.gads_data_youtube,
-              'gadsDataDisplay': this.gads_data_display,
-              'gadsFinalFilters': this.finalGadsFilter,
-              'ytSubscriberOperator': this.gadsForm.controls['ytSubscriberOperator'].value,
-              'ytSubscriberValue': this.gadsForm.controls['ytSubscriberValue'].value,
-              'ytViewOperator': this.gadsForm.controls['ytViewOperator'].value,
-              'ytViewValue': this.gadsForm.controls['ytViewValue'].value,
-              'ytVideoOperator': this.gadsForm.controls['ytVideoOperator'].value,
-              'ytVideoValue': this.gadsForm.controls['ytVideoValue'].value,
-              'ytLanguageOperator': this.gadsForm.controls['ytLanguageOperator'].value,
-              'ytLanguageValue': this.gadsForm.controls['ytLanguageValue'].value,
-              'ytCountryOperator': this.gadsForm.controls['ytCountryOperator'].value,
-              'ytCountryValue': this.gadsForm.controls['ytCountryValue'].value,
-              'ytStandardCharValue': this.gadsForm.controls['ytStandardCharValue'].value,
-              'includeYouTubeData': this.include_youtube
+          var placement_types = [];
+          if (this.data_youtube) {
+            placement_types.push("YOUTUBE_CHANNEL", "YOUTUBE_VIDEO");
+          }
+          if (this.data_display) {
+            placement_types.push("WEBSITE");
+          }
+          if (this.data_mobile) {
+            placement_types.push("MOBILE_APPLICATION", "MOBILE_APP_CATEGORY");
+          }
+          let formRawValue = {
+            'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value,
+            'fromDaysAgo': this.gadsForm.controls['fromDaysAgo'].value,
+            'lookbackDays': this.gadsForm.controls['lookbackDays'].value,
+            'gadsFinalFilters': this.finalGadsFilter,
+            'placement_types': placement_types.toString()
           };
           if (this.finalGadsFilter == "") {
               this.dialogService.openConfirmDialog("WARNING: Are you sure you want to run with no Google Ads Filters?\n\nThis can take considerably longer on larger accounts and even run out of memory. It is advised to add filters for best results.")
@@ -390,18 +352,14 @@ export class NewtaskComponent implements OnInit {
           this.handleEmptyTable("Server error, please investigate the cloud logs", "error-snackbar");
           return;
       }
+      if (!jsonResponse.data){
+        this.handleEmptyTable("Server error, please investigate the cloud logs", "error-snackbar");
+        return;
+      }
       const flattened_raw_response = [];
-      for (const raw_data_row_obj of Object.values(jsonResponse.data)) {
-          let raw_data_row = JSON.parse(JSON.stringify(raw_data_row_obj));
-          const placement_level_data = raw_data_row["placement_level_data"];
-          const yt_data = raw_data_row["yt_data"];
-          for (const ad_group_placement_level_array of raw_data_row["ad_group_placement_level_array"]) {
-              flattened_raw_response.push({
-                  ...ad_group_placement_level_array,
-                  ...placement_level_data,
-                  ...yt_data
-              });
-          }
+      for (const raw_data_row_obj of Object.values(jsonResponse.data)){
+        let raw_data_row = JSON.parse(JSON.stringify(raw_data_row_obj));
+        flattened_raw_response.push({ ...raw_data_row});
       }
       const dates = jsonResponse["dates"];
       this.date_from = dates["date_from"];
@@ -440,21 +398,21 @@ export class NewtaskComponent implements OnInit {
   }
 
   runManualExcludeForm() {
-      let exclusion_list = [];
-      for (let data of this.table_result) {
-          if (data.exclude_from_account && !data.excluded_already && !data.allowlist) {
-              exclusion_list.push(
-                {"placement_type" : data.group_placement_view_placement_type, 
-                 "placement_id" : data.group_placement_view_placement});
-          }
+    let exclusion_list = [];
+    for (let data of this.table_result) {
+      // TODO: Return if block
+      // if (data.exclude_from_account && !data.excluded_already && !data.allowlist) {
+      // exclusion_list.push([data.group_placement_view_placement_type, data.group_placement_view_placement]);
+      exclusion_list.push([data.ad_group_id, data.placement_type, data.placement, data.criterion_id, data.campaign_type]);
+      // }
+    }
+    if (exclusion_list.length > 0) {
+      let formRawValue = {
+        'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value,
+        'allExclusionList': exclusion_list
       }
-      if (exclusion_list.length > 0) {
-          let formRawValue = {
-              'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value,
-              'allExclusionList': exclusion_list
-          }
-          this._call_manual_service(JSON.stringify(formRawValue));
-      }
+      this._call_manual_service(JSON.stringify(formRawValue));
+    }
   }
 
   //the call to the server
@@ -495,11 +453,11 @@ export class NewtaskComponent implements OnInit {
                       }
                   });
           } else {
-              this.dialogService.openConfirmDialog(warning + "Are you sure you want to save this task?\n\nThis will also create a schedule if you have selected a schedule setting")
-                  .afterClosed().subscribe(res => {
-                      if (res) {
-                          this.loading = true;
-                          this._finalise_save_task("");
+              this.dialogService.openConfirmDialog(warning+"Are you sure you want to save this task?\n\nThis will also create a schedule if you have selected a schedule setting")
+                .afterClosed().subscribe(res => {
+                  if (res) {
+                    this.loading = true;
+                    this._finalise_save_task(this.task_id);
                       }
                   });
           }
@@ -507,30 +465,28 @@ export class NewtaskComponent implements OnInit {
   }
 
   async _finalise_save_task(task_id: string) {
+      var placement_types = [];
+      if (this.data_youtube) {
+        placement_types.push("YOUTUBE_CHANNEL", "YOUTUBE_VIDEO");
+      }
+      if (this.data_display) {
+        placement_types.push("WEBSITE");
+      }
+      if (this.data_mobile) {
+        placement_types.push("MOBILE_APPLICATION", "MOBILE_APP_CATEGORY");
+      }
       let formRawValue = {
           'task_id': task_id,
-          'task_name': this.gadsForm.controls['taskName'].value,
-          'customer_id': this.gadsForm.controls['gadsCustomerId'].value,
+          'name': this.gadsForm.controls['taskName'].value,
+          'customer_ids': this.gadsForm.controls['gadsCustomerId'].value,
+          'exclusion_rule': this.finalGadsFilter,
+          'output': this.gadsForm.controls['task_output'].value,
           'from_days_ago': this.gadsForm.controls['fromDaysAgo'].value,
-          'lookback_days': this.gadsForm.controls['lookbackDays'].value,
+          'date_range': this.gadsForm.controls['lookbackDays'].value,
+          'exclusion_level': this.gadsForm.controls['exclusionLevel'].value,
           'schedule': this.gadsForm.controls['schedule'].value,
-          'gads_data_youtube': this.gads_data_youtube,
-          'gads_data_display': this.gads_data_display,
-          'gads_filter': this.finalGadsFilter,
-          'yt_subscriber_operator': this.gadsForm.controls['ytSubscriberOperator'].value,
-          'yt_subscriber_value': this.gadsForm.controls['ytSubscriberValue'].value,
-          'yt_view_operator': this.gadsForm.controls['ytViewOperator'].value,
-          'yt_view_value': this.gadsForm.controls['ytViewValue'].value,
-          'yt_video_operator': this.gadsForm.controls['ytVideoOperator'].value,
-          'yt_video_value': this.gadsForm.controls['ytVideoValue'].value,
-          'yt_language_operator': this.gadsForm.controls['ytLanguageOperator'].value,
-          'yt_language_value': this.gadsForm.controls['ytLanguageValue'].value,
-          'yt_country_operator': this.gadsForm.controls['ytCountryOperator'].value,
-          'yt_country_value': this.gadsForm.controls['ytCountryValue'].value,
-          'yt_std_character': this.gadsForm.controls['ytStandardCharValue'].value,
-          'emailAlerts': this.gadsForm.controls['emailAlerts'].value,
-          'includeYouTubeData': this.include_youtube
-      };
+          'placement_types': placement_types.toString(),
+        };
 
       this._call_save_task_service(JSON.stringify(formRawValue));
   }
@@ -602,13 +558,12 @@ export class NewtaskComponent implements OnInit {
       this._run_exclude_count(false);
   }
 
-  excludeCheckChange(ytChannelId: string, exclude_from_account: boolean) {
+  excludeCheckChange(placementName: string) {
       //same channle-id can be to several rows
-      for (let i in this.table_result) {
-          if (this.table_result[i]['group_placement_view_placement'] == ytChannelId) {
-              this.table_result[i]['exclude_from_account'] = !exclude_from_account;
-          }
-      }
+      // for (let i in this.table_result) {
+      //     if (this.table_result[i]['placement'] == placementName) {
+      //     }
+      // }
       this._run_exclude_count(false);
   }
 
@@ -618,11 +573,6 @@ export class NewtaskComponent implements OnInit {
       this.customer_id_error = false;
       this.lookback_error = false;
       this.gads_filter_error = false;
-      this.yt_subscribers_error = false;
-      this.yt_view_error = false;
-      this.yt_video_error = false;
-      this.yt_language_error = false;
-      this.yt_country_error = false;
       this.from_lookback_error = false;
       this.gads_data_error = false;
       if (full) {
@@ -650,38 +600,8 @@ export class NewtaskComponent implements OnInit {
           this.customer_id_error = true;
           error_count++;
       }
-      if (!this.gads_data_display && !this.gads_data_youtube) {
+      if (!this.data_display && !this.data_youtube && !this.data_mobile) {
           this.gads_data_error = true;
-          error_count++;
-      }
-      if (isNaN(Number(this.gadsForm.controls['ytSubscriberValue'].value)) ||
-          (this.gadsForm.controls['ytSubscriberValue'].value != "" && this.gadsForm.controls['ytSubscriberOperator'].value == "") ||
-          (this.gadsForm.controls['ytSubscriberValue'].value == "" && this.gadsForm.controls['ytSubscriberOperator'].value != "")) {
-          this.yt_subscribers_error = true;
-          error_count++;
-      }
-      if (isNaN(Number(this.gadsForm.controls['ytViewValue'].value)) ||
-          (this.gadsForm.controls['ytViewValue'].value != "" && this.gadsForm.controls['ytViewOperator'].value == "") ||
-          (this.gadsForm.controls['ytViewValue'].value == "" && this.gadsForm.controls['ytViewOperator'].value != "")) {
-          this.yt_view_error = true;
-          error_count++;
-      }
-      if (isNaN(Number(this.gadsForm.controls['ytVideoValue'].value)) ||
-          (this.gadsForm.controls['ytVideoValue'].value != "" && this.gadsForm.controls['ytVideoOperator'].value == "") ||
-          (this.gadsForm.controls['ytVideoValue'].value == "" && this.gadsForm.controls['ytVideoOperator'].value != "")) {
-          this.yt_video_error = true;
-          error_count++;
-      }
-      if ((this.gadsForm.controls['ytLanguageValue'].value).length != 2 && this.gadsForm.controls['ytLanguageValue'].value != "" ||
-          (this.gadsForm.controls['ytLanguageValue'].value != "" && this.gadsForm.controls['ytLanguageOperator'].value == "") ||
-          (this.gadsForm.controls['ytLanguageValue'].value == "" && this.gadsForm.controls['ytLanguageOperator'].value != "")) {
-          this.yt_language_error = true;
-          error_count++;
-      }
-      if ((this.gadsForm.controls['ytCountryValue'].value).length != 2 && this.gadsForm.controls['ytCountryValue'].value != "" ||
-          (this.gadsForm.controls['ytCountryValue'].value != "" && this.gadsForm.controls['ytCountryOperator'].value == "") ||
-          (this.gadsForm.controls['ytCountryValue'].value == "" && this.gadsForm.controls['ytCountryOperator'].value != "")) {
-          this.yt_country_error = true;
           error_count++;
       }
       if (error_count == 0) {
@@ -694,10 +614,10 @@ export class NewtaskComponent implements OnInit {
 
   gadsAddFilter() {
       this.gads_error = false;
-      if (isNaN(Number(this.gadsForm.controls['gadsValue'].value))) {
+      if (isNaN(Number(this.gadsForm.controls['gadsValue'].value)) && !this.gadsForm.controls['gadsOperator'].value.includes("regex") && !this.gadsForm.controls['gadsOperator'].value.includes("contains")) {
           this.gads_error = true;
           this.gads_error_msg = "Needs to be a number";
-      } else if (this.gadsForm.controls['gadsField'].value == "metrics.cost_per_conversion" &&
+      } else if (this.gadsForm.controls['gadsField'].value == "cost_per_conversion" &&
           (this.gadsForm.controls['gadsOperator'].value == "=" ||
               this.gadsForm.controls['gadsOperator'].value == "!=") &&
           this.gadsForm.controls['gadsValue'].value == 0) {
@@ -708,18 +628,10 @@ export class NewtaskComponent implements OnInit {
           this.gadsForm.controls['gadsValue'].value != "" &&
           this.conditionEnabled) {
           let finalValue = this.gadsForm.controls['gadsValue'].value;
-          if (this.gadsForm.controls['gadsField'].value == "metrics.average_cpm" ||
-              this.gadsForm.controls['gadsField'].value == "metrics.average_cpc" ||
-              this.gadsForm.controls['gadsField'].value == "metrics.cost_micros" ||
-              this.gadsForm.controls['gadsField'].value == "metrics.cost_per_conversion" ||
-              this.gadsForm.controls['gadsField'].value == "metrics.cost_per_conversion" ||
-              this.gadsForm.controls['gadsField'].value == "metrics.cost_per_all_conversion") {
-              finalValue = finalValue * 1e6;
-          }
           if (!this.finalGadsFilter.endsWith("(") && this.finalGadsFilter != "") {
               this.finalGadsFilter += " ";
           }
-          this.finalGadsFilter += this.gadsForm.controls['gadsField'].value + this.gadsForm.controls['gadsOperator'].value + finalValue;
+          this.finalGadsFilter += this.gadsForm.controls['gadsField'].value + " " + this.gadsForm.controls['gadsOperator'].value + " " + finalValue;
           if (this.finalGadsFilter.includes(") OR (") && !this.finalGadsFilter.endsWith(")")) {
               this.finalGadsFilter += ")";
           }
@@ -780,7 +692,7 @@ export class NewtaskComponent implements OnInit {
       if (this.gadsForm.controls['schedule'].value == "0") {
           this.save_button = "Save Task";
           this.email_alerts_hidden = true;
-          this.email_alerts = false;
+          this.taskOutput = ["EXCLUDE_AND_NOTIFY", "Both"];
       } else {
           this.save_button = "Save and Schedule Task";
           this.email_alerts_hidden = false;
@@ -818,14 +730,14 @@ export class NewtaskComponent implements OnInit {
       saveAs(blob, "cpr_export.csv");
   }
 
-  async addToAllowlist(channelType: string, channelId: string) {
+  async addToAllowlist(placementType: string, placementName: string) {
       this.loading = true;
-      let channel_id = {
-          'type': channelType,
-          'channel_id': channelId,
+      let placement_id = {
+          'type': placementType,
+          'name': placementName,
           'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value
       };
-      (await this.service.add_to_allowlist(JSON.stringify(channel_id)))
+      (await this.service.add_to_allowlist(JSON.stringify(placement_id)))
       .subscribe({
           next: (response: ReturnPromise) => this.loading = false,
           error: (err) => this.openSnackBar("Unknown error adding to allowlist", "Dismiss", "error-snackbar"),
@@ -833,7 +745,7 @@ export class NewtaskComponent implements OnInit {
       });
 
       for (let i in this.table_result) {
-          if (this.table_result[i]['group_placement_view_placement'] == channelId) {
+          if (this.table_result[i]['placement'] == placementName) {
               this.table_result[i]['allowlist'] = true;
               this.table_result[i]['excluded_already'] = false;
           }
@@ -841,11 +753,11 @@ export class NewtaskComponent implements OnInit {
       this._run_exclude_count(false);
   }
 
-  async removeFromAllowlist(channelId: string) {
-      let channel_id = {
-          'channel_id': channelId
+  async removeFromAllowlist(placementName: string) {
+      let placement_id = {
+          'name': placementName
       };
-      (await this.service.remove_from_allowlist(JSON.stringify(channel_id)))
+      (await this.service.remove_from_allowlist(JSON.stringify(placement_id)))
       .subscribe({
           next: (response: ReturnPromise) => this.loading = false,
           error: (err) => this.openSnackBar("Unknown error removing from allowlist", "Dismiss", "error-snackbar"),
@@ -853,11 +765,24 @@ export class NewtaskComponent implements OnInit {
       });
 
       for (let i in this.table_result) {
-          if (this.table_result[i]['group_placement_view_placement'] == channelId) {
+          if (this.table_result[i]['placement'] == placementName) {
               this.table_result[i]['allowlist'] = false;
           }
       }
       this._run_exclude_count(false);
   }
 
+  onFilterToggleChanged() {
+    let filteredItems: string[][] = this.allMetricArray.slice();
+    if (!this.data_youtube) {
+      filteredItems = filteredItems.filter(item => !item[0].startsWith('YOUTUBE_CHANNEL_INFO'));
+    }
+    if (!this.data_display) {
+      filteredItems = filteredItems.filter(item => !item[0].startsWith('WEBSITE_INFO'));
+    }
+    if (!this.data_mobile) {
+        filteredItems = filteredItems.filter(item => !item[0].startsWith('MOBILE'));
+      }
+    this.relevantMetricArray = filteredItems;
+  }
 }

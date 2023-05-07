@@ -52,6 +52,7 @@ export class PostService {
   async file_upload(file_data: string) {
     const headers = new HttpHeaders();
     headers.set('Content-Type', 'application/json; charset=utf-8');
+    headers.set('Access-Control-Allow-Origin','*');
     return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/fileUpload", file_data, {headers: headers});
   }
 

@@ -4,30 +4,6 @@
           <div class="heading">
              <span>Settings</span>
           </div>
-          <div>
-             <div class="label-input-block yt-label">
-                <label for="clientFile">'client_secret.json' file</label>
-             </div>
-             <div class="label-input-block">
-                <input type="file" class="file-upload" formControlName="clientFile" name="clientFile" 
-                   requiredFileType="json" (change)="upload_file($event)">{{file_status}}
-             </div>
-          </div>
-          <div class="label-input-block yt-label">
-             <label for="gadsDevToken">Google Ads Developer Token</label>
-          </div>
-          <div class="label-input-block">
-             <input type="text" [className]="dev_token_error ? 'errorElement' : 'inputElement'" formControlName="gadsDevToken" name="gadsDevToken">
-             <span class="error_text" *ngIf=dev_token_error>Dev token too long. Verify you're not mistaken with the refresh-token</span>
-          </div>
-       </div>
-       <div class="label-input-block centre-form">
-          <div class="label-input-block">
-             <button type="button" class="primaryButton" (click)="reauth()">Create New Authentication Token</button>
-          </div>
-          <div class="label-input-block">
-             <button [hidden]=hideAuth type="button" class="authButton" (click)="finish_auth()">Finish Authentication</button>
-          </div>
        </div>
        <p></p>
        <div>
@@ -36,7 +12,7 @@
           </div>
           <div class="label-input-block">
              <select name="gadsMccId" class="inputElement" formControlName="gadsMccId" id="gadsMccId">
-             <option *ngFor="let mcc_id of mcc_list" [value]=mcc_id[1]>{{  mcc_id[1] }}</option>
+                <option *ngFor="let mcc of mcc_list" [value]=mcc[1].mcc_id>{{ mcc[1].account_name }} [{{ mcc[1].mcc_id }}]</option>
              </select>
           </div>
           <div>
@@ -45,6 +21,14 @@
              </div>
              <div class="label-input-block">
                 <input type="text" class="inputElement" formControlName="emailAddress" name="emailAddress">
+             </div>
+          </div>
+          <div>
+             <div class="label-input-block yt-label">
+                <label for="saveToDB">Save parsed placements to DB?</label>
+             </div>
+             <div class="label-input-block">
+                <input type="checkbox" checked="checked" class="inputElement" formControlName="saveToDB" name="saveToDB">
              </div>
           </div>
           <div class="label-input-block centre-form">
