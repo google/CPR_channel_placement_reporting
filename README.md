@@ -12,12 +12,14 @@ The tool will display all the merged data, exclusions available and can be sched
 
 # Developer
 - bsidebottom@google.com
+- eladb@google.com
+- amarkin@google.com
 
 # Documentation
 
-[Overview and Design Document] (https://docs.google.com/presentation/d/1rDplGtndGCnwsmfAQakLCH9eL-Cy5RTtYKyj4F4TxfE/edit?resourcekey=0-Vf_ZZstUULv13gmPm4X7Nw#slide=id.gdb48c65296_5_14)
+[Overview and Design Document](https://docs.google.com/presentation/d/1rDplGtndGCnwsmfAQakLCH9eL-Cy5RTtYKyj4F4TxfE/edit?resourcekey=0-Vf_ZZstUULv13gmPm4X7Nw#slide=id.gdb48c65296_5_14)
 
-[Installation and User Guide] (https://docs.google.com/document/d/15dnP5g6jk0gd3BpF8Jc9d0qhzuRvmexbcnRgjWuooyU/edit?usp=sharing&resourcekey=0-ncS9bMmWOeIRnDLBe-y5hg)
+[Installation and User Guide](https://docs.google.com/document/d/15dnP5g6jk0gd3BpF8Jc9d0qhzuRvmexbcnRgjWuooyU/edit?usp=sharing&resourcekey=0-ncS9bMmWOeIRnDLBe-y5hg)
 
 
 # Disclaimer
