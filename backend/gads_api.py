@@ -331,11 +331,15 @@ def update_yt_data_statistics(full_data_set, user_yt_filter, yt_data_entry, yt_f
         full_data_set[yt_data_entry['id']]['yt_data'].update(
             {yt_data_second_category: '-'})
 
-        if user_yt_filter and yt_value:
-            filter_count += 1
-            if eval(f"{yt_value}{user_yt_filter}"):
-                matches_count += 1
+    if isAnActualString(yt_value) and isAnActualString(user_yt_filter):
+        filter_count += 1
+        if eval(f"{yt_value}{user_yt_filter}"):                
+            matches_count += 1
     return filter_count, matches_count
+
+
+def isAnActualString(exp):
+    return locals() and exp is not None and exp != ""
 
 
 def update_yt_data_settings(full_data_set, user_yt_filter, entry, yt_first_category, yt_data_second_category, yt_data_third_category, filter_count, matches_count):
@@ -380,9 +384,8 @@ def get_gads_customer_ids(client, mcc_id) -> dict:
         WHERE customer_client.level <= 1"""
 
         googleads_service = client.get_service("GoogleAdsService")
-
-        response = googleads_service.search(query=query)
-
+        response = googleads_service.search(customer_id=str(mcc_id), query=query)
+        
         for googleads_row in response:
             customer_client = googleads_row.customer_client
             all_customer_ids[customer_client.id] = {
