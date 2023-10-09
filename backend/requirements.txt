@@ -8,3 +8,4 @@ google-ads
 gunicorn
 firebase_admin
 appengine-python-standard>=1.0.0
+pillow>=10.0.1
