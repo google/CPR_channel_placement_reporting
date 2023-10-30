@@ -171,9 +171,16 @@ def get_task_id(task_id):
     return _build_response(json.dumps(result, default=str))
 
 
+@app.route("/api/task/<task_id>/executions", methods=['GET'])
+def get_task_executions(task_id):
+    result = views.executions(task_id, bus.uow)
+    if not result:
+        return "not found", 404
+    return _build_response(json.dumps(result, default=str))
+
 @app.route("/api/task/<task_id>/executions/<execution_id>", methods=['GET'])
 def get_task_execution_id(task_id, execution_id):
-    result = views.executions(task_id, execution_id, bus.uow)
+    result = views.execution_details(task_id, execution_id, bus.uow)
     if not result:
         return "not found", 404
     return _build_response(json.dumps(result, default=str))
@@ -226,6 +233,11 @@ def get_customer_ids():
         result = bus.handle(cmd)
     return _build_response(json.dumps(result))
 
+@app.route("/api/getAllowlistedPlacements", methods=['GET'])
+def get_allowlisted_placements():
+    if result := views.allowlisted_placements(bus.uow):
+        return _build_response(json.dumps(result, default=str))
+    return "no allowlisted placements", 200
 
 def _build_response(msg='', status=200, mimetype='application/json'):
     """Helper method to build the response."""
