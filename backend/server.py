@@ -20,7 +20,6 @@ from googleads_housekeeper import bootstrap, views
 from googleads_housekeeper.domain import commands
 from googleads_housekeeper.services import unit_of_work
 from googleads_housekeeper.adapters import publisher
-from google.cloud import datastore, pubsub_v1
 
 app = Flask(__name__)
 STATIC_DIR = os.getenv('STATIC_DIR') or 'static'
@@ -379,6 +378,7 @@ def get_task_executions(task_id):
         return "not found", 404
     return _build_response(json.dumps(result, default=str))
 
+
 @app.route("/api/task/<task_id>/executions/<execution_id>", methods=['GET'])
 def get_task_execution_id(task_id, execution_id):
     result = views.execution_details(task_id, execution_id, bus.uow)
@@ -434,11 +434,13 @@ def get_customer_ids():
         result = bus.handle(cmd)
     return _build_response(json.dumps(result))
 
+
 @app.route("/api/getAllowlistedPlacements", methods=['GET'])
 def get_allowlisted_placements():
     if result := views.allowlisted_placements(bus.uow):
         return _build_response(json.dumps(result, default=str))
     return "no allowlisted placements", 200
+
 
 def _build_response(msg='', status=200, mimetype='application/json'):
     """Helper method to build the response."""
