@@ -1,8 +1,6 @@
 --extra-index-url https://testpypi.python.org/pypi
-google-ads-house-keeper==0.0.20
+google-ads-house-keeper[full]==0.0.24
 gunicorn
 flask
 flask-cors
-google-cloud-datastore
-google-cloud-pubsub
 redis
