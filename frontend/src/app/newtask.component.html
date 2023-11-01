@@ -220,8 +220,11 @@ From:&nbsp;{{this.date_from}} &nbsp;&nbsp;&nbsp;To:&nbsp;{{this.date_to}}
                 <span *ngIf="data.allowlist"><a (click)="removeFromAllowlist(data.placement)"
                     target="_self" matTooltip="Remove placement from allowlist so it can be excluded"><mat-icon class="gold_icon">stars</mat-icon></a></span>
                 </td>
-            <td *ngIf="data.placement_type=='WEBSITE'"><mat-icon matTooltip="Display">picture_in_picture</mat-icon></td>
-            <td *ngIf="data.placement_type=='MOBILE_APPLICATION'"><mat-icon matTooltip="Mobile">video_library</mat-icon></td>
+            <td *ngIf="data.placement_type=='WEBSITE'"><mat-icon matTooltip="Website">computers</mat-icon></td>
+            <td *ngIf="data.placement_type=='YOUTUBE_CHANNEL'"><mat-icon matTooltip="YouTube Channel">video_library</mat-icon></td>
+            <td *ngIf="data.placement_type=='YOUTUBE_VIDEO'"><mat-icon matTooltip="YouTube Video">video_library</mat-icon></td>
+            <td *ngIf="data.placement_type=='MOBILE_APPLICATION'"><mat-icon matTooltip="Mobile Application">mobile_friendly</mat-icon></td>
+            <td *ngIf="data.placement_type=='MOBILE_APP_CATEGORY'"><mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon></td>
             <td>{{data.name}}</td>
             <td><a href="https://{{data.url}}" target="_blank">{{
                     data.placement }}</a></td>
