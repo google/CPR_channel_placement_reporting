@@ -209,7 +209,7 @@ From:&nbsp;{{this.date_from}} &nbsp;&nbsp;&nbsp;To:&nbsp;{{this.date_to}}
         [className]="row_class(data.excluded_already, data.exclude_from_account, data.allowlist)">
             <td>
                 <input [value]="data.placement" type="checkbox"
-                    (change)="!data.excluded_already && !data.allowlist ? excludeCheckChange(data.placement) : null"
+                    (change)="!data.excluded_already && !data.allowlist ? excludeCheckChange(data.placement, data.exclude_from_account) : null"
                     [checked]="data.exclude_from_account && !data.excluded_already && !data.allowlist"
                     [disabled]="data.excluded_already || data.allowlist"/></td>
             <td *ngIf="data.excluded_already"><mat-icon matTooltip="Excluded">block</mat-icon></td>

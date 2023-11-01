@@ -33,6 +33,7 @@ export class NewtaskComponent implements OnInit {
   gadsForm: FormGroup;
   paginationForm: FormGroup;
   loading: boolean = false;
+  column_headers: any[] = [];
   table_result: any[] = [];
   customer_list: any[] = [];
   finalGadsFilter: string = "";
@@ -365,6 +366,7 @@ export class NewtaskComponent implements OnInit {
       this.date_from = dates["date_from"];
       this.date_to = dates["date_to"];
       this.table_result = flattened_raw_response;
+      this.column_headers = Object.keys(jsonResponse.data['0'])
       if (this.table_result.length > 0) {
           this.sort_table("default");
           this.no_data = false;
@@ -400,15 +402,14 @@ export class NewtaskComponent implements OnInit {
   runManualExcludeForm() {
     let exclusion_list = [];
     for (let data of this.table_result) {
-      // TODO: Return if block
-      // if (data.exclude_from_account && !data.excluded_already && !data.allowlist) {
-      // exclusion_list.push([data.group_placement_view_placement_type, data.group_placement_view_placement]);
-      exclusion_list.push([data.ad_group_id, data.placement_type, data.placement, data.criterion_id, data.campaign_type]);
-      // }
+      if (data.exclude_from_account && !data.excluded_already && !data.allowlist) {
+        exclusion_list.push(Object.values(data));
+      }
     }
     if (exclusion_list.length > 0) {
       let formRawValue = {
         'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value,
+        'column_header': this.column_headers,
         'allExclusionList': exclusion_list
       }
       this._call_manual_service(JSON.stringify(formRawValue));
@@ -558,12 +559,12 @@ export class NewtaskComponent implements OnInit {
       this._run_exclude_count(false);
   }
 
-  excludeCheckChange(placementName: string) {
-      //same channle-id can be to several rows
-      // for (let i in this.table_result) {
-      //     if (this.table_result[i]['placement'] == placementName) {
-      //     }
-      // }
+  excludeCheckChange(placementName: string, exclude_from_account: boolean) {
+       for (let i in this.table_result) {
+           if (this.table_result[i]['placement'] == placementName) {
+              this.table_result[i]['exclude_from_account'] = !exclude_from_account;
+           }
+       }
       this._run_exclude_count(false);
   }
 
