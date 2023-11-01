@@ -24,5 +24,6 @@ automatic_scaling:
   max_instances: 1
 instance_class: F4
 env_variables:
-  YOUTUBE_DATA_API_KEY: ""
-  GOOGLE_ADS_PATH_TO_CONFIG: ""
+  ADS_HOUSEKEEPER_DEPLOYMENT_TYPE: "Google Cloud"
+  YOUTUBE_DATA_API_KEY: "your-youtube-api-key"
+  GOOGLE_ADS_PATH_TO_CONFIG: "path/to/google-ads.yaml"
