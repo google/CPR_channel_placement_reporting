@@ -259,7 +259,7 @@ export class NewtaskComponent implements OnInit {
               this.gadsForm.controls['lookbackDays'].setValue(v);
           }
           if (k == 'exclusion_level') {
-            this.gadsForm.controls['exclusionLevel'].setValue(v);
+            this.gadsForm.controls['exclusionLevel'].setValue(v.replace("ExclusionLevelEnum.", ""));
           }
           if (k == 'task_output') {
             this.gadsForm.controls['task_output'].setValue(v);
