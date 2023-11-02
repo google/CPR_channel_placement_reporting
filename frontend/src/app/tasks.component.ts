@@ -83,7 +83,7 @@ export class TasksComponent implements OnInit {
   }
 
   async _fill_table_success(response: ReturnPromise) {
-    this.task_table_data=Object.values(response).filter((task) => task.status == "TaskStatus.ACTIVE");
+    this.task_table_data=Object.values(response).filter((task) => task.status.replace("TaskStatus.", "") == "ACTIVE");
     if(this.task_table_data.length > 0) {
       this.no_data=false;
     }
