@@ -56,7 +56,7 @@ export class TasksComponent implements OnInit {
     ["48", "Every 2 days"]
   ];
 
-  constructor(private snackbar: MatSnackBar, private fb: FormBuilder, private service: PostService, private dialogService: DialogService) { 
+  constructor(private snackbar: MatSnackBar, private fb: FormBuilder, private service: PostService, private dialogService: DialogService) {
 
     this.paginationForm = this.fb.group({
       paginationValue: ['']
@@ -83,7 +83,7 @@ export class TasksComponent implements OnInit {
   }
 
   async _fill_table_success(response: ReturnPromise) {
-    this.task_table_data=Object.values(response);
+    this.task_table_data=Object.values(response).filter((task) => task.status == "TaskStatus.ACTIVE");
     if(this.task_table_data.length > 0) {
       this.no_data=false;
     }
@@ -98,10 +98,10 @@ export class TasksComponent implements OnInit {
     this.openSnackBar("Not able to retrieve list of tasks. Make sure you have provieded the details in Settings and Authenticated with Google Ads", "Dismiss", "error-snackbar");
   }
 
-  
+
   async runNow(file_name:string, task_name:string){
     this.dialogService.openConfirmDialog(`Are you sure you want to run the task '`+task_name+`' (`+file_name+`) now?
-    
+
     This will add any exclusions to your account and be an addition run to any upcoming schedules`)
         .afterClosed().subscribe(res => {
           if(res) {
@@ -134,7 +134,7 @@ export class TasksComponent implements OnInit {
 
   async deleteNow(task_id:string, task_name:string){
     this.dialogService.openConfirmDialog(`Are you sure you want to delete '`+task_name+`' (`+task_id+`)?
-    
+
     This will also delete any schedules for this task`)
         .afterClosed().subscribe(res => {
           if(res) {
