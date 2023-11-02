@@ -316,11 +316,12 @@ export class NewtaskComponent implements OnInit {
             placement_types.push("MOBILE_APPLICATION", "MOBILE_APP_CATEGORY");
           }
           let formRawValue = {
-            'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value,
-            'fromDaysAgo': this.gadsForm.controls['fromDaysAgo'].value,
-            'lookbackDays': this.gadsForm.controls['lookbackDays'].value,
-            'gadsFinalFilters': this.finalGadsFilter,
-            'placement_types': placement_types.toString()
+            'customer_ids': this.gadsForm.controls['gadsCustomerId'].value,
+            'from_days_ago': this.gadsForm.controls['fromDaysAgo'].value,
+            'date_range': this.gadsForm.controls['lookbackDays'].value,
+            'exclusion_level': this.gadsForm.controls['exclusionLevel'].value,
+            'exclusion_rule': this.finalGadsFilter,
+            'placement_types': placement_types.toString(),
           };
           if (this.finalGadsFilter == "") {
               this.dialogService.openConfirmDialog("WARNING: Are you sure you want to run with no Google Ads Filters?\n\nThis can take considerably longer on larger accounts and even run out of memory. It is advised to add filters for best results.")
