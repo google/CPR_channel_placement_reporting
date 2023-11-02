@@ -263,18 +263,10 @@ def preview_placements():
     else:
         config = config[0]
     data = request.get_json(force=True)
-    # TODO (amarkin): Refactor and simplify
-    cmd = commands.PreviewPlacements(
-        exclusion_rule=data["gadsFinalFilters"],
-        placement_types=tuple(data["placement_types"].split(","))
-        if data["placement_types"] else None,
-        customer_ids=data["gadsCustomerId"],
-        from_days_ago=int(data["fromDaysAgo"]),
-        lookback_days=int(data["lookbackDays"]),
-        save_to_db=config.get("save_to_db", True))
+    cmd = commands.PreviewPlacements(**data,
+                                     save_to_db=config.get("save_to_db", True))
     result = bus.handle(cmd)
-    resp = _build_response(json.dumps(result))
-    return resp
+    return _build_response(json.dumps(result))
 
 
 @app.route("/api/runManualExcluder", methods=['POST', 'GET'])
