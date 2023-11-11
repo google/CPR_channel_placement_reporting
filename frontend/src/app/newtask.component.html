@@ -180,28 +180,9 @@ From:&nbsp;{{this.date_from}} &nbsp;&nbsp;&nbsp;To:&nbsp;{{this.date_to}}
             <th class="hrlink"><a (click)="sort_table('default')">Exclude</a></th>
             <th class="hrlink"><a (click)="sort_table('excluded_already')">Status</a></th>
             <th class="hrlink"><a (click)="sort_table('allowlist')">Allowlist</a></th>
-            <th class="hrlink"><a (click)="sort_table('type')">Type</a></th>
-            <th class="hrlink"><a (click)="sort_table('name')">Placement Name</a></th>
-            <th class="hrlink"><a (click)="sort_table('placement')">Channel/URL</a></th>
-            <th class="hrlink"><a (click)="sort_table('ad_group_name')"></a>Ad Group Name</th>
-            <th class="hrlink"><a (click)="sort_table('campaign_name')"></a>Campaign Name</th>
-            <th class="hrlink"><a (click)="sort_table('impressions')">Impressions</a></th>
-            <th class="hrlink"><a (click)="sort_table('clicks')">Clicks</a></th>
-            <th class="hrlink"><a (click)="sort_table('video_views')">Video Views</a></th>
-            <th class="hrlink"><a (click)="sort_table('cost')">Cost</a></th>
-            <th class="hrlink"><a (click)="sort_table('conversions')">Conversions</a></th>
-            <th class="hrlink"><a (click)="sort_table('cost_per_conversion')">CPA</a></th>
-            <th class="hrlink"><a (click)="sort_table('view_through_conversions')">View-Through Conversions</a></th>
-            <th class="hrlink"><a (click)="sort_table('avg_cpm')">Avg. CPM</a></th>
-            <th class="hrlink"><a (click)="sort_table('avg_cpc')">Avg. CPC</a></th>
-            <th class="hrlink"><a (click)="sort_table('ctr')">CTR</a></th>
-            <th class="hrlink"><a (click)="sort_table('conversions_from_interactions_rate')">Conversion Rate</a></th>
-            <th class="hrlink"><a (click)="sort_table('subscriberCount')">YouTube Subscribers</a></th>
-            <th class="hrlink"><a (click)="sort_table('viewCount')">YouTube View Count</a></th>
-            <th class="hrlink"><a (click)="sort_table('videoCount')">YouTube Video Count</a></th>
-            <th class="hrlink"><a (click)="sort_table('language')">YouTube Language</a></th>
-            <th class="hrlink"><a (click)="sort_table('country')">YouTube Country</a></th>
-            <th class="hrlink"><a (click)="sort_table('asciiTitle')">YouTube Title Standard Characters</a></th>
+            <ng-container *ngFor="let header of column_headers">
+                <th *ngIf="!hidden_columns.includes(header)  " class="hrlink"><a (click)="sort_table('{{header}}')">{{header}}</a></th>
+            </ng-container>
         </tr>
     </thead>
     <tbody>
@@ -220,33 +201,18 @@ From:&nbsp;{{this.date_from}} &nbsp;&nbsp;&nbsp;To:&nbsp;{{this.date_to}}
                 <span *ngIf="data.allowlist"><a (click)="removeFromAllowlist(data.placement)"
                     target="_self" matTooltip="Remove placement from allowlist so it can be excluded"><mat-icon class="gold_icon">stars</mat-icon></a></span>
                 </td>
-            <td *ngIf="data.placement_type=='WEBSITE'"><mat-icon matTooltip="Website">computers</mat-icon></td>
-            <td *ngIf="data.placement_type=='YOUTUBE_CHANNEL'"><mat-icon matTooltip="YouTube Channel">video_library</mat-icon></td>
-            <td *ngIf="data.placement_type=='YOUTUBE_VIDEO'"><mat-icon matTooltip="YouTube Video">video_library</mat-icon></td>
-            <td *ngIf="data.placement_type=='MOBILE_APPLICATION'"><mat-icon matTooltip="Mobile Application">mobile_friendly</mat-icon></td>
-            <td *ngIf="data.placement_type=='MOBILE_APP_CATEGORY'"><mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon></td>
-            <td>{{data.name}}</td>
-            <td><a href="https://{{data.url}}" target="_blank">{{
-                    data.placement }}</a></td>
-            <td>{{data.ad_group_name}}</td>
-            <td>{{data.campaign_name}}</td>
-            <td>{{data.impressions | number}}</td>
-            <td>{{data.clicks | number}}</td>
-            <td>{{data.video_views | number}}</td>
-            <td>{{data.cost | number : '1.2-2'}}</td>
-            <td>{{data.conversions | number}}</td>
-            <td>{{data.cost_per_conversion | number : '1.2-2'}}</td>
-            <td>{{data.view_through_conversions | number}}</td>
-            <td>{{data.avg_cpm | number : '1.2-2'}}</td>
-            <td>{{data.avg_cpc | number : '1.2-2'}}</td>
-            <td>{{(data.ctr * 100) | number : '1.2-2'}}%</td>
-            <td>{{data.conversions_from_interaction_rate | number : '1.2-2'}}</td>
-            <td>{{data.subscriberCount | number}}</td>
-            <td>{{data.viewCount | number}}</td>
-            <td>{{data.videoCount | number}}</td>
-            <td>{{data.language}}</td>
-            <td>{{data.country}}</td>
-            <td>{{data.asciiTitle}}</td>
+
+            <ng-container *ngFor="let item of data | keyvalue: unsorted; let i=index">
+                <td *ngIf="!hidden_columns.includes(column_headers[i])">
+                    <span *ngIf="item.value == 'YOUTUBE_CHANNEL'"><mat-icon matTooltip="YouTube Channel">video_library</mat-icon></span>
+                    <span *ngIf="item.value == 'YOUTUBE_VIDEO'"><mat-icon matTooltip="YouTube Channel">video_library</mat-icon></span>
+                    <span *ngIf="item.value == 'WEBSITE'"><mat-icon matTooltip="Website">computers</mat-icon></span>
+                    <span *ngIf="item.value == 'MOBILE_APPLICATION'"><mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon></span>
+                    <span *ngIf="item.value == 'MOBILE_APP_CATEGORY'"><mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon></span>
+                    <span *ngIf="column_headers[i] == 'name'"><a href="https://{{data['url']}}" target="_blank">{{item.value}}</a></span>
+                    <span *ngIf="!['placement_type', 'name'].includes(column_headers[i])">{{item.value}}</span>
+                </td>
+            </ng-container>
         </tr>
     </tbody>
 </table>
