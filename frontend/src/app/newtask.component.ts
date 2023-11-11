@@ -152,6 +152,16 @@ export class NewtaskComponent implements OnInit {
     ["regexp", "Match regexp"],
   ];
 
+  hidden_columns: any[] = [
+    "campaign_id",
+    "ad_group_id",
+    "criterion_id",
+    "customer_id",
+    "account_id",
+    "placement",
+    "url"
+  ];
+
   task_exists: any;
   file_exists: any;
 
@@ -367,12 +377,12 @@ export class NewtaskComponent implements OnInit {
       this.date_from = dates["date_from"];
       this.date_to = dates["date_to"];
       this.table_result = flattened_raw_response;
-      this.column_headers = Object.keys(jsonResponse.data['0'])
       if (this.table_result.length > 0) {
-          this.sort_table("default");
-          this.no_data = false;
+        this.column_headers = Object.keys(jsonResponse.data['0']);
+        this.sort_table("default");
+        this.no_data = false;
       } else {
-          this.handleEmptyTable("Successful run, but no data matches criteria", "success-snackbar");
+        this.handleEmptyTable("Successful run, but no data matches criteria", "success-snackbar");
       }
       this.loading = false;
   }
@@ -409,9 +419,9 @@ export class NewtaskComponent implements OnInit {
     }
     if (exclusion_list.length > 0) {
       let formRawValue = {
-        'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value,
-        'column_header': this.column_headers,
-        'allExclusionList': exclusion_list
+        'customer_ids': this.gadsForm.controls['gadsCustomerId'].value,
+        'header': this.column_headers,
+        'placements': exclusion_list
       }
       this._call_manual_service(JSON.stringify(formRawValue));
     }
@@ -786,5 +796,22 @@ export class NewtaskComponent implements OnInit {
         filteredItems = filteredItems.filter(item => !item[0].startsWith('MOBILE'));
       }
     this.relevantMetricArray = filteredItems;
+  }
+  unsorted(a: any, b: any): number { return 0; }
+  formatNumber(val: any, pct: boolean = false): any {
+    if (typeof val === 'number') {
+      if (Math.floor(val) == val) {
+        return val;
+      } else {
+        if (pct) {
+          return Math.round(val * 100  * 10) / 10 + "%";
+        } else {
+          return Math.round(val * 10) / 10;
+        }
+        return
+      }
+    } else {
+      return val;
+    };
   }
 }

@@ -272,8 +272,7 @@ def preview_placements():
 @app.route("/api/runManualExcluder", methods=['POST', 'GET'])
 def run_manual_excluder():
     data = request.get_json(force=True)
-    cmd = commands.RunManualExclusion(customer_ids=data["gadsCustomerId"],
-                                      placements=data["allExclusionList"])
+    cmd = commands.RunManualExclusion(**data)
     result = bus.handle(cmd)
     resp = _build_response(json.dumps(result))
     return resp
