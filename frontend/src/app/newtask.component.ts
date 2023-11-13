@@ -161,6 +161,19 @@ export class NewtaskComponent implements OnInit {
     "placement",
     "url"
   ];
+  value_columns: any[] = [
+    "cost",
+    "avg_cpc",
+    "avg_cpm",
+    "avg_cpv",
+    "video_view_rate",
+    "ctr",
+    "cost_per_conversion",
+    "cost_per_all_conversion",
+    "all_conversion_rate",
+    "interaction_rate",
+    "conversions_from_interactions_rate"
+  ];
 
   task_exists: any;
   file_exists: any;

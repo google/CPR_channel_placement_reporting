@@ -204,13 +204,14 @@ From:&nbsp;{{this.date_from}} &nbsp;&nbsp;&nbsp;To:&nbsp;{{this.date_to}}
 
             <ng-container *ngFor="let item of data | keyvalue: unsorted; let i=index">
                 <td *ngIf="!hidden_columns.includes(column_headers[i])">
-                    <span *ngIf="item.value == 'YOUTUBE_CHANNEL'"><mat-icon matTooltip="YouTube Channel">video_library</mat-icon></span>
-                    <span *ngIf="item.value == 'YOUTUBE_VIDEO'"><mat-icon matTooltip="YouTube Channel">video_library</mat-icon></span>
-                    <span *ngIf="item.value == 'WEBSITE'"><mat-icon matTooltip="Website">computers</mat-icon></span>
-                    <span *ngIf="item.value == 'MOBILE_APPLICATION'"><mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon></span>
-                    <span *ngIf="item.value == 'MOBILE_APP_CATEGORY'"><mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon></span>
+                    <span *ngIf="column_headers[i] == 'placement_type' && item.value == 'YOUTUBE_CHANNEL'"><mat-icon matTooltip="YouTube Channel">video_library</mat-icon></span>
+                    <span *ngIf="column_headers[i] == 'placement_type' && item.value == 'YOUTUBE_VIDEO'"><mat-icon matTooltip="YouTube Channel">video_library</mat-icon></span>
+                    <span *ngIf="column_headers[i] == 'placement_type' && item.value == 'WEBSITE'"><mat-icon matTooltip="Website">computers</mat-icon></span>
+                    <span *ngIf="column_headers[i] == 'placement_type' && item.value == 'MOBILE_APPLICATION'"><mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon></span>
+                    <span *ngIf="column_headers[i] == 'placement_type' && item.value == 'MOBILE_APP_CATEGORY'"><mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon></span>
                     <span *ngIf="column_headers[i] == 'name'"><a href="https://{{data['url']}}" target="_blank">{{item.value}}</a></span>
-                    <span *ngIf="!['placement_type', 'name'].includes(column_headers[i])">{{item.value}}</span>
+                    <span *ngIf="value_columns.includes(column_headers[i])">{{formatNumber(item.value) | number : '1.2-2'}}</span>
+                    <span *ngIf="!value_columns.includes(column_headers[i]) && !['placement_type', 'name'].includes(column_headers[i])">{{item.value}}</span>
                 </td>
             </ng-container>
         </tr>
