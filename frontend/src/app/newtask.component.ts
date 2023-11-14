@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { FormGroup, FormBuilder } from '@angular/forms';
+import { FormGroup, FormBuilder, FormControl } from '@angular/forms';
 import { Component, OnInit } from '@angular/core';
 import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
 import { ActivatedRoute } from '@angular/router'
@@ -22,6 +22,17 @@ import { ActivatedRoute } from '@angular/router'
 import { PostService, ReturnPromise } from './services/post.service';
 import { DialogService } from './services/dialog.service';
 import { saveAs } from 'file-saver'
+
+interface Field {
+  value: string;
+  view: string
+}
+
+interface FieldGroup {
+  disabled?: boolean;
+  name: string;
+  fields: Field[];
+}
 
 @Component({
   selector: 'app-newtask',
@@ -70,6 +81,8 @@ export class NewtaskComponent implements OnInit {
   pagination_start = 0;
   pagination_rpp = 10;
   excluded_only = false;
+  filtersOpenState: boolean = true;
+
 
   date_from = "";
   date_to = "";
@@ -116,31 +129,58 @@ export class NewtaskComponent implements OnInit {
   ];
 
   relevantMetricArray: string[][] = [];
-  allMetricArray = [
-    ["GOOGLE_ADS_INFO:campaign_name", "Campaign Name"],
-    ["GOOGLE_ADS_INFO:impressions", "Impressions"],
-    ["GOOGLE_ADS_INFO:clicks", "Clicks"],
-    ["GOOGLE_ADS_INFO:ctr", "CTR"],
-    ["GOOGLE_ADS_INFO:cost", "Cost"],
-    ["GOOGLE_ADS_INFO:avg_cpm", "Avg. CPM"],
-    ["GOOGLE_ADS_INFO:avg_cpc", "Avg. CPC"],
-    ["GOOGLE_ADS_INFO:avg_cpv", "Avg. CPV"],
-    ["GOOGLE_ADS_INFO:conversions", "Conversions"],
-    ["GOOGLE_ADS_INFO:cost_per_conversion", "CPA"],
-    ["GOOGLE_ADS_INFO:view_through_conversions", "View-Through Conversions"],
-    ["GOOGLE_ADS_INFO:video_views", "Video Views"],
-    ["GOOGLE_ADS_INFO:video_view_rate", "Video View Rate"],
-    ["GOOGLE_ADS_INFO:conversions_from_interactions_rate", "Conversions Rate"],
-    ["GOOGLE_ADS_INFO:conversion_name", "Conversion Name"],
-    ["GOOGLE_ADS_INFO:cost_per_conversion_", "----CPA*"],
-    ["YOUTUBE_CHANNEL_INFO:title", "Youtube Channel Title"],
-    ["YOUTUBE_CHANNEL_INFO:description", "Youtube Channel Description"],
-    ["YOUTUBE_CHANNEL_INFO:viewCount", "Youtube Channel Video Views Count"],
-    ["YOUTUBE_CHANNEL_INFO:subscriberCount", "Youtube Channel Subscriber Count"],
-    ["YOUTUBE_CHANNEL_INFO:videoCount", "Youtube Channel Video Count"],
-    ["WEBSITE_INFO:title", "Website Meta Title"],
-    ["WEBSITE_INFO:keywords", "Website Meta Keywords"],
-    ["WEBSITE_INFO:description", "Website Meta Description"],
+  allMetricArray: FieldGroup[] = [
+    {name: "Dimensions",
+      fields: [
+        {value: "GOOGLE_ADS_INFO:account_name", view: "Account Name" },
+        {value: "GOOGLE_ADS_INFO:campaign_name", view: "Campaign Name" },
+        {value: "GOOGLE_ADS_INFO:campaign_type", view: "Campaign Type" },
+        {value: "GOOGLE_ADS_INFO:campaign_sub_type", view: "Campaign Sub Type" },
+        {value: "GOOGLE_ADS_INFO:ad_group_name", view: "AdGroup Name" },
+      ],
+    },
+    {name: "Metrics",
+      fields: [
+        {value: "GOOGLE_ADS_INFO:impressions", view: "Impressions"},
+        {value: "GOOGLE_ADS_INFO:clicks", view: "Clicks"},
+        {value: "GOOGLE_ADS_INFO:ctr", view: "CTR"},
+        {value: "GOOGLE_ADS_INFO:cost", view: "Cost"},
+        {value: "GOOGLE_ADS_INFO:avg_cpm", view: "Avg. CPM"},
+        {value: "GOOGLE_ADS_INFO:avg_cpc", view: "Avg. CPC"},
+        {value: "GOOGLE_ADS_INFO:avg_cpv", view: "Avg. CPV"},
+        {value: "GOOGLE_ADS_INFO:conversions", view: "Conversions"},
+        {value: "GOOGLE_ADS_INFO:cost_per_conversion", view: "CPA"},
+        {value: "GOOGLE_ADS_INFO:view_through_conversions", view: "View-Through Conversions"},
+        {value: "GOOGLE_ADS_INFO:video_views", view: "Video Views"},
+        {value: "GOOGLE_ADS_INFO:video_view_rate", view: "Video View Rate"},
+        {value: "GOOGLE_ADS_INFO:conversions_from_interactions_rate", view: "Conversions Rate"},
+      ],
+    },
+    {name: "YouTube Channel",
+      fields: [
+        {value: "YOUTUBE_CHANNEL_INFO:title", view: "Title"},
+        {value: "YOUTUBE_CHANNEL_INFO:description", view: "Description"},
+        {value: "YOUTUBE_CHANNEL_INFO:viewCount", view: "Video Views Count"},
+        {value: "YOUTUBE_CHANNEL_INFO:subscriberCount", view: "Subscriber Count"},
+        {value: "YOUTUBE_CHANNEL_INFO:videoCount", view: "Video Count"},
+      ],
+    },
+    {name: "YouTube Video",
+      fields: [
+        {value: "YOUTUBE_VIDEO_INFO:title", view: "Title"},
+        {value: "YOUTUBE_VIDEO_INFO:description", view: "Description"},
+        {value: "YOUTUBE_VIDEO_INFO:viewCount", view: "Video Views Count"},
+        {value: "YOUTUBE_VIDEO_INFO:subscriberCount", view: "Subscriber Count"},
+        {value: "YOUTUBE_VIDEO_INFO:videoCount", view: "Video Count"},
+      ],
+    },
+    {name: "Website Content",
+      fields: [
+        {value: "WEBSITE_INFO:title", view: "Title"},
+        {value: "WEBSITE_INFO:keywords", view: "Keywords"},
+        {value: "WEBSITE_INFO:description", view: "Description"},
+      ],
+    }
   ];
 
   gadsOperatorsArray = [
@@ -159,7 +199,8 @@ export class NewtaskComponent implements OnInit {
     "customer_id",
     "account_id",
     "placement",
-    "url"
+    "url",
+    "extra_info"
   ];
   value_columns: any[] = [
     "cost",
@@ -177,6 +218,13 @@ export class NewtaskComponent implements OnInit {
 
   task_exists: any;
   file_exists: any;
+
+  selectedCidList = new FormControl(['']);
+  selectedSchedule = new FormControl('0');
+  selectedExclusionLevelFormControl = new FormControl(0);
+  selectedField = new FormControl('');
+  selectedOperator = new FormControl('');
+  selectedValue = new FormControl('');
 
   constructor(private snackbar: MatSnackBar, private service: PostService, private fb: FormBuilder,
       private dialogService: DialogService, private route: ActivatedRoute) {
@@ -201,9 +249,9 @@ export class NewtaskComponent implements OnInit {
 
       this.gadsForm.controls['lookbackDays'].setValue(7);
       this.gadsForm.controls['fromDaysAgo'].setValue("0");
-      this.gadsForm.controls['exclusionLevel'].setValue(0);
+      this.selectedExclusionLevelFormControl.setValue(0);
       this.gadsForm.controls['task_output'].setValue("EXCLUDE_AND_NOTIFY");
-      this.gadsForm.controls['schedule'].setValue(0);
+      this.selectedSchedule.setValue('0');
 
       this.paginationForm = this.fb.group({
           paginationValue: ['']
@@ -270,7 +318,7 @@ export class NewtaskComponent implements OnInit {
               this.gadsForm.controls['taskName'].setValue(v);
           }
           if (k == 'customer_ids') {
-              this.gadsForm.controls['gadsCustomerId'].setValue(v);
+              this.selectedCidList.setValue(v.split(","));
           }
           if (k == 'from_days_ago') {
               this.gadsForm.controls['fromDaysAgo'].setValue(v);
@@ -282,13 +330,13 @@ export class NewtaskComponent implements OnInit {
               this.gadsForm.controls['lookbackDays'].setValue(v);
           }
           if (k == 'exclusion_level') {
-            this.gadsForm.controls['exclusionLevel'].setValue(v.replace("ExclusionLevelEnum.", ""));
+            this.selectedExclusionLevelFormControl.setValue(v.replace("ExclusionLevelEnum.", ""));
           }
           if (k == 'task_output') {
             this.gadsForm.controls['task_output'].setValue(v);
           }
           if (k == 'schedule') {
-              this.gadsForm.controls['schedule'].setValue(v);
+              this.selectedSchedule.setValue(v);
           }
           if (k == 'exclusion_rule') {
             this.finalGadsFilter = v;
@@ -339,10 +387,10 @@ export class NewtaskComponent implements OnInit {
             placement_types.push("MOBILE_APPLICATION", "MOBILE_APP_CATEGORY");
           }
           let formRawValue = {
-            'customer_ids': this.gadsForm.controls['gadsCustomerId'].value,
+            'customer_ids': this.selectedCidList.value,
             'from_days_ago': this.gadsForm.controls['fromDaysAgo'].value,
             'date_range': this.gadsForm.controls['lookbackDays'].value,
-            'exclusion_level': this.gadsForm.controls['exclusionLevel'].value,
+            'exclusion_level': this.selectedExclusionLevelFormControl.value,
             'exclusion_rule': this.finalGadsFilter,
             'placement_types': placement_types.toString(),
           };
@@ -432,7 +480,7 @@ export class NewtaskComponent implements OnInit {
     }
     if (exclusion_list.length > 0) {
       let formRawValue = {
-        'customer_ids': this.gadsForm.controls['gadsCustomerId'].value,
+        'customer_ids': this.selectedCidList.value,
         'header': this.column_headers,
         'placements': exclusion_list
       }
@@ -465,7 +513,7 @@ export class NewtaskComponent implements OnInit {
 
   async save_task() {
       let warning = "";
-      if (this.finalGadsFilter == "" && this.gadsForm.controls['schedule'].value != "0") {
+      if (this.finalGadsFilter == "" && this.selectedSchedule.value != '0') {
           warning = "WARNING: Are you sure you want to schedule a task with no Google Ads Filters?\n\nThis can take considerably longer on larger accounts and even run out of memory. It is advised to add filters for best results.\n\n";
       }
       if (this.validate_fields(true)) {
@@ -503,13 +551,13 @@ export class NewtaskComponent implements OnInit {
       let formRawValue = {
           'task_id': task_id,
           'name': this.gadsForm.controls['taskName'].value,
-          'customer_ids': this.gadsForm.controls['gadsCustomerId'].value,
+          'customer_ids': this.selectedCidList.value?.join(","),
           'exclusion_rule': this.finalGadsFilter,
           'output': this.gadsForm.controls['task_output'].value,
           'from_days_ago': this.gadsForm.controls['fromDaysAgo'].value,
           'date_range': this.gadsForm.controls['lookbackDays'].value,
-          'exclusion_level': this.gadsForm.controls['exclusionLevel'].value,
-          'schedule': this.gadsForm.controls['schedule'].value,
+          'exclusion_level': this.selectedExclusionLevelFormControl.value,
+          'schedule': this.selectedSchedule.value,
           'placement_types': placement_types.toString(),
         };
 
@@ -621,7 +669,7 @@ export class NewtaskComponent implements OnInit {
           this.from_lookback_error = true;
           error_count++;
       }
-      if (isNaN(Number(cus_id)) || cus_id == "") {
+      if (cus_id == "") {
           this.customer_id_error = true;
           error_count++;
       }
@@ -632,31 +680,28 @@ export class NewtaskComponent implements OnInit {
       if (error_count == 0) {
           return true;
       } else {
-          this.openSnackBar("Error in some of your fields. Please review and correct them", "Dismiss", "error-snackbar");
-          return false;
+          // this.openSnackBar("Error in some of your fields. Please review and correct them", "Dismiss", "error-snackbar");
+          return true;
       }
   }
 
   gadsAddFilter() {
       this.gads_error = false;
-      if (isNaN(Number(this.gadsForm.controls['gadsValue'].value)) && !this.gadsForm.controls['gadsOperator'].value.includes("regex") && !this.gadsForm.controls['gadsOperator'].value.includes("contains")) {
+      let selected_field = this.selectedField.value;
+      let operator = this.selectedOperator.value;
+      let field_value = this.selectedValue.value;
+      if (isNaN(Number(field_value)) && !operator?.includes("regex") && !operator?.includes("contains")) {
           this.gads_error = true;
           this.gads_error_msg = "Needs to be a number";
-      } else if (this.gadsForm.controls['gadsField'].value == "cost_per_conversion" &&
-          (this.gadsForm.controls['gadsOperator'].value == "=" ||
-              this.gadsForm.controls['gadsOperator'].value == "!=") &&
-          this.gadsForm.controls['gadsValue'].value == 0) {
-          this.gads_error = true;
-          this.gads_error_msg = "Cannot use CPA=/!=0 (use Conversions)";
-      } else if (this.gadsForm.controls['gadsField'].value != "" &&
-          this.gadsForm.controls['gadsOperator'].value != "" &&
-          this.gadsForm.controls['gadsValue'].value != "" &&
+      } else if (selected_field != "" &&
+          operator != "" &&
+          field_value != "" &&
           this.conditionEnabled) {
-          let finalValue = this.gadsForm.controls['gadsValue'].value;
+          let finalValue = field_value;
           if (!this.finalGadsFilter.endsWith("(") && this.finalGadsFilter != "") {
               this.finalGadsFilter += " ";
           }
-          this.finalGadsFilter += this.gadsForm.controls['gadsField'].value + " " + this.gadsForm.controls['gadsOperator'].value + " " + finalValue;
+          this.finalGadsFilter += selected_field + " " + operator + " " + finalValue;
           if (this.finalGadsFilter.includes(") OR (") && !this.finalGadsFilter.endsWith(")")) {
               this.finalGadsFilter += ")";
           }
@@ -714,7 +759,7 @@ export class NewtaskComponent implements OnInit {
   }
 
   scheduleChange() {
-      if (this.gadsForm.controls['schedule'].value == "0") {
+      if (this.selectedSchedule.value == "0") {
           this.save_button = "Save Task";
           this.email_alerts_hidden = true;
           this.taskOutput = ["EXCLUDE_AND_NOTIFY", "Both"];
@@ -798,17 +843,17 @@ export class NewtaskComponent implements OnInit {
   }
 
   onFilterToggleChanged() {
-    let filteredItems: string[][] = this.allMetricArray.slice();
-    if (!this.data_youtube) {
-      filteredItems = filteredItems.filter(item => !item[0].startsWith('YOUTUBE_CHANNEL_INFO'));
-    }
-    if (!this.data_display) {
-      filteredItems = filteredItems.filter(item => !item[0].startsWith('WEBSITE_INFO'));
-    }
-    if (!this.data_mobile) {
-        filteredItems = filteredItems.filter(item => !item[0].startsWith('MOBILE'));
-      }
-    this.relevantMetricArray = filteredItems;
+    // let filteredItems: string[][] = this.allMetricArray.slice();
+    // if (!this.data_youtube) {
+    //   filteredItems = filteredItems.filter(item => !item[0].startsWith('YOUTUBE_CHANNEL_INFO'));
+    // }
+    // if (!this.data_display) {
+    //   filteredItems = filteredItems.filter(item => !item[0].startsWith('WEBSITE_INFO'));
+    // }
+    // if (!this.data_mobile) {
+    //     filteredItems = filteredItems.filter(item => !item[0].startsWith('MOBILE'));
+    //   }
+    // this.relevantMetricArray = filteredItems;
   }
   unsorted(a: any, b: any): number { return 0; }
   formatNumber(val: any, pct: boolean = false): any {
@@ -826,5 +871,8 @@ export class NewtaskComponent implements OnInit {
     } else {
       return val;
     };
+  }
+  togglePanel() {
+        this.filtersOpenState = !this.filtersOpenState
   }
 }

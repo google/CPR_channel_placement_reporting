@@ -1,80 +1,154 @@
 <div class="task-width centre-table">
-    <div class="heading">
-        <span >Tasks</span>
-    </div>
-    <br>
-    <div *ngIf="task_table_data.length > 0">
-        <form [formGroup]="paginationForm">
-            <div class="pagination-left">
-                <a routerLink="/newtask"><button type="button" class="secondaryButton"><mat-icon>add_box</mat-icon>New Task</button></a>
-            </div>
-            <div class="pagination">
-            <div class="label-input-block">
-                <span *ngIf="pagination_start+pagination_rpp <= task_table_data.length">
-                    {{pagination_start+1}} to {{pagination_start+pagination_rpp}} of {{task_table_data.length}}
-                </span>
-                <span *ngIf="pagination_start+pagination_rpp > task_table_data.length  && task_table_data.length > 0">
-                    {{pagination_start+1}} to {{task_table_data.length}} of {{task_table_data.length}}
-                </span>
-            </div>
-            <div class="label-input-block">
-                <button type="button" class="pageButton" (click)="pagination_prev()"><<</button>
-            </div>
-            <div class="label-input-block">
-                <select name="paginationValue" formControlName="paginationValue" (change)="paginationChange()"
-                    class="pageElement" id="paginationValue">
-                    <option *ngFor="let item of pagination_values" [value]=item[0]>{{ item[0] }}</option>
-                </select>
-            </div>
-            <div class="label-input-block">
-                <button type="button" class="pageButton" (click)="pagination_next()">>></button>
-            </div>
+  <div class="heading">
+    <span>Tasks</span>
+  </div>
+  <br />
+  <div *ngIf="task_table_data.length > 0">
+    <form [formGroup]="paginationForm">
+      <div class="pagination-left">
+        <a routerLink="/newtask"
+          ><button type="button" class="secondaryButton">
+            <mat-icon>add_box</mat-icon>New Task
+          </button></a
+        >
+      </div>
+      <div class="pagination">
+        <div class="label-input-block">
+          <span
+            *ngIf="pagination_start + pagination_rpp <= task_table_data.length"
+          >
+            {{ pagination_start + 1 }} to
+            {{ pagination_start + pagination_rpp }} of
+            {{ task_table_data.length }}
+          </span>
+          <span
+            *ngIf="
+              pagination_start + pagination_rpp > task_table_data.length &&
+              task_table_data.length > 0
+            "
+          >
+            {{ pagination_start + 1 }} to {{ task_table_data.length }} of
+            {{ task_table_data.length }}
+          </span>
         </div>
-        </form>
-    </div>
-    <table *ngIf="task_table_data.length > 0" class="styled-table task-width">
-        <thead>
-            <tr>
-                <th>Date Created</th>
-                <th>Task Name</th>
-                <th>Customer ID</th>
-                <th>Schedule</th>
-                <th>Next Run and Status</th>
-                <th class="align-centre">Edit</th>
-                <th class="align-centre">Run Now</th>
-                <th class="align-centre">Delete</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let data of task_table_data | slice:pagination_start:pagination_start+pagination_rpp">
-                <td>{{localizeDate(data.creation_date)}}</td>
-                <td>
-                    <a href="/newtask?task={{data.id}}" target="_self" matTooltip="Open task">{{data.name}}</a>
-                </td>
-                <td>{{data.customer_ids}}</td>
-                <td>{{getScheduleValue(data.schedule)}}</td>
-                <td>
-                    {{data.next_run}}
-                    <span *ngIf="data.error_code>0" class="error_text"><mat-icon matTooltip="Last run failed due to end point error">error</mat-icon></span>
-                    <span *ngIf="data.error_code=='0'" class="valid_text"><mat-icon matTooltip="Schedule is up and running">check_circle</mat-icon></span>
-                    
-                    <span *ngIf="data.exclude_and_notify=='NOTIFY'" class="valid_text"><mat-icon matTooltip="Email alerts are enabled for this schedule">mail</mat-icon></span>
-                    <span *ngIf="data.exclude_and_notify=='EXCLUDE'" class="valid_text"><mat-icon matTooltip="Exclusion is enabled for this schedule">label_off</mat-icon></span>
-                    <span *ngIf="data.exclude_and_notify=='EXCLUDE_AND_NOTIFY'" class="valid_text"><mat-icon matTooltip="Email alerts are enabled for this schedule">mail</mat-icon><mat-icon matTooltip="Exclusion is enabled for this schedule">label_off</mat-icon></span>
-                    </td>
-                <td class="align-centre">
-                    <a href="/newtask?task={{data.id}}" target="_self" matTooltip="Edit current task"><mat-icon>edit</mat-icon></a>
-                </td>
-                <td class="align-centre">
-                    <a (click)="runNow(data.id, data.name)" target="_self" matTooltip="Run task and exclude now"><mat-icon>play_arrow</mat-icon></a>
-                </td>
-                <td class="align-centre">
-                    <a (click)="deleteNow(data.id, data.name)" target="_self" matTooltip="Permanently delete this task"><mat-icon>delete_forever</mat-icon></a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <div *ngIf="no_data" class="empty-table">There are no saved tasks!</div>
+        <div class="label-input-block">
+          <button type="button" class="pageButton" (click)="pagination_prev()">
+            <<
+          </button>
+        </div>
+        <div class="label-input-block">
+          <select
+            name="paginationValue"
+            formControlName="paginationValue"
+            (change)="paginationChange()"
+            class="pageElement"
+            id="paginationValue"
+          >
+            <option *ngFor="let item of pagination_values" [value]="item[0]">
+              {{ item[0] }}
+            </option>
+          </select>
+        </div>
+        <div class="label-input-block">
+          <button type="button" class="pageButton" (click)="pagination_next()">
+            >>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+  <table *ngIf="task_table_data.length > 0" class="styled-table task-width">
+    <thead>
+      <tr>
+        <th>Date Created</th>
+        <th>Task Name</th>
+        <th>Customer ID</th>
+        <th>Schedule</th>
+        <th>Next Run and Status</th>
+        <th class="align-centre">Edit</th>
+        <th class="align-centre">Run Now</th>
+        <th class="align-centre">Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        *ngFor="
+          let data of task_table_data
+            | slice: pagination_start : pagination_start + pagination_rpp
+        "
+      >
+        <td>{{ localizeDate(data.creation_date) }}</td>
+        <td>
+          <a
+            href="/newtask?task={{ data.id }}"
+            target="_self"
+            matTooltip="Open task"
+            >{{ data.name }}</a
+          >
+        </td>
+        <td>{{ data.customer_ids }}</td>
+        <td>{{ getScheduleValue(data.schedule) }}</td>
+        <td>
+          {{ data.next_run }}
+          <span *ngIf="data.error_code > 0" class="error_text"
+            ><mat-icon matTooltip="Last run failed due to end point error"
+              >error</mat-icon
+            ></span
+          >
+          <span *ngIf="data.error_code == '0'" class="valid_text"
+            ><mat-icon matTooltip="Schedule is up and running"
+              >check_circle</mat-icon
+            ></span
+          >
+
+          <span *ngIf="data.exclude_and_notify == 'NOTIFY'" class="valid_text"
+            ><mat-icon matTooltip="Email alerts are enabled for this schedule"
+              >mail</mat-icon
+            ></span
+          >
+          <span *ngIf="data.exclude_and_notify == 'EXCLUDE'" class="valid_text"
+            ><mat-icon matTooltip="Exclusion is enabled for this schedule"
+              >label_off</mat-icon
+            ></span
+          >
+          <span
+            *ngIf="data.exclude_and_notify == 'EXCLUDE_AND_NOTIFY'"
+            class="valid_text"
+            ><mat-icon matTooltip="Email alerts are enabled for this schedule"
+              >mail</mat-icon
+            ><mat-icon matTooltip="Exclusion is enabled for this schedule"
+              >label_off</mat-icon
+            ></span
+          >
+        </td>
+        <td class="align-centre">
+          <a
+            href="/newtask?task={{ data.id }}"
+            target="_self"
+            matTooltip="Edit current task"
+            ><mat-icon>edit</mat-icon></a
+          >
+        </td>
+        <td class="align-centre">
+          <a
+            (click)="runNow(data.id, data.name)"
+            target="_self"
+            matTooltip="Run task and exclude now"
+            ><mat-icon>play_arrow</mat-icon></a
+          >
+        </td>
+        <td class="align-centre">
+          <a
+            (click)="deleteNow(data.id, data.name)"
+            target="_self"
+            matTooltip="Permanently delete this task"
+            ><mat-icon>delete_forever</mat-icon></a
+          >
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div *ngIf="no_data" class="empty-table">There are no saved tasks!</div>
 </div>
 
-<app-loading [showSpinner]=loading></app-loading>
+<app-loading [showSpinner]="loading"></app-loading>

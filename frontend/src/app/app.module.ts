@@ -17,7 +17,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatToolbarModule } from '@angular/material/toolbar'; 
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -36,9 +36,14 @@ import { SettingsComponent } from './settings.component';
 import { LoadingComponent } from './components/loading.component';
 import { ConfirmDialogComponent } from './components/confirm-dialog.component';
 import { ReleasenotesComponent } from './releasenotes.component';
+import { MatSelectModule } from '@angular/material/select';
+import {MatInputModule} from '@angular/material/input';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatStepperModule} from '@angular/material/stepper';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 @NgModule({
-  declarations: [	
+  declarations: [
     AppComponent,
     NavbarComponent,
     TasksComponent,
@@ -61,7 +66,12 @@ import { ReleasenotesComponent } from './releasenotes.component';
     MatSnackBarModule,
     MatSlideToggleModule,
     MatDialogModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatSelectModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatStepperModule,
+    MatExpansionModule
   ],
   providers: [],
   bootstrap: [AppComponent],
