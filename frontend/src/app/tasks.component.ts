@@ -17,6 +17,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
+import cronstrue from 'cronstrue';
 import { DialogService } from './services/dialog.service';
 import { PostService, ReturnPromise } from './services/post.service';
 
@@ -196,7 +197,7 @@ export class TasksComponent implements OnInit {
         return sch[1];
       }
     }
-    return "-"
+    return cronstrue.toString(index);
   }
   localizeDate(date:string) {
     return date.split(" ")[0]
