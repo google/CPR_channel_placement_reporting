@@ -77,12 +77,9 @@
 
   _parse_config(response: ReturnPromise) {
      let config = (Object.entries(response).find(([k, v]) => {
-       if(k=='dev_token') {
-         this.settingsForm.controls['gadsDevToken'].setValue(v);
-         this.populate_mcc_ids();
-       }
        if(k=='mcc_id') {
          this.settingsForm.controls['gadsMccId'].setValue(v);
+         this.populate_mcc_ids();
        }
        if(k=='email_address') {
          this.settingsForm.controls['emailAddress'].setValue(v);
