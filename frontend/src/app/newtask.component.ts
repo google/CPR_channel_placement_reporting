@@ -804,12 +804,12 @@ export class NewtaskComponent implements OnInit {
       saveAs(blob, "cpr_export.csv");
   }
 
-  async addToAllowlist(placementType: string, placementName: string) {
+  async addToAllowlist(placementType: string, placementName: string, accountId: string) {
       this.loading = true;
       let placement_id = {
           'type': placementType,
           'name': placementName,
-          'gadsCustomerId': this.gadsForm.controls['gadsCustomerId'].value
+          'account_id': accountId
       };
       (await this.service.add_to_allowlist(JSON.stringify(placement_id)))
       .subscribe({
@@ -827,9 +827,11 @@ export class NewtaskComponent implements OnInit {
       this._run_exclude_count(false);
   }
 
-  async removeFromAllowlist(placementName: string) {
+  async removeFromAllowlist(placementType: string, placementName: string, accountId: string) {
       let placement_id = {
-          'name': placementName
+          'type': placementType,
+          'name': placementName,
+          'account_id': accountId
       };
       (await this.service.remove_from_allowlist(JSON.stringify(placement_id)))
       .subscribe({

@@ -334,7 +334,7 @@ def set_config():
 @app.route("/api/addToAllowlist", methods=['POST'])
 def add_to_allowlisting():
     data = request.get_json(force=True)
-    cmd = commands.AddToAllowlisting(data)
+    cmd = commands.AddToAllowlisting(**data)
     result = bus.handle(cmd)
     return _build_response(json.dumps("success"))
 
@@ -342,7 +342,7 @@ def add_to_allowlisting():
 @app.route("/api/removeFromAllowlist", methods=['POST'])
 def remove_from_allowlisting():
     data = request.get_json(force=True)
-    cmd = commands.RemoveFromAllowlisting(data)
+    cmd = commands.RemoveFromAllowlisting(**data)
     result = bus.handle(cmd)
     return _build_response(json.dumps("success"))
 
