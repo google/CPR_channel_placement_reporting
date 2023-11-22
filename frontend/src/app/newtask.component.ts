@@ -61,7 +61,6 @@ export class NewtaskComponent implements OnInit {
   manual_cid: boolean = false;
   cid_choice: string = "Enter manually";
   revSort: string = "";
-  include_youtube: boolean = true;
 
   error_count = 0;
   task_name_error = false;
@@ -156,6 +155,13 @@ export class NewtaskComponent implements OnInit {
         {value: "GOOGLE_ADS_INFO:conversions_from_interactions_rate", view: "Conversions Rate"},
       ],
     },
+    {name: "Conversion Split",
+      fields: [
+        {value: "GOOGLE_ADS_INFO:conversion_name", view: "Conversion Name"},
+        {value: "GOOGLE_ADS_INFO:cost_per_conversion_", view: "CPA for selected conversion(s)"},
+        {value: "GOOGLE_ADS_INFO:conversions_", view: "Selected conversion(s)"},
+      ],
+    },
     {name: "YouTube Channel",
       fields: [
         {value: "YOUTUBE_CHANNEL_INFO:title", view: "Title"},
@@ -221,7 +227,7 @@ export class NewtaskComponent implements OnInit {
 
   selectedCidList = new FormControl(['']);
   selectedSchedule = new FormControl('0');
-  selectedExclusionLevelFormControl = new FormControl(0);
+  selectedExclusionLevelFormControl = new FormControl('AD_GROUP');
   selectedField = new FormControl('');
   selectedOperator = new FormControl('');
   selectedValue = new FormControl('');
@@ -249,7 +255,6 @@ export class NewtaskComponent implements OnInit {
 
       this.gadsForm.controls['lookbackDays'].setValue(7);
       this.gadsForm.controls['fromDaysAgo'].setValue("0");
-      this.selectedExclusionLevelFormControl.setValue(0);
       this.gadsForm.controls['task_output'].setValue("EXCLUDE_AND_NOTIFY");
       this.selectedSchedule.setValue('0');
 
