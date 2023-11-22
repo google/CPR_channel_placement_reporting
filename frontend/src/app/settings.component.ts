@@ -31,15 +31,12 @@
    subs: any;
    hideAuth = true;
    mcc_list: any[] = [];
-   dev_token_error = false;
 
    horizontalPosition: MatSnackBarHorizontalPosition = 'center';
    verticalPosition: MatSnackBarVerticalPosition = 'top';
 
    constructor(private snackbar: MatSnackBar, private fb: FormBuilder, private service: PostService) {
      this.settingsForm = this.fb.group({
-       clientFile: [''],
-       gadsDevToken: [''],
        gadsMccId: [''],
        emailAddress: [''],
        saveToDB: ['']
@@ -61,12 +58,8 @@
 
 
    validate_fields() {
+     // TODO (amarkin): Add email validation
     let error_count = 0;
-    this.dev_token_error = false;
-    if (this.settingsForm.controls['gadsDevToken'].value.length > 30) {
-      this.dev_token_error = true;
-      error_count++;
-    }
      if (error_count == 0) { return true; }
     else {
       this.openSnackBar("Error in some of your fields. Please review and correct them", "Dismiss", "error-snackbar");
@@ -111,12 +104,7 @@
      mcc_id = (mcc_id.replace(new RegExp('-', 'g'), '')).trim();
      this.settingsForm.controls['gadsMccId'].setValue(mcc_id);
 
-     let dev_tok = this.settingsForm.controls['gadsDevToken'].value;
-     dev_tok = dev_tok.trim();
-     this.settingsForm.controls['gadsDevToken'].setValue(dev_tok);
-
      let formRawValue = {
-       'dev_token': dev_tok,
        'mcc_id': mcc_id,
        'email_address': this.settingsForm.controls['emailAddress'].value,
        'save_to_db': this.settingsForm.controls['saveToDB'].value
@@ -155,66 +143,7 @@
     }
    }
 
-   async finish_auth() {
-     var code=prompt("Please enter your authentication code","Authentication Code");
-     this.loading=true;
-     if(code!=null) {
-       let codeRawValue = {
-         'code': code,
-         'dev_token': this.settingsForm.controls['gadsDevToken'].value,
-         'mcc_id': '',
-         'email_address': this.settingsForm.controls['emailAddress'].value
-       }
-       this.subs = (await ((this.service.finalise_auth(JSON.stringify(codeRawValue)))))
-       .subscribe({
-         next: (response: ReturnPromise) => this._auth_complete(response),
-         error: (err: any) => this.openSnackBar("Error updating settings"+JSON.stringify(err), "Dismiss", "error-snackbar"),
-         complete: () => this.loading=false
-       });
-       this.hideAuth = true;
-     }
-   }
 
-   _auth_complete(response: ReturnPromise) {
-      let resp = response.toString();
-      if(resp=="error") {
-        this.openSnackBar("Error creating credentials. Try running the process again and check you have not copied any additional spaces when pasting the code", "Dismiss", "error-snackbar")
-      }
-      else {
-        this.openSnackBar("Auth Completed!", "Dismiss", "success-snackbar");
-        this.populate_mcc_ids();
-      }
-   }
-
-   async upload_file(event: any) {
-     this.loading=true
-     const file:File = event.target.files[0];
-     // TODO: Are we sure we need this?
-     // TODO: Fixed; add validation of a different type
-     if (file && file.name.endsWith(".json")) {
-         let fileContents = "";
-         let fileReader = new FileReader();
-         fileReader.onload = (e) => {
-           fileContents = fileReader.result!.toString();
-           this.complete_upload(fileContents);
-         }
-         fileReader.readAsText(file);
-
-     }
-     else {
-       this.openSnackBar("File must be named 'client_secret_xxxxxxx.json' and be a valid client secret file", "Dismiss", "error-snackbar")
-       this.loading=false
-     }
-   }
-
-   async complete_upload(fileContents: string) {
-     this.subs = (await (((this.service.file_upload(fileContents)))))
-           .subscribe({
-             next: (response: ReturnPromise) => this.openSnackBar("File successfully uploaded and saved!", "Dismiss", "success-snackbar"),
-             error: (err: any) => this.openSnackBar("Error uploading file. Make sure it is a .json file and try again", "Dismiss", "error-snackbar"),
-             complete: () => this.loading=false
-       });
-   }
 
    openSnackBar(message: string, button: string, type: string) {
      this.snackbar.open(message, button, {
