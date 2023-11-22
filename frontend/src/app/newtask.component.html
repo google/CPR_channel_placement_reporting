@@ -459,7 +459,7 @@
         <span *ngIf="!data.allowlist"
           ><a
             class="grey_icon"
-            (click)="addToAllowlist(data.placement_type, data.placement)"
+            (click)="addToAllowlist(data.placement_type, data.placement, data.customer_id)"
             target="_self"
             matTooltip="Add placement to allowlist so it is never excluded"
             ><mat-icon>add_circle_outline</mat-icon></a
@@ -468,7 +468,7 @@
 
         <span *ngIf="data.allowlist"
           ><a
-            (click)="removeFromAllowlist(data.placement)"
+            (click)="removeFromAllowlist(data.placement_type, data.placement, data.customer_id)"
             target="_self"
             matTooltip="Remove placement from allowlist so it can be excluded"
             ><mat-icon class="gold_icon">stars</mat-icon></a
