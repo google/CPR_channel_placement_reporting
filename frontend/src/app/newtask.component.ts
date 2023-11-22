@@ -114,8 +114,6 @@ export class NewtaskComponent implements OnInit {
     ["NOTIFY", "Notify"],
     ["EXCLUDE_AND_NOTIFY", "Both"]
   ];
-  defaultTaskOutput = this.taskOutputArray[2][0];
-  selectedTaskOutput = this.taskOutputArray[2][0];
 
   scheduleArray = [
       ["0", "Do not schedule"],
@@ -229,6 +227,7 @@ export class NewtaskComponent implements OnInit {
   selectedSchedule = new FormControl('0');
   selectedExclusionLevelFormControl = new FormControl('AD_GROUP');
   selectedField = new FormControl('');
+  selectedTaskOutput = new FormControl('EXCLUDE_AND_NOTIFY');
   selectedOperator = new FormControl('');
   selectedValue = new FormControl('');
 
@@ -255,7 +254,6 @@ export class NewtaskComponent implements OnInit {
 
       this.gadsForm.controls['lookbackDays'].setValue(7);
       this.gadsForm.controls['fromDaysAgo'].setValue("0");
-      this.gadsForm.controls['task_output'].setValue("EXCLUDE_AND_NOTIFY");
       this.selectedSchedule.setValue('0');
 
       this.paginationForm = this.fb.group({
@@ -337,10 +335,11 @@ export class NewtaskComponent implements OnInit {
           if (k == 'exclusion_level') {
             this.selectedExclusionLevelFormControl.setValue(v.replace("ExclusionLevelEnum.", ""));
           }
-          if (k == 'task_output') {
-            this.gadsForm.controls['task_output'].setValue(v);
+          if (k == 'output') {
+            this.selectedTaskOutput.setValue(v.replace("TaskOutput.", ""));
           }
           if (k == 'schedule') {
+              // TODO: convert crontab to variable
               this.selectedSchedule.setValue(v);
           }
           if (k == 'exclusion_rule') {
@@ -558,7 +557,7 @@ export class NewtaskComponent implements OnInit {
           'name': this.gadsForm.controls['taskName'].value,
           'customer_ids': this.selectedCidList.value?.join(","),
           'exclusion_rule': this.finalGadsFilter,
-          'output': this.gadsForm.controls['task_output'].value,
+          'output': this.selectedTaskOutput.value,
           'from_days_ago': this.gadsForm.controls['fromDaysAgo'].value,
           'date_range': this.gadsForm.controls['lookbackDays'].value,
           'exclusion_level': this.selectedExclusionLevelFormControl.value,
