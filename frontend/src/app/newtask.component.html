@@ -271,7 +271,7 @@
             <mat-label>Schedule task</mat-label>
             <mat-select
               [formControl]="selectedSchedule"
-              (change)="scheduleChange()"
+              (selectionChange)="scheduleChange()"
             >
               <mat-option *ngFor="let item of scheduleArray" [value]="item[0]">
                 {{ item[1] }}
@@ -283,10 +283,8 @@
           <mat-form-field>
             <mat-label>Exclude or Notify?</mat-label>
             <mat-select
-              formControlName="taskOutputDrowpDown"
-              name="taskOutputDrowpDown"
-              id="taskOutputDrowpDown"
-              [(ngModel)]="selectedTaskOutput"
+              [formControl]="selectedTaskOutput"
+              id="taskOutputDropDown"
             >
               <mat-option
                 *ngFor="let item of taskOutputArray"
