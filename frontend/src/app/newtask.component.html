@@ -13,21 +13,21 @@
     </div>
     <mat-stepper #stepper>
       <mat-step>
-      <div class="label-input-block top-centre-form">
-        <mat-form-field
-          name="gadsCustomerId"
-          formControlName="gadsCustomerId"
-          id="gadsCustomerId"
-        >
-          <ng-template matStepLabel>Select accounts</ng-template>
-          <mat-label>Select-accounts</mat-label>
-          <mat-select [formControl]="selectedCidList" multiple>
-            <mat-option *ngFor="let cid of customer_list" [value]="cid.id">
-              {{ cid.account_name }} [{{ cid.id }}]
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+        <div class="label-input-block top-centre-form">
+          <mat-form-field
+            name="gadsCustomerId"
+            formControlName="gadsCustomerId"
+            id="gadsCustomerId"
+          >
+            <ng-template matStepLabel>Select accounts</ng-template>
+            <mat-label>Select-accounts</mat-label>
+            <mat-select [formControl]="selectedCidList" multiple>
+              <mat-option *ngFor="let cid of customer_list" [value]="cid.id">
+                {{ cid.account_name }} [{{ cid.id }}]
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
         <ng-template matStepLabel>Configure date range</ng-template>
         <div class="label-input-block top-centre-form">
           <mat-form-field>
@@ -36,32 +36,34 @@
               name="fromDaysAgo"
               formControlName="fromDaysAgo"
               id="fromDaysAgo"
-            matInput />
+              matInput
+            />
           </mat-form-field>
         </div>
         <div class="label-input-block top-centre-form">
           <mat-form-field>
             <mat-label>LookbackDays</mat-label>
             <input
-            name="lookbackDays"
-            formControlName="lookbackDays"
-            id="lookbackDays"
-            matInput />
+              name="lookbackDays"
+              formControlName="lookbackDays"
+              id="lookbackDays"
+              matInput
+            />
           </mat-form-field>
         </div>
-      <div class="label-input-block top-centre-form">
-        <mat-form-field>
-          <mat-label>Specify exclusion level</mat-label>
-          <mat-select [formControl]="selectedExclusionLevelFormControl">
-            <mat-option
-              *ngFor="let item of exclusionLevelArray"
-              [value]="item[0]"
-            >
-              {{ item[1] }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+        <div class="label-input-block top-centre-form">
+          <mat-form-field>
+            <mat-label>Specify exclusion level</mat-label>
+            <mat-select [formControl]="selectedExclusionLevelFormControl">
+              <mat-option
+                *ngFor="let item of exclusionLevelArray"
+                [value]="item[0]"
+              >
+                {{ item[1] }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
         <div>
           <button mat-button matStepperNext>Next</button>
         </div>
@@ -107,145 +109,155 @@
             >
           </div>
         </div>
-          <br /><br />
+        <br /><br />
         <mat-accordion>
           <mat-expansion-panel [expanded]="filtersOpenState">
             <mat-expansion-panel-header>
               <mat-panel-title> Filters</mat-panel-title>
-              <mat-panel-description>{{finalGadsFilter}}</mat-panel-description>
+              <mat-panel-description>{{
+                finalGadsFilter
+              }}</mat-panel-description>
             </mat-expansion-panel-header>
-        <ng-template matStepLabel>Select filters</ng-template>
-          <mat-form-field>
-            <mat-label>Metrics & Dimensions</mat-label>
-            <mat-select [formControl]="selectedField">
-              <mat-optgroup
-                *ngFor="let group of allMetricArray"
-                [label]="group.name"
-                [disabled]="group.disabled"
+            <ng-template matStepLabel>Select filters</ng-template>
+            <div class="label-input-block top-centre-form">
+              <mat-form-field>
+                <mat-label>Metrics & Dimensions</mat-label>
+                <mat-select [formControl]="selectedField">
+                  <mat-optgroup
+                    *ngFor="let group of allMetricArray"
+                    [label]="group.name"
+                    [disabled]="group.disabled"
+                  >
+                    <mat-option
+                      *ngFor="let field of group.fields"
+                      [value]="field.value"
+                    >
+                      {{ field.view }}
+                    </mat-option>
+                  </mat-optgroup>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="label-input-block top-centre-form">
+              <mat-form-field
+                name="gadsOperator"
+                formControlName="gadsOperator"
+                id="gadsOperator"
               >
-                <mat-option
-                  *ngFor="let field of group.fields"
-                  [value]="field.value"
-                >
-                  {{ field.view }}
-                </mat-option>
-              </mat-optgroup>
-            </mat-select>
-          </mat-form-field>
-          <div class="label-input-block top-centre-form">
-            <mat-form-field
-              name="gadsOperator"
-              formControlName="gadsOperator"
-              id="gadsOperator"
-            >
-              <mat-label>Operator</mat-label>
-              <mat-select [formControl]="selectedOperator">
-                <mat-option
-                  *ngFor="let item of gadsOperatorsArray"
-                  [value]="item[0]"
-                >
-                  {{ item[1] }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-          <div class="label-input-block top-centre-form">
-            <mat-form-field>
-              <mat-label>Value</mat-label>
-              <span class="error_text" *ngIf="gads_error">{{
-                gads_error_msg
-              }}</span>
-              <input [formControl]="selectedValue" matInput />
-            </mat-form-field>
-          </div>
-          <div class="label-input-block">
-            <button
-              type="button"
-              id="gadsAddToFilters"
-              class="focusButton"
-              (click)="gadsAddFilter()"
-              [disabled]="!conditionEnabled"
-            >
-              + Add
-            </button>
-          </div>
-          <div class="label-input-block">
-            <button
-              type="button"
-              id="gadsAddAnd"
-              class="focusButton"
-              (click)="gadsAddOrAnd('AND')"
-              [disabled]="!orAndEnabled"
-            >
-              AND
-            </button>
-          </div>
-          <div class="label-input-block">
-            <button
-              type="button"
-              id="gadsAddOr"
-              class="focusButton"
-              (click)="gadsAddOrAnd('OR')"
-              [disabled]="!orAndEnabled"
-            >
-              OR
-            </button>
-          </div>
-          <div>
-            <div class="label-input-block">
-              &nbsp; &nbsp; &nbsp;<mat-icon class="bigicon"
-                >subdirectory_arrow_right</mat-icon
-              >
-              &nbsp;<input
-                [className]="
-                  gads_filter_error
-                    ? 'errorElement extrawide'
-                    : 'inputElement extrawide'
-                "
-                type="text"
-                [(ngModel)]="finalGadsFilter"
-                formControlName="gadsFinalFilters"
-                name="gadsFinalFilters"
-                value="{{ finalGadsFilter }}"
-                [readonly]="gads_filter_lock"
-              />
-              <br /><span class="error_text" *ngIf="gads_filter_error"
-                >Errors in format. Do not end with OR or AND</span
-              >
+                <mat-label>Operator</mat-label>
+                <mat-select [formControl]="selectedOperator">
+                  <mat-option
+                    *ngFor="let item of gadsOperatorsArray"
+                    [value]="item[0]"
+                  >
+                    {{ item[1] }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="label-input-block top-centre-form">
+              <mat-form-field>
+                <mat-label>Value</mat-label>
+                <span class="error_text" *ngIf="gads_error">{{
+                  gads_error_msg
+                }}</span>
+                <input [formControl]="selectedValue" matInput />
+              </mat-form-field>
             </div>
             <div class="label-input-block">
               <button
                 type="button"
-                id="unlockFilter"
-                class="bigicon"
-                (click)="unlockFilter()"
-                matTooltip="Unlock/lock filter for free text"
+                id="gadsAddToFilters"
+                class="focusButton"
+                (click)="gadsAddFilter()"
+                [disabled]="!conditionEnabled"
               >
-                <mat-icon class="red_icon" *ngIf="gads_filter_lock">lock</mat-icon>
-                <mat-icon class="green_icon" *ngIf="!gads_filter_lock"
-                  >lock_open</mat-icon
-                >
-              </button>
-              <button
-                type="button"
-                id="clearGadsFilter"
-                class="deleteButton"
-                (click)="clearFilter()"
-                matTooltip="Clear current GAds filters"
-              >
-                <mat-icon>delete_forever</mat-icon>
+                + Add
               </button>
             </div>
-          </div>
-        </mat-expansion-panel>
+            <div class="label-input-block">
+              <button
+                type="button"
+                id="gadsAddAnd"
+                class="focusButton"
+                (click)="gadsAddOrAnd('AND')"
+                [disabled]="!orAndEnabled"
+              >
+                AND
+              </button>
+            </div>
+            <div class="label-input-block">
+              <button
+                type="button"
+                id="gadsAddOr"
+                class="focusButton"
+                (click)="gadsAddOrAnd('OR')"
+                [disabled]="!orAndEnabled"
+              >
+                OR
+              </button>
+            </div>
+            <div>
+              <div class="label-input-block">
+                &nbsp; &nbsp; &nbsp;<mat-icon class="bigicon"
+                  >subdirectory_arrow_right</mat-icon
+                >
+                &nbsp;<input
+                  [className]="
+                    gads_filter_error
+                      ? 'errorElement extrawide'
+                      : 'inputElement extrawide'
+                  "
+                  type="text"
+                  [(ngModel)]="finalGadsFilter"
+                  formControlName="gadsFinalFilters"
+                  name="gadsFinalFilters"
+                  value="{{ finalGadsFilter }}"
+                  [readonly]="gads_filter_lock"
+                />
+                <br /><span class="error_text" *ngIf="gads_filter_error"
+                  >Errors in format. Do not end with OR or AND</span
+                >
+              </div>
+              <div class="label-input-block">
+                <button
+                  type="button"
+                  id="unlockFilter"
+                  class="bigicon"
+                  (click)="unlockFilter()"
+                  matTooltip="Unlock/lock filter for free text"
+                >
+                  <mat-icon class="red_icon" *ngIf="gads_filter_lock"
+                    >lock</mat-icon
+                  >
+                  <mat-icon class="green_icon" *ngIf="!gads_filter_lock"
+                    >lock_open</mat-icon
+                  >
+                </button>
+                <button
+                  type="button"
+                  id="clearGadsFilter"
+                  class="deleteButton"
+                  (click)="clearFilter()"
+                  matTooltip="Clear current GAds filters"
+                >
+                  <mat-icon>delete_forever</mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-expansion-panel>
         </mat-accordion>
-    <br />
-    <br />
+        <br />
+        <br />
+        <div>
+          <button mat-button matStepperNext>Next</button>
+        </div>
+        <br>
         <div>
           <button
             type="button"
             class="secondaryButton"
-            (click)="togglePanel();previewPlacements()"
+            (click)="togglePanel(); previewPlacements()"
             value="Preview"
           >
             Preview Results
@@ -254,50 +266,53 @@
       </mat-step>
       <mat-step>
         <ng-template matStepLabel>Save and Schedule</ng-template>
-      <div class="label-input-block top-centre-form">
-        <mat-form-field>
-          <mat-label>Schedule task</mat-label>
-          <mat-select
-            [formControl]="selectedSchedule"
-            (change)="scheduleChange()"
-          >
-            <mat-option *ngFor="let item of scheduleArray" [value]="item[0]">
-              {{ item[1] }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="label-input-block" [hidden]="email_alerts_hidden">
-        <mat-form-field>
-          <mat-label>Exclude or Notify?</mat-label>
-          <mat-select
-            formControlName="taskOutputDrowpDown"
-            name="taskOutputDrowpDown"
-            id="taskOutputDrowpDown"
-            [(ngModel)]="selectedTaskOutput"
-          >
-            <mat-option *ngFor="let item of taskOutputArray" [value]="item[0]">
-              {{ item[1] }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-    <div>
-      <mat-form-field class="example-full-width">
-        <mat-label>Task Name</mat-label>
-        <textarea
-          matInput
-          formControlName="taskName"
-          name="taskName"
-          placeholder="Enter task description, i.e. CPC > 10 and CTR < 0.01"
-        ></textarea>
-      </mat-form-field>
-    </div>
-      <div>
-        <button type="button" class="saveButton" (click)="save_task()">
-          {{ save_button }}
-        </button>
-      </div>
+        <div class="label-input-block top-centre-form">
+          <mat-form-field>
+            <mat-label>Schedule task</mat-label>
+            <mat-select
+              [formControl]="selectedSchedule"
+              (change)="scheduleChange()"
+            >
+              <mat-option *ngFor="let item of scheduleArray" [value]="item[0]">
+                {{ item[1] }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="label-input-block" [hidden]="email_alerts_hidden">
+          <mat-form-field>
+            <mat-label>Exclude or Notify?</mat-label>
+            <mat-select
+              formControlName="taskOutputDrowpDown"
+              name="taskOutputDrowpDown"
+              id="taskOutputDrowpDown"
+              [(ngModel)]="selectedTaskOutput"
+            >
+              <mat-option
+                *ngFor="let item of taskOutputArray"
+                [value]="item[0]"
+              >
+                {{ item[1] }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div>
+          <mat-form-field class="example-full-width">
+            <mat-label>Task Name</mat-label>
+            <textarea
+              matInput
+              formControlName="taskName"
+              name="taskName"
+              placeholder="Enter task description, i.e. CPC > 10 and CTR < 0.01"
+            ></textarea>
+          </mat-form-field>
+        </div>
+        <div>
+          <button type="button" class="saveButton" (click)="save_task()">
+            {{ save_button }}
+          </button>
+        </div>
       </mat-step>
     </mat-stepper>
     <br />
@@ -305,8 +320,7 @@
     <!-- Form End -->
     <br />
     <div class="label-input-block formSubmits">
-      <div class="float-left">
-      </div>
+      <div class="float-left"></div>
     </div>
   </form>
 </div>
@@ -315,18 +329,16 @@
 </p>
 
 <div *ngIf="table_result.length > 0">
-      <div class="label-input-block">
-        <button
-          type="button"
-          [className]="
-            exclude_count == 0 ? 'disabledButton' : 'secondaryButton'
-          "
-          (click)="runManualExcludeForm()"
-          value="Preview"
-        >
-          Manually Exclude ({{ exclude_count }})
-        </button>
-      </div>
+  <div class="label-input-block">
+    <button
+      type="button"
+      [className]="exclude_count == 0 ? 'disabledButton' : 'secondaryButton'"
+      (click)="runManualExcludeForm()"
+      value="Preview"
+    >
+      Manually Exclude ({{ exclude_count }})
+    </button>
+  </div>
   <div class="pagination-left">
     <span class="error_text" *ngIf="memory_error"
       ><mat-icon>warning</mat-icon> Your report is only partial due to memory of
