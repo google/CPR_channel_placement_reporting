@@ -3,3 +3,4 @@ tags
 *.pyc
 *.db
 google-ads.yaml
+backend/package-lock.json

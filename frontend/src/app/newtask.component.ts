@@ -18,6 +18,7 @@ import { FormGroup, FormBuilder, FormControl } from '@angular/forms';
 import { Component, OnInit } from '@angular/core';
 import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
 import { ActivatedRoute } from '@angular/router'
+import { MatSelectChange } from '@angular/material/select'; 
 
 import { PostService, ReturnPromise } from './services/post.service';
 import { DialogService } from './services/dialog.service';
@@ -196,6 +197,8 @@ export class NewtaskComponent implements OnInit {
     ["regexp", "Match regexp"],
   ];
 
+  is_user_visible_columns: string[] = [];
+
   hidden_columns: any[] = [
     "campaign_id",
     "ad_group_id",
@@ -255,6 +258,11 @@ export class NewtaskComponent implements OnInit {
       this.gadsForm.controls['lookbackDays'].setValue(7);
       this.gadsForm.controls['fromDaysAgo'].setValue("0");
       this.selectedSchedule.setValue('0');
+
+
+     this.value_columns.forEach(column => {
+        this.is_user_visible_columns.push(column); // By default, show all columns
+     });
 
       this.paginationForm = this.fb.group({
           paginationValue: ['']
@@ -627,6 +635,8 @@ export class NewtaskComponent implements OnInit {
           return "";
       }
   }
+
+
 
   toggleCheckAll(value: boolean) {
       for (let i in this.table_result) {

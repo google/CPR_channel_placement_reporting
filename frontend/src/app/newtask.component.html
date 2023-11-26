@@ -327,28 +327,41 @@
 </p>
 
 <div *ngIf="table_result.length > 0">
-  <div class="label-input-block">
-    <button
-      type="button"
-      [className]="exclude_count == 0 ? 'disabledButton' : 'secondaryButton'"
-      (click)="runManualExcludeForm()"
-      value="Preview"
-    >
-      Manually Exclude ({{ exclude_count }})
-    </button>
+  <div class="button-container">
+    <div class="label-input-block">
+      <button
+        type="button"
+        [className]="exclude_count == 0 ? 'disabledButton' : 'secondaryButton'"
+        (click)="runManualExcludeForm()"
+        value="Preview"
+      >
+        Manually Exclude ({{ exclude_count }})
+      </button>
+    </div>
+    <div class="toggle-column-select">
+      <mat-form-field appearance="fill">
+        <mat-label>Toggle column visibilities:</mat-label>
+        <mat-select [(ngModel)]="is_user_visible_columns" multiple>
+          <mat-option *ngFor="let header of column_headers" [value]="header">
+            {{ header }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
   </div>
+
   <div class="pagination-left">
     <span class="error_text" *ngIf="memory_error"
       ><mat-icon>warning</mat-icon> Your report is only partial due to memory of
       your instance being reached</span
     >
   </div>
+
   <div class="pagination">
     <form [formGroup]="paginationForm">
       <div class="label-input-block">
         <a (click)="downloadCSV()"
-          ><mat-icon>save_alt</mat-icon> Download CSV</a
-        >
+          ><mat-icon>save_alt</mat-icon> Download CSV</a>
       </div>
       <div class="label-input-block">
         <span *ngIf="pagination_start + pagination_rpp <= table_result.length">
@@ -402,6 +415,8 @@
   (ngModelChange)="toggleCheckAll(isCheckAll)"
 />
 <span *ngIf="table_result.length > 0">Un/check all</span>
+
+
 <table *ngIf="table_result.length > 0" class="styled-table newtask-width">
   <thead>
     <tr>
@@ -411,7 +426,8 @@
       </th>
       <th class="hrlink"><a (click)="sort_table('allowlist')">Allowlist</a></th>
       <ng-container *ngFor="let header of column_headers">
-        <th *ngIf="!hidden_columns.includes(header)" class="hrlink">
+
+        <th *ngIf="is_user_visible_columns.includes(header) && !hidden_columns.includes(header)" class="hrlink">
           <a (click)="sort_table('{{header}}')">{{ header }}</a>
         </th>
       </ng-container>
@@ -478,8 +494,8 @@
 
       <ng-container
         *ngFor="let item of data | keyvalue: unsorted; let i = index"
-      >
-        <td *ngIf="!hidden_columns.includes(column_headers[i])">
+      >     
+        <td *ngIf="is_user_visible_columns.includes(column_headers[i]) && !hidden_columns.includes(column_headers[i])">
           <span
             *ngIf="
               column_headers[i] == 'placement_type' &&
