@@ -284,15 +284,15 @@ def run_task_from_task_id():
     data = request.get_json(force=True)
     data.update({"save_to_db": config.get("save_to_db", True)})
     cmd = commands.RunTask(**data)
-    bus.handle(cmd)
-    return "OK", 200
+    result = bus.handle(cmd)
+    return _build_response(json.dumps(result))
 
 
 @app.route("/api/runTaskFromScheduler/<task_id>", methods=['GET'])
 def run_task_from_scheduler(task_id):
     cmd = commands.RunTask(task_id)
-    bus.handle(cmd)
-    return "OK", 200
+    result = bus.handle(cmd)
+    return _build_response(json.dumps(result))
 
 
 @app.route("/api/saveTask", methods=['POST'])
