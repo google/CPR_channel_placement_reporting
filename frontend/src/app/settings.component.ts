@@ -92,7 +92,7 @@
 
    _populate_mcc_list(response: ReturnPromise)
    {
-    this.mcc_list = Object.entries(response);
+    this.mcc_list = Object.values(response);
     this.mcc_list.sort((a, b) => (a.account_name.toLowerCase() > b.account_name.toLowerCase()) ? 1 : -1);
     this.loading=false;
    }

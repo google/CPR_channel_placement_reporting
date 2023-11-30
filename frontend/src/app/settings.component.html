@@ -12,7 +12,7 @@
           </div>
           <div class="label-input-block">
              <select name="gadsMccId" class="inputElement" formControlName="gadsMccId" id="gadsMccId">
-                <option *ngFor="let mcc of mcc_list" [value]=mcc[1].mcc_id>{{ mcc[1].account_name }} [{{ mcc[1].mcc_id }}]</option>
+                <option *ngFor="let mcc of mcc_list" [value]=mcc.id>{{ mcc.account_name }} [{{ mcc.id }}]</option>
              </select>
           </div>
           <div>
