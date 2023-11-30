@@ -17,8 +17,7 @@
 import { FormGroup, FormBuilder, FormControl } from '@angular/forms';
 import { Component, OnInit } from '@angular/core';
 import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
-import { ActivatedRoute } from '@angular/router'
-import { MatSelectChange } from '@angular/material/select'; 
+import { ActivatedRoute } from '@angular/router';
 
 import { PostService, ReturnPromise } from './services/post.service';
 import { DialogService } from './services/dialog.service';
@@ -26,7 +25,8 @@ import { saveAs } from 'file-saver'
 
 interface Field {
   value: string;
-  view: string
+  view: string,
+  type: string
 }
 
 interface FieldGroup {
@@ -34,6 +34,16 @@ interface FieldGroup {
   name: string;
   fields: Field[];
 }
+
+enum MetricType {
+    Number = "numeric",
+    String = "string",
+  }
+
+enum FilterField {
+    Operator,
+    Value,
+  }
 
 @Component({
   selector: 'app-newtask',
@@ -65,8 +75,10 @@ export class NewtaskComponent implements OnInit {
 
   error_count = 0;
   task_name_error = false;
-  gads_error = false;
-  gads_error_msg = "";
+  filter_operator_error = false;
+  filter_operator_error_msg = "";
+  filter_value_error = false;
+  filter_value_error_msg = "";
   gads_data_error = false;
   customer_id_error = false;
   lookback_error = false;
@@ -130,63 +142,68 @@ export class NewtaskComponent implements OnInit {
   allMetricArray: FieldGroup[] = [
     {name: "Dimensions",
       fields: [
-        {value: "GOOGLE_ADS_INFO:account_name", view: "Account Name" },
-        {value: "GOOGLE_ADS_INFO:campaign_name", view: "Campaign Name" },
-        {value: "GOOGLE_ADS_INFO:campaign_type", view: "Campaign Type" },
-        {value: "GOOGLE_ADS_INFO:campaign_sub_type", view: "Campaign Sub Type" },
-        {value: "GOOGLE_ADS_INFO:ad_group_name", view: "AdGroup Name" },
+        {value: "GOOGLE_ADS_INFO:account_name", view: "Account Name" , type:"string"},
+        {value: "GOOGLE_ADS_INFO:campaign_name", view: "Campaign Name", type:"string"},
+        {value: "GOOGLE_ADS_INFO:campaign_type", view: "Campaign Type", type:"string"},
+        {value: "GOOGLE_ADS_INFO:campaign_sub_type", view: "Campaign Sub Type" , type:"string"},
+        {value: "GOOGLE_ADS_INFO:ad_group_name", view: "AdGroup Name" , type:"string"},
       ],
     },
     {name: "Metrics",
       fields: [
-        {value: "GOOGLE_ADS_INFO:impressions", view: "Impressions"},
-        {value: "GOOGLE_ADS_INFO:clicks", view: "Clicks"},
-        {value: "GOOGLE_ADS_INFO:ctr", view: "CTR"},
-        {value: "GOOGLE_ADS_INFO:cost", view: "Cost"},
-        {value: "GOOGLE_ADS_INFO:avg_cpm", view: "Avg. CPM"},
-        {value: "GOOGLE_ADS_INFO:avg_cpc", view: "Avg. CPC"},
-        {value: "GOOGLE_ADS_INFO:avg_cpv", view: "Avg. CPV"},
-        {value: "GOOGLE_ADS_INFO:conversions", view: "Conversions"},
-        {value: "GOOGLE_ADS_INFO:cost_per_conversion", view: "CPA"},
-        {value: "GOOGLE_ADS_INFO:view_through_conversions", view: "View-Through Conversions"},
-        {value: "GOOGLE_ADS_INFO:video_views", view: "Video Views"},
-        {value: "GOOGLE_ADS_INFO:video_view_rate", view: "Video View Rate"},
-        {value: "GOOGLE_ADS_INFO:conversions_from_interactions_rate", view: "Conversions Rate"},
+        {value: "GOOGLE_ADS_INFO:impressions", view: "Impressions", type:"numeric"},
+        {value: "GOOGLE_ADS_INFO:clicks", view: "Clicks", type:"numeric"},
+        {value: "GOOGLE_ADS_INFO:ctr", view: "CTR", type:"numeric"},
+        {value: "GOOGLE_ADS_INFO:cost", view: "Cost", type:"numeric"},
+        {value: "GOOGLE_ADS_INFO:avg_cpm", view: "Avg. CPM", type:"numeric"},
+        {value: "GOOGLE_ADS_INFO:avg_cpc", view: "Avg. CPC", type:"numeric"},
+        {value: "GOOGLE_ADS_INFO:avg_cpv", view: "Avg. CPV", type:"numeric"},
+        {value: "GOOGLE_ADS_INFO:conversions", view: "Conversions", type:"numeric"},
+        {value: "GOOGLE_ADS_INFO:cost_per_conversion", view: "CPA", type:"numeric"},
+        {value: "GOOGLE_ADS_INFO:view_through_conversions", view: "View-Through Conversions", type:"numeric"},
+        {value: "GOOGLE_ADS_INFO:video_views", view: "Video Views", type:"numeric"},
+        {value: "GOOGLE_ADS_INFO:video_view_rate", view: "Video View Rate", type:"numeric"},
+        {value: "GOOGLE_ADS_INFO:conversions_from_interactions_rate", view: "Conversions Rate", type:"numeric"},
       ],
     },
     {name: "Conversion Split",
       fields: [
-        {value: "GOOGLE_ADS_INFO:conversion_name", view: "Conversion Name"},
-        {value: "GOOGLE_ADS_INFO:cost_per_conversion_", view: "CPA for selected conversion(s)"},
-        {value: "GOOGLE_ADS_INFO:conversions_", view: "Selected conversion(s)"},
+        {value: "GOOGLE_ADS_INFO:conversion_name", view: "Conversion Name", type:"string"},
+        {value: "GOOGLE_ADS_INFO:cost_per_conversion_", view: "CPA for selected conversion(s)", type:"numeric"},
+        {value: "GOOGLE_ADS_INFO:conversions_", view: "Selected conversion(s)", type:"string"},
       ],
     },
     {name: "YouTube Channel",
       fields: [
-        {value: "YOUTUBE_CHANNEL_INFO:title", view: "Title"},
-        {value: "YOUTUBE_CHANNEL_INFO:description", view: "Description"},
-        {value: "YOUTUBE_CHANNEL_INFO:viewCount", view: "Video Views Count"},
-        {value: "YOUTUBE_CHANNEL_INFO:subscriberCount", view: "Subscriber Count"},
-        {value: "YOUTUBE_CHANNEL_INFO:videoCount", view: "Video Count"},
+        {value: "YOUTUBE_CHANNEL_INFO:title", view: "Title", type:"string"},
+        {value: "YOUTUBE_CHANNEL_INFO:description", view: "Description", type:"string"},
+        {value: "YOUTUBE_CHANNEL_INFO:viewCount", view: "Video Views Count", type:"numeric"},
+        {value: "YOUTUBE_CHANNEL_INFO:subscriberCount", view: "Subscriber Count", type:"numeric"},
+        {value: "YOUTUBE_CHANNEL_INFO:videoCount", view: "Video Count", type:"numeric"},
       ],
     },
     {name: "YouTube Video",
       fields: [
-        {value: "YOUTUBE_VIDEO_INFO:title", view: "Title"},
-        {value: "YOUTUBE_VIDEO_INFO:description", view: "Description"},
-        {value: "YOUTUBE_VIDEO_INFO:viewCount", view: "Video Views Count"},
-        {value: "YOUTUBE_VIDEO_INFO:subscriberCount", view: "Subscriber Count"},
-        {value: "YOUTUBE_VIDEO_INFO:videoCount", view: "Video Count"},
+        {value: "YOUTUBE_VIDEO_INFO:title", view: "Title", type:"string"},
+        {value: "YOUTUBE_VIDEO_INFO:description", view: "Description", type:"string"},
+        {value: "YOUTUBE_VIDEO_INFO:viewCount", view: "Video Views Count", type:"numeric"},
+        {value: "YOUTUBE_VIDEO_INFO:subscriberCount", view: "Subscriber Count", type:"numeric"},
+        {value: "YOUTUBE_VIDEO_INFO:videoCount", view: "Video Count", type:"numeric"},
       ],
     },
     {name: "Website Content",
       fields: [
-        {value: "WEBSITE_INFO:title", view: "Title"},
-        {value: "WEBSITE_INFO:keywords", view: "Keywords"},
-        {value: "WEBSITE_INFO:description", view: "Description"},
+        {value: "WEBSITE_INFO:title", view: "Title", type:"string"},
+        {value: "WEBSITE_INFO:keywords", view: "Keywords", type:"string"},
+        {value: "WEBSITE_INFO:description", view: "Description", type:"string"},
       ],
     }
   ];
+
+
+  metricsByTypeDict: { [key: string]: Set<string> } = {};  
+  numericOperators: Set<string | null > = new Set(["<", ">", "=", "!="]);
+  stringOperators: Set<string | null> = new Set(["contains", "regexp", "=", "!="]);
 
   gadsOperatorsArray = [
     ["<", "less than"],
@@ -269,7 +286,21 @@ export class NewtaskComponent implements OnInit {
       });
 
       this.paginationForm.controls['paginationValue'].setValue(this.pagination_rpp);
+      this.initMetricsByTypeDict();
   }
+
+  initMetricsByTypeDict() {
+        if (!this.metricsByTypeDict || Object.keys(this.metricsByTypeDict).length == 0){
+        this.allMetricArray.forEach((fieldGroup) => {
+            fieldGroup.fields.forEach((field) => {
+            if (!this.metricsByTypeDict[field.type]) {
+                this.metricsByTypeDict[field.type] = new Set<string>();
+            }
+            this.metricsByTypeDict[field.type].add(field.value);
+            });
+        });
+      }
+    }
 
   ngOnInit(): void {
       this.task_id = "";
@@ -282,7 +313,6 @@ export class NewtaskComponent implements OnInit {
   }
 
   ngAfterViewInit(): void {
-
       if (this.task_id != undefined && this.task_id != "") {
           this._populate_task_load(this.task_id);
       }
@@ -636,8 +666,6 @@ export class NewtaskComponent implements OnInit {
       }
   }
 
-
-
   toggleCheckAll(value: boolean) {
       for (let i in this.table_result) {
           this.table_result[i]['exclude_from_account'] = value;
@@ -700,29 +728,50 @@ export class NewtaskComponent implements OnInit {
   }
 
   gadsAddFilter() {
-      this.gads_error = false;
-      let selected_field = this.selectedField.value;
-      let operator = this.selectedOperator.value;
-      let field_value = this.selectedValue.value;
-      if (isNaN(Number(field_value)) && !operator?.includes("regex") && !operator?.includes("contains")) {
-          this.gads_error = true;
-          this.gads_error_msg = "Needs to be a number";
-      } else if (selected_field != "" &&
-          operator != "" &&
-          field_value != "" &&
-          this.conditionEnabled) {
-          let finalValue = field_value;
-          if (!this.finalGadsFilter.endsWith("(") && this.finalGadsFilter != "") {
-              this.finalGadsFilter += " ";
-          }
-          this.finalGadsFilter += selected_field + " " + operator + " " + finalValue;
-          if (this.finalGadsFilter.includes(") OR (") && !this.finalGadsFilter.endsWith(")")) {
-              this.finalGadsFilter += ")";
-          }
-          this.conditionEnabled = false;
-          this.orAndEnabled = true;
-      }
-
+    this.filter_operator_error = false;
+    this.filter_value_error = false;
+    let selected_field = this.selectedField.value?? "";
+    let operator = this.selectedOperator.value?? "";
+    let field_value = this.selectedValue.value?? "";
+    const showError = (feild :FilterField ,msg: string) => {        
+        if (feild == FilterField.Operator) {
+            this.filter_operator_error = true;
+            this.filter_operator_error_msg = msg;
+        } else{
+            this.filter_value_error = true;
+            this.filter_value_error_msg = msg;
+        }        
+    }    
+    if (this.metricsByTypeDict[MetricType.Number].has(selected_field)){
+        if (!this.numericOperators.has(operator)){
+        showError(FilterField.Operator, "Not compatible with the selected field");
+        }
+        if (isNaN(Number(field_value))){
+            showError(FilterField.Value, "Should be numeric");
+        }
+    } else if (this.metricsByTypeDict[MetricType.String].has(selected_field)){
+        if (!this.stringOperators.has(operator)){
+            showError(FilterField.Operator, "Not compatible with the selected field");
+            }
+            if (Number(field_value)){
+                showError(FilterField.Value, "Please type in not just digits");
+            }
+    } else if (isNaN(Number(field_value)) && !operator?.includes("regex") && !operator?.includes("contains")) {
+        showError(FilterField.Value, "Should be numeric");
+    } 
+    
+    if (selected_field != "" && operator != "" && field_value != "" &&  this.conditionEnabled) {
+        let finalValue = field_value;
+        if (!this.finalGadsFilter.endsWith("(") && this.finalGadsFilter != "") {
+            this.finalGadsFilter += " ";
+        }
+        this.finalGadsFilter += selected_field + " " + operator + " " + finalValue;
+        if (this.finalGadsFilter.includes(") OR (") && !this.finalGadsFilter.endsWith(")")) {
+            this.finalGadsFilter += ")";
+        }
+        this.conditionEnabled = false;
+        this.orAndEnabled = true;
+        }
   }
 
   gadsAddOrAnd(andOr: string) {
@@ -892,3 +941,4 @@ export class NewtaskComponent implements OnInit {
         this.filtersOpenState = !this.filtersOpenState
   }
 }
+

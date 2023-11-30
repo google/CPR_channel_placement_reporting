@@ -153,15 +153,18 @@
                     {{ item[1] }}
                   </mat-option>
                 </mat-select>
+                <span class="error_text" *ngIf="filter_operator_error">{{
+                  filter_operator_error_msg
+                }}</span>
               </mat-form-field>
             </div>
             <div class="label-input-block top-centre-form">
               <mat-form-field>
                 <mat-label>Value</mat-label>
-                <span class="error_text" *ngIf="gads_error">{{
-                  gads_error_msg
-                }}</span>
                 <input [formControl]="selectedValue" matInput />
+                <span class="error_text" *ngIf="filter_value_error">{{
+                  filter_value_error_msg
+                }}</span>
               </mat-form-field>
             </div>
             <div class="label-input-block">
