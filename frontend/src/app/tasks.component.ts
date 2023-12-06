@@ -113,7 +113,7 @@ export class TasksComponent implements OnInit {
 
   async _continue_run_task(task_id:string) {
     this.loading = true;
-    let task_id_json = { 'id': task_id };
+    let task_id_json = { 'id': task_id , 'type': "MANUAL"};
     (await this.service.run_task_from_task_id(JSON.stringify(task_id_json)))
       .subscribe({
         next: (response: ReturnPromise) => this._run_task_from_file_success(response),

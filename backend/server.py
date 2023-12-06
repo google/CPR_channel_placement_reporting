@@ -17,7 +17,7 @@ from flask import Flask, request, render_template, send_from_directory
 import json
 
 from googleads_housekeeper import bootstrap, views
-from googleads_housekeeper.domain import commands
+from googleads_housekeeper.domain import commands, execution
 from googleads_housekeeper.services import unit_of_work
 from googleads_housekeeper.adapters import publisher
 
@@ -79,7 +79,8 @@ def run_task_from_task_id():
 
 @app.route("/api/runTaskFromScheduler/<task_id>", methods=['GET'])
 def run_task_from_scheduler(task_id):
-    cmd = commands.RunTask(task_id)
+    cmd = commands.RunTask(id=task_id,
+                           type=execution.ExecutionTypeEnum.SCHEDULED)
     result = bus.handle(cmd)
     return _build_response(json.dumps(result))
 
@@ -193,8 +194,7 @@ def get_config():
 
 @app.route("/api/getMccIds", methods=['GET'])
 def get_all_mcc_ids():
-    mcc_ids = views.mcc_ids(bus.uow)
-    if not mcc_ids:
+    if not (mcc_ids := views.mcc_ids(bus.uow)):
         cmd = commands.GetMccIds()
         mcc_ids = bus.handle(cmd)
     return _build_response(json.dumps(mcc_ids))
