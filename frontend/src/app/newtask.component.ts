@@ -741,7 +741,7 @@ export class NewtaskComponent implements OnInit {
             this.filter_value_error = true;
             this.filter_value_error_msg = msg;
         }        
-    }    
+    }
     if (this.metricsByTypeDict[MetricType.Number].has(selected_field)){
         if (!this.numericOperators.has(operator)){
         showError(FilterField.Operator, "Not compatible with the selected field");
@@ -760,19 +760,25 @@ export class NewtaskComponent implements OnInit {
         showError(FilterField.Value, "Should be numeric");
     } 
     
-    if (selected_field != "" && operator != "" && field_value != "" &&  this.conditionEnabled) {
-        let finalValue = field_value;
-        if (!this.finalGadsFilter.endsWith("(") && this.finalGadsFilter != "") {
-            this.finalGadsFilter += " ";
-        }
-        this.finalGadsFilter += selected_field + " " + operator + " " + finalValue;
-        if (this.finalGadsFilter.includes(") OR (") && !this.finalGadsFilter.endsWith(")")) {
-            this.finalGadsFilter += ")";
-        }
-        this.conditionEnabled = false;
-        this.orAndEnabled = true;
-        }
+    if (!(this.filter_operator_error || this.filter_value_error)){
+        this.fixFilterSyntax(selected_field, operator, field_value);
+    }
   }
+
+    private fixFilterSyntax(selected_field: string, operator: string, field_value: string) {
+        if (selected_field != "" && operator != "" && field_value != "" && this.conditionEnabled) {
+            let finalValue = field_value;
+            if (!this.finalGadsFilter.endsWith("(") && this.finalGadsFilter != "") {
+                this.finalGadsFilter += " ";
+            }
+            this.finalGadsFilter += selected_field + " " + operator + " " + finalValue;
+            if (this.finalGadsFilter.includes(") OR (") && !this.finalGadsFilter.endsWith(")")) {
+                this.finalGadsFilter += ")";
+            }
+            this.conditionEnabled = false;
+            this.orAndEnabled = true;
+        }
+    }
 
   gadsAddOrAnd(andOr: string) {
       if (this.orAndEnabled) {
