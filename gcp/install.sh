@@ -138,6 +138,7 @@ deploy_app() {
 	echo -e "${COLOR}Deploying app to GAE...${NC}"
 	cd $SCRIPT_PATH/../backend
   sed -i'.bak' -e "s^path/to/google-ads.yaml^$GCS_BASE_PATH/google-ads.yaml^" app.yaml
+  sed -i'.bak' -e "s^your-youtube-api-key^$YOUTUBE_DATA_API_KEY^" app.yaml
 	gcloud app deploy -q
 	cd $SCRIPT_PATH
 }
