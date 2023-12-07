@@ -51,9 +51,7 @@ def handle_event(cloud_event):
     }
 
     client = CloudSchedulerClient()
-    if job := get_job(client, job_name):
-        update_job(client, job, job_body)
-    else:
+    if not (job := get_job(client, job_name)):
         create_job(client, parent, job_body)
 
 
@@ -74,13 +72,6 @@ def get_job(client: CloudSchedulerClient, job_name: str) -> Optional[Job]:
         return job
     except Exception:
         return None
-
-
-def update_job(client: CloudSchedulerClient, job: Job, job_dict: Dict[str, str]) -> None:
-    job.schedule = job_dict.get("schedule")
-    update_mask = field_mask_pb2.FieldMask(paths=['schedule'])
-    request = UpdateJobRequest(job=job, update_mask=update_mask)
-    client.update_job(request)
 
 
 def create_job(client: CloudSchedulerClient, parent: str,

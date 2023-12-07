@@ -86,7 +86,8 @@ check_billing_enabled() {
 
 deploy_cloud_functions() {
 	echo -e "${COLOR}Deploying cloud functions...${NC}"
-	_deploy_cf "create_update_task_schedule" "${PROJECT_ALIAS}_task_created"
+	_deploy_cf "create_task_schedule" "${PROJECT_ALIAS}_task_created"
+	_deploy_cf "update_task_schedule" "${PROJECT_ALIAS}_task_updated"
 	_deploy_cf "delete_task_schedule" "${PROJECT_ALIAS}_task_deleted"
 }
 
@@ -107,7 +108,7 @@ _deploy_cf() {
 
 create_topics() {
 	echo -e "${COLOR}Creating PubSub topics...${NC}"
-	for topic in "task_created" "task_deleted"; do
+	for topic in "task_created" "task_deleted" "task_updated"; do
 		_create_topic "${PROJECT_ALIAS}_${topic}"
 	done
 }

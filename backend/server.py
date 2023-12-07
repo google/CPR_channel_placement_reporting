@@ -24,8 +24,9 @@ from googleads_housekeeper.adapters import publisher
 app = Flask(__name__)
 STATIC_DIR = os.getenv('STATIC_DIR') or 'static'
 
-bus = bootstrap.Bootstrapper(
-    os.getenv("ADS_HOUSEKEEPER_DEPLOYMENT_TYPE", "Dev")).bootstrap_app()
+bus = bootstrap.Bootstrapper(type=os.getenv("ADS_HOUSEKEEPER_DEPLOYMENT_TYPE",
+                                            "Dev"),
+                             topic_prefix="cpr").bootstrap_app()
 
 
 @app.route('/', defaults={'path': ''})
