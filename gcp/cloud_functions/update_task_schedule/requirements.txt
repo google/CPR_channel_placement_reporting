@@ -1,0 +1,3 @@
+functions-framework==3.*
+google-cloud-scheduler
+google-api-python-client

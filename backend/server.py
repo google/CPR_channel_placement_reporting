@@ -24,22 +24,9 @@ from googleads_housekeeper.adapters import publisher
 app = Flask(__name__)
 STATIC_DIR = os.getenv('STATIC_DIR') or 'static'
 
-from cpr_services import get_mcc_ids, get_placements_full_data, run_manual_excluder, get_customer_ids, remove_channel_id
-from gads_api import exclude_channels, get_channels_to_remove_partial_data, is_localhost_run
-from cloud_api import get_schedule_list, update_cloud_schedule
-from firebase_server import fb_get_task, fb_save_client_secret, fb_save_task, fb_get_tasks_list, fb_delete_task, fb_save_settings, fb_read_settings, fb_read_client_secret, fb_save_token, fb_read_token, fb_clear_token, fb_add_to_allowlist, fb_remove_from_allowlist
-if os.getenv("GCP_DEPLOYMENT"):
-    datastore_client = datastore.Client()
-    pubsub_client = pubsub_v1.PublisherClient()
-    pubsub_publisher = publisher.GoogleCloudPubSubPublisher(
-        client=pubsub_client, project_id=os.getenv("GOOGLE_CLOUD_PROJECT"))
-
-    bus = bootstrap.bootstrap(
-        start_orm=False,
-        uow=unit_of_work.DatastoreUnitOfWork(datastore_client),
-        publish_service=pubsub_publisher)
-else:
-    bus = bootstrap.bootstrap()
+bus = bootstrap.Bootstrapper(type=os.getenv("ADS_HOUSEKEEPER_DEPLOYMENT_TYPE",
+                                            "Dev"),
+                             topic_prefix="cpr").bootstrap_app()
 
 
 @app.route('/', defaults={'path': ''})
