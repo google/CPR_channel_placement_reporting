@@ -344,7 +344,7 @@
     <div class="toggle-column-select">
       <mat-form-field appearance="fill">
         <mat-label>Toggle column visibilities:</mat-label>
-        <mat-select [(ngModel)]="is_user_visible_columns" multiple>
+        <mat-select [(ngModel)]="user_visible_columns" multiple>
           <mat-option *ngFor="let header of column_headers" [value]="header">
             {{ header }}
           </mat-option>
@@ -430,7 +430,7 @@
       <th class="hrlink"><a (click)="sort_table('allowlist')">Allowlist</a></th>
       <ng-container *ngFor="let header of column_headers">
 
-        <th *ngIf="is_user_visible_columns.includes(header) && !hidden_columns.includes(header)" class="hrlink">
+        <th *ngIf="user_visible_columns.includes(header) && !hidden_columns.includes(header)" class="hrlink">
           <a (click)="sort_table('{{header}}')">{{ header }}</a>
         </th>
       </ng-container>
@@ -498,7 +498,7 @@
       <ng-container
         *ngFor="let item of data | keyvalue: unsorted; let i = index"
       >     
-        <td *ngIf="is_user_visible_columns.includes(column_headers[i]) && !hidden_columns.includes(column_headers[i])">
+        <td *ngIf="user_visible_columns.includes(column_headers[i]) && !hidden_columns.includes(column_headers[i])">
           <span
             *ngIf="
               column_headers[i] == 'placement_type' &&
