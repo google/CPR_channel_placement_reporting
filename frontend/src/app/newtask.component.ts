@@ -214,7 +214,7 @@ export class NewtaskComponent implements OnInit {
     ["regexp", "Match regexp"],
   ];
 
-  is_user_visible_columns: string[] = [];
+  user_visible_columns: string[] = [];
 
   hidden_columns: any[] = [
     "campaign_id",
@@ -238,6 +238,10 @@ export class NewtaskComponent implements OnInit {
     "all_conversion_rate",
     "interaction_rate",
     "conversions_from_interactions_rate"
+  ];
+
+  user_hidden_columns_by_defualt: any[] = [
+    "criterion_id"
   ];
 
   task_exists: any;
@@ -276,18 +280,29 @@ export class NewtaskComponent implements OnInit {
       this.gadsForm.controls['fromDaysAgo'].setValue("0");
       this.selectedSchedule.setValue('0');
 
+     this.fillUserVisibilColumnDropDown();
 
-     this.value_columns.forEach(column => {
-        this.is_user_visible_columns.push(column); // By default, show all columns
-     });
-
-      this.paginationForm = this.fb.group({
+     this.paginationForm = this.fb.group({
           paginationValue: ['']
       });
 
       this.paginationForm.controls['paginationValue'].setValue(this.pagination_rpp);
       this.initMetricsByTypeDict();
   }
+
+    private fillUserVisibilColumnDropDown() {
+        this.hidden_columns.forEach(column => {
+            this.user_visible_columns.push(column); 
+        });
+
+        this.value_columns.forEach(column => {
+            this.user_visible_columns.push(column);
+        });
+
+        this.user_hidden_columns_by_defualt.forEach(column => {
+            this.user_visible_columns.push(column);
+        });
+    }
 
   initMetricsByTypeDict() {
         if (!this.metricsByTypeDict || Object.keys(this.metricsByTypeDict).length == 0){
