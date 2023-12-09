@@ -514,21 +514,35 @@ export class NewtaskComponent implements OnInit {
   }
 
   runManualExcludeForm() {
-    let exclusion_list = [];
+    let exclusion_list: Object[][] = [];
     for (let data of this.table_result) {
       if (data.exclude_from_account && !data.excluded_already && !data.allowlist) {
         exclusion_list.push(Object.values(data));
       }
     }
     if (exclusion_list.length > 0) {
-      let formRawValue = {
+        if (this.data_youtube && this.selectedExclusionLevelFormControl.value != "ACCOUNT" ){
+            this.dialogService.openConfirmDialog("For now, CPR tool can exclude video placements at an account level only (regardless of 'success' indication). Do you wish to proceed?")
+            .afterClosed().subscribe(res => {
+                if (res) {
+                    this.manualExcludeConfirmed(exclusion_list);
+                }
+            });
+        }
+        else{
+            this.manualExcludeConfirmed(exclusion_list);
+        }
+    }
+  }
+
+  manualExcludeConfirmed(exclusion_list: Object[][]) {
+    let formRawValue = {
         'customer_ids': this.selectedCidList.value,
         'header': this.column_headers,
         'placements': exclusion_list
-      }
-      this._call_manual_service(JSON.stringify(formRawValue));
-    }
-  }
+    };
+    this._call_manual_service(JSON.stringify(formRawValue));
+}
 
   //the call to the server
   async _call_manual_service(formRawValue: string) {
