@@ -145,7 +145,7 @@
                 id="gadsOperator"
               >
                 <mat-label>Operator</mat-label>
-                <mat-select [formControl]="selectedOperator">
+                <mat-select [formControl]="selectedOperator" (focus)="clearErrors('selectedOperator')" (blur)="validateOperator()">
                   <mat-option
                     *ngFor="let item of gadsOperatorsArray"
                     [value]="item[0]"
@@ -161,7 +161,7 @@
             <div class="label-input-block top-centre-form">
               <mat-form-field>
                 <mat-label>Value</mat-label>
-                <input [formControl]="selectedValue" matInput />
+                <input [formControl]="selectedValue" matInput (focus)="clearErrors('selectedValue')" (blur)="validateValue()" />
                 <span class="error_text" *ngIf="filter_value_error">{{
                   filter_value_error_msg
                 }}</span>
