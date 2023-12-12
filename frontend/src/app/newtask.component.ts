@@ -762,35 +762,84 @@ export class NewtaskComponent implements OnInit {
     let selected_field = this.selectedField.value?? "";
     let operator = this.selectedOperator.value?? "";
     let field_value = this.selectedValue.value?? "";
-    const showError = (feild :FilterField ,msg: string) => {        
-        if (feild == FilterField.Operator) {
-            this.filter_operator_error = true;
-            this.filter_operator_error_msg = msg;
-        } else{
-            this.filter_value_error = true;
-            this.filter_value_error_msg = msg;
-        }        
+
+    if (!(this.validateOperator() && this.validateValue())){
+     return;
     }
-    if (this.metricsByTypeDict[MetricType.Number].has(selected_field)){
-        if (!this.numericOperators.has(operator)){
-        showError(FilterField.Operator, "Not compatible with the selected field");
-        }
-        if (isNaN(Number(field_value))){
-            showError(FilterField.Value, "Should be numeric");
-        }
-    } else if (this.metricsByTypeDict[MetricType.String].has(selected_field)){
-        if (!this.stringOperators.has(operator)){
-            showError(FilterField.Operator, "Not compatible with the selected field");
-            }
-            if (Number(field_value)){
-                showError(FilterField.Value, "Please type in not just digits");
-            }
-    } else if (isNaN(Number(field_value)) && !operator?.includes("regex") && !operator?.includes("contains")) {
-        showError(FilterField.Value, "Should be numeric");
+     if (isNaN(Number(field_value)) && !operator?.includes("regex") && !operator?.includes("contains")) {
+        this.showError(FilterField.Value, "Should be numeric");
     } 
     
     if (!(this.filter_operator_error || this.filter_value_error)){
         this.fixFilterSyntax(selected_field, operator, field_value);
+    }
+  }
+
+
+  showError(feild :FilterField ,msg: string) {        
+    if (feild == FilterField.Operator) {
+        this.filter_operator_error = true;
+        this.filter_operator_error_msg = msg;
+    } else{
+        this.filter_value_error = true;
+        this.filter_value_error_msg = msg;
+    }        
+}
+  
+  validateOperator(){
+    let isValid = true;
+
+    let selected_field = this.selectedField.value?? "";
+    let operator = this.selectedOperator.value?? "";
+
+    if (this.metricsByTypeDict[MetricType.Number].has(selected_field)){
+        if (!this.numericOperators.has(operator)){
+            this.showError(FilterField.Operator, "Not compatible with the selected field");
+        isValid = false;
+        }
+    } else if (this.metricsByTypeDict[MetricType.String].has(selected_field)){
+        if (!this.stringOperators.has(operator)){
+            this.showError(FilterField.Operator, "Not compatible with the selected field");
+            isValid = false;
+            }
+    }
+    return isValid;
+  }
+
+  validateValue(){
+    let isValid = true;
+
+    let selected_field = this.selectedField.value?? "";
+    let field_value = this.selectedValue.value?? "";
+
+    if (this.metricsByTypeDict[MetricType.Number].has(selected_field)){
+        if (isNaN(Number(field_value))){
+            this.showError(FilterField.Value, "Should be numeric");
+            isValid = false;
+        }
+    } else if (this.metricsByTypeDict[MetricType.String].has(selected_field)){
+            if (Number(field_value)){
+             this.showError(FilterField.Value, "Please type in not just digits");
+             isValid = false;
+            }
+    }
+    return isValid;
+  }
+
+
+  clearErrors(controlName: string) {
+    switch (controlName)
+    {
+        case "selectedOperator":
+            {
+                this.filter_operator_error = false;
+                break;
+            }
+            case "selectedValue":
+            {
+                this.filter_value_error = false;
+                break;
+            }
     }
   }
 
