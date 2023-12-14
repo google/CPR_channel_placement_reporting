@@ -67,6 +67,7 @@ export class NewtaskComponent implements OnInit {
   isChecked: boolean = false;
   save_button = "Save Task";
   task_id: string = "";
+  task_name: string = "";
   taskOutput:any[] = [];
   email_alerts_hidden: boolean = true;
   manual_cid: boolean = false;
@@ -651,9 +652,11 @@ export class NewtaskComponent implements OnInit {
       } else {
           schedule_text = " and removed any schedules that were running"
       }
-      this.openSnackBar("Successfully saved task '" + this.gadsForm.controls['taskName'].value + "' (" +
+      const task_name = this.gadsForm.controls['taskName'].value;
+      this.openSnackBar("Successfully saved task '" + task_name + "' (" +
           response + ")" + schedule_text, "Dismiss", "success-snackbar");
       this.task_id = "" + response;
+      this.task_name = task_name;
       this.loading = false;
   }
 
