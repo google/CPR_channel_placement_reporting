@@ -345,7 +345,7 @@
       <mat-form-field appearance="fill">
         <mat-label>Toggle column visibilities:</mat-label>
         <mat-select [(ngModel)]="user_visible_columns" multiple>
-          <mat-option *ngFor="let header of column_headers" [value]="header">
+          <mat-option *ngFor="let header of toggle_column_headers" [value]="header">
             {{ header }}
           </mat-option>
         </mat-select>
