@@ -56,6 +56,7 @@ export class NewtaskComponent implements OnInit {
   paginationForm: FormGroup;
   loading: boolean = false;
   column_headers: any[] = [];
+  toggle_column_headers: any[] = [];
   table_result: any[] = [];
   customer_list: any[] = [];
   finalGadsFilter: string = "";
@@ -241,8 +242,9 @@ export class NewtaskComponent implements OnInit {
     "conversions_from_interactions_rate"
   ];
 
-  user_hidden_columns_by_defualt: any[] = [
-    "criterion_id"
+  user_visible_columns_by_defualt: any[] = [
+    "name",
+    "placemnet_type"
   ];
 
   task_exists: any;
@@ -292,15 +294,7 @@ export class NewtaskComponent implements OnInit {
   }
 
     private fillUserVisibilColumnDropDown() {
-        this.hidden_columns.forEach(column => {
-            this.user_visible_columns.push(column); 
-        });
-
-        this.value_columns.forEach(column => {
-            this.user_visible_columns.push(column);
-        });
-
-        this.user_hidden_columns_by_defualt.forEach(column => {
+        this.user_visible_columns_by_defualt.forEach(column => {
             this.user_visible_columns.push(column);
         });
     }
@@ -332,6 +326,10 @@ export class NewtaskComponent implements OnInit {
       if (this.task_id != undefined && this.task_id != "") {
           this._populate_task_load(this.task_id);
       }
+  }
+
+  compareFields(field1: Field, field2: Field): boolean {
+    return field1 && field2 ? field1.value === field2.value : field1 === field2;
   }
 
   async _populate_customer_list() {
@@ -498,6 +496,7 @@ export class NewtaskComponent implements OnInit {
       this.table_result = flattened_raw_response;
       if (this.table_result.length > 0) {
         this.column_headers = Object.keys(jsonResponse.data['0']);
+        this.toggle_column_headers = this.column_headers.filter(item => !this.hidden_columns.includes(item))
         this.sort_table("default");
         this.no_data = false;
       } else {
@@ -506,6 +505,7 @@ export class NewtaskComponent implements OnInit {
       this.loading = false;
   }
 
+ 
 
   private handleEmptyTable(message: string, css_class: string) {
       this.no_data = true;
@@ -766,15 +766,9 @@ export class NewtaskComponent implements OnInit {
     let operator = this.selectedOperator.value?? "";
     let field_value = this.selectedValue.value?? "";
 
-    if (!(this.validateOperator() && this.validateValue())){
-     return;
-    }
-     if (isNaN(Number(field_value)) && !operator?.includes("regex") && !operator?.includes("contains")) {
-        this.showError(FilterField.Value, "Should be numeric");
-    } 
-    
-    if (!(this.filter_operator_error || this.filter_value_error)){
+    if (this.validateOperator() && this.validateValue()){
         this.fixFilterSyntax(selected_field, operator, field_value);
+        this.user_visible_columns.push(selected_field.split(":")[1])
     }
   }
 
