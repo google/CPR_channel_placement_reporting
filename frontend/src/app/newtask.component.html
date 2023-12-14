@@ -2,7 +2,7 @@
   <form [formGroup]="gadsForm">
     <div class="heading">
       <span *ngIf="task_id != undefined && this.task_id != ''"
-        >Task ID / {{ task_id }}
+        >Task Name / {{ task_name }}
         <div class="label-input-block">
           <a (click)="duplicateTask()" matTooltip="Make a copy">
             <mat-icon>file_copy</mat-icon>
