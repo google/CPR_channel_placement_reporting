@@ -64,7 +64,7 @@
         <th>Task Name</th>
         <th>Customer ID</th>
         <th>Schedule</th>
-        <th>Next Run and Status</th>
+        <th>Status</th>
         <th class="align-centre">Edit</th>
         <th class="align-centre">Run Now</th>
         <th class="align-centre">Delete</th>
@@ -87,9 +87,14 @@
           >
         </td>
         <td>{{ data.customer_ids }}</td>
-        <td>{{ getScheduleValue(data.schedule) }}</td>
+        <td *ngIf="data.next_run != 'Not scheduled'" matTooltip="Next run: {{data.next_run}}">{{ getScheduleValue(data.schedule) }}</td>
+        <td *ngIf="data.next_run == 'Not scheduled'">{{ getScheduleValue(data.schedule) }}</td>
         <td>
-          {{ data.next_run }}
+          <span *ngIf="data.placements_excluded == 0"
+            ><mat-icon matTooltip="No placements were excluded during the last run {{data.last_run}}" color="accent"
+              >warning</mat-icon
+            ></span
+          >
           <span *ngIf="data.error_code > 0" class="error_text"
             ><mat-icon matTooltip="Last run failed due to end point error"
               >error</mat-icon
@@ -101,18 +106,18 @@
             ></span
           >
 
-          <span *ngIf="data.exclude_and_notify == 'NOTIFY'" class="valid_text"
+          <span *ngIf="data.output == 'NOTIFY'" class="valid_text"
             ><mat-icon matTooltip="Email alerts are enabled for this schedule"
               >mail</mat-icon
             ></span
           >
-          <span *ngIf="data.exclude_and_notify == 'EXCLUDE'" class="valid_text"
+          <span *ngIf="data.output == 'EXCLUDE'" class="valid_text"
             ><mat-icon matTooltip="Exclusion is enabled for this schedule"
               >label_off</mat-icon
             ></span
           >
           <span
-            *ngIf="data.exclude_and_notify == 'EXCLUDE_AND_NOTIFY'"
+            *ngIf="data.output == 'EXCLUDE_AND_NOTIFY'"
             class="valid_text"
             ><mat-icon matTooltip="Email alerts are enabled for this schedule"
               >mail</mat-icon
