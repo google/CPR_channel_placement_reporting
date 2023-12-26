@@ -4,3 +4,4 @@ tags
 *.db
 google-ads.yaml
 backend/package-lock.json
+.vscode/
