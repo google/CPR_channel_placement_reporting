@@ -200,7 +200,7 @@ export class NewtaskComponent implements OnInit {
   ];
 
 
-  metricsByTypeDict: { [key: string]: Set<string> } = {};  
+  metricsByTypeDict: { [key: string]: Set<string> } = {};
   numericOperators: Set<string | null > = new Set(["<", ">", "=", "!="]);
   stringOperators: Set<string | null> = new Set(["contains", "regexp", "=", "!="]);
 
@@ -511,7 +511,7 @@ export class NewtaskComponent implements OnInit {
     let maxKeys = 0;
     let keysOfMaxItem: string[] = [];
     const transformedData: any[] = [];
-  
+
     for (const key in originalData) {
       const item = originalData[key];
       const transformedItem: any = {
@@ -525,21 +525,21 @@ export class NewtaskComponent implements OnInit {
           ...(item.extra_info || {}),
         },
       };
-  
+
     // Remove the yt_columns_in_extra from extra_info
     this.yt_columns_in_extra.forEach((col) => {
         delete transformedItem.extra_info[col];
         });
 
       transformedData.push(transformedItem);
-  
+
       // Check if the current item has more keys than the previous maximum
       const itemKeys = Object.keys(transformedItem);
       if (itemKeys.length > maxKeys) {
         maxKeys = itemKeys.length;
         keysOfMaxItem = itemKeys;
       }
-    }  
+    }
     return { rows: transformedData, headers: keysOfMaxItem };
   }
 
@@ -809,16 +809,16 @@ export class NewtaskComponent implements OnInit {
   }
 
 
-  showError(feild :FilterField ,msg: string) {        
+  showError(feild :FilterField ,msg: string) {
     if (feild == FilterField.Operator) {
         this.filter_operator_error = true;
         this.filter_operator_error_msg = msg;
     } else{
         this.filter_value_error = true;
         this.filter_value_error_msg = msg;
-    }        
+    }
 }
-  
+
   validateOperator(){
     let isValid = true;
 
