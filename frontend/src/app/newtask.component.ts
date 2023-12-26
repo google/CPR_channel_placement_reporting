@@ -241,10 +241,19 @@ export class NewtaskComponent implements OnInit {
     "interaction_rate",
     "conversions_from_interactions_rate"
   ];
+  yt_columns_in_extra: any[] = [
+        "title",
+        "description",
+        "country",
+        "viewCount",
+        "subscriberCount",
+        "videoCount",
+        "topicCategories"
+  ];
 
-  user_visible_columns_by_defualt: any[] = [
+  user_visible_columns_by_default: any[] = [
     "name",
-    "placemnet_type"
+    "placement_type"
   ];
 
   task_exists: any;
@@ -294,7 +303,7 @@ export class NewtaskComponent implements OnInit {
   }
 
     private fillUserVisibilColumnDropDown() {
-        this.user_visible_columns_by_defualt.forEach(column => {
+        this.user_visible_columns_by_default.forEach(column => {
             this.user_visible_columns.push(column);
         });
     }
@@ -485,17 +494,13 @@ export class NewtaskComponent implements OnInit {
         this.handleEmptyTable("Server error, please investigate the cloud logs", "error-snackbar");
         return;
       }
-      const flattened_raw_response = [];
-      for (const raw_data_row_obj of Object.values(jsonResponse.data)){
-        let raw_data_row = JSON.parse(JSON.stringify(raw_data_row_obj));
-        flattened_raw_response.push({ ...raw_data_row});
-      }
       const dates = jsonResponse["dates"];
       this.date_from = dates["date_from"];
       this.date_to = dates["date_to"];
-      this.table_result = flattened_raw_response;
+      const flatened_data = this.fromServerToUiTable(jsonResponse.data);
+      this.table_result = flatened_data.rows;
       if (this.table_result.length > 0) {
-        this.column_headers = Object.keys(jsonResponse.data['0']);
+        this.column_headers = flatened_data.headers;
         this.toggle_column_headers = this.column_headers.filter(item => !this.hidden_columns.includes(item))
         this.sort_table("default");
         this.no_data = false;
@@ -505,7 +510,41 @@ export class NewtaskComponent implements OnInit {
       this.loading = false;
   }
 
- 
+  fromServerToUiTable(originalData: any): any {
+    let maxKeys = 0;
+    let keysOfMaxItem: string[] = [];
+    const transformedData: any[] = [];
+  
+    for (const key in originalData) {
+      const item = originalData[key];
+      const transformedItem: any = {
+        placement: item.placement,
+        placement_type: item.placement_type,
+        name: item.name,
+        ...Object.fromEntries(
+            this.yt_columns_in_extra.map((col) => [`yt_${col}`, item.extra_info?.[col] !== null ? item.extra_info?.[col] : 'empty'])
+            ),
+        extra_info: {
+          ...(item.extra_info || {}),
+        },
+      };
+  
+    // Remove the yt_columns_in_extra from extra_info
+    this.yt_columns_in_extra.forEach((col) => {
+        delete transformedItem.extra_info[col];
+        });
+
+      transformedData.push(transformedItem);
+  
+      // Check if the current item has more keys than the previous maximum
+      const itemKeys = Object.keys(transformedItem);
+      if (itemKeys.length > maxKeys) {
+        maxKeys = itemKeys.length;
+        keysOfMaxItem = itemKeys;
+      }
+    }  
+    return { rows: transformedData, headers: keysOfMaxItem };
+  }
 
   private handleEmptyTable(message: string, css_class: string) {
       this.no_data = true;
