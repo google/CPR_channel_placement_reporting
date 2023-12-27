@@ -212,8 +212,8 @@ export class NewtaskComponent implements OnInit {
     [">", "greater than"],
     ["=", "equal to"],
     ["!=", "not equal to"],
-    ["contains", "Contains"],
-    ["regexp", "Match regexp"],
+    ["contains", "contains"],
+    ["regexp", "match regexp"],
   ];
 
   user_visible_columns: string[] = [];
