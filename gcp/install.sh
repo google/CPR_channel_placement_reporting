@@ -126,6 +126,7 @@ enable_api() {
 	echo -e "${COLOR}Enabling APIs...${NC}"
 	gcloud services enable appengine.googleapis.com
 	gcloud services enable iap.googleapis.com
+	gcloud services enable apikeys.googleapis.com
 	gcloud services enable cloudresourcemanager.googleapis.com
 	gcloud services enable iamcredentials.googleapis.com
 	gcloud services enable cloudbuild.googleapis.com
@@ -139,7 +140,7 @@ deploy_app() {
 	echo -e "${COLOR}Deploying app to GAE...${NC}"
 	cd $SCRIPT_PATH/../backend
   sed -i'.bak' -e "s^path/to/google-ads.yaml^$GCS_BASE_PATH/google-ads.yaml^" app.yaml
-  sed -i'.bak' -e "s^your-youtube-api-key^$YOUTUBE_DATA_API_KEY^" app.yaml
+  sed -i'.bak' -e "s^your-youtube-api-key^$youtube_api_key^" app.yaml
 	gcloud app deploy -q
 	cd $SCRIPT_PATH
 }
@@ -233,11 +234,20 @@ print_welcome_message() {
 
 }
 
+generate_youtube_api_key() {
+	gcloud projects add-iam-policy-binding $PROJECT_ID --member="user:$USER_EMAIL" --role roles/serviceusage.apiKeysAdmin
+	curl -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" \
+		https://apikeys.googleapis.com/v2/projects/$PROJECT_NUMBER/locations/global/keys -X POST -d '{"displayName" : "CPR YouTube Data API Key", "restrictions": {"api_targets": [{"service": "youtube.googleapis.com"}]}}'
+	key_name=`curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://apikeys.googleapis.com/v2/projects/$PROJECT_NUMBER/locations/global/keys | grep -B1 "CPR YouTube Data API Key" | head -n 1 | cut -d '"' -f4`
+	youtube_api_key=`curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://apikeys.googleapis.com/v2/$key_name/keyString | grep keyString | cut -d '"' -f4`
+
+}
 
 deploy_all() {
 	check_billing_enabled
 	check_ads_config
 	enable_api
+	generate_youtube_api_key
 	deploy_files
 	build_frontend
 	deploy_app
