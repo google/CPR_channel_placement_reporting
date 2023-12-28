@@ -85,7 +85,6 @@
               [(ngModel)]="data_youtube"
               formControlName="gadsDataYouTube"
               id="gadsDataYouTube"
-              (ngModelChange)="onFilterToggleChanged()"
             ></mat-slide-toggle>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Website
             Display
@@ -94,7 +93,6 @@
               [(ngModel)]="data_display"
               formControlName="gadsDataDisplay"
               id="gadsDataDisplay"
-              (ngModelChange)="onFilterToggleChanged()"
             ></mat-slide-toggle>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Mobile
             <mat-slide-toggle
@@ -102,7 +100,6 @@
               [(ngModel)]="data_mobile"
               formControlName="gadsDataMobile"
               id="gadsDataMobile"
-              (ngModelChange)="onFilterToggleChanged()"
             ></mat-slide-toggle>
             <span class="error_text" *ngIf="gads_data_error"
               >You must select at least one data type to retrieve</span
@@ -344,8 +341,8 @@
     <div class="toggle-column-select">
       <mat-form-field appearance="fill">
         <mat-label>Toggle column visibilities:</mat-label>
-        <mat-select [(ngModel)]="user_visible_columns" multiple>
-          <mat-option *ngFor="let header of toggle_column_headers" [value]="header">
+        <mat-select [(ngModel)]="toggle_column_selected_headers" multiple>
+          <mat-option *ngFor="let header of toggle_column_all_headers" [value]="header">
             {{ header }}
           </mat-option>
         </mat-select>
@@ -430,7 +427,7 @@
       <th class="hrlink"><a (click)="sort_table('allowlist')">Allowlist</a></th>
       <ng-container *ngFor="let header of column_headers">
 
-        <th *ngIf="user_visible_columns.includes(header) && !hidden_columns.includes(header)" class="hrlink">
+        <th *ngIf="toggle_column_selected_headers.includes(header) && !hidden_columns.includes(header)" class="hrlink">
           <a (click)="sort_table('{{header}}')">{{ header }}</a>
         </th>
       </ng-container>
@@ -498,7 +495,7 @@
       <ng-container
         *ngFor="let item of data | keyvalue: unsorted; let i = index"
       >     
-        <td *ngIf="user_visible_columns.includes(column_headers[i]) && !hidden_columns.includes(column_headers[i])">
+        <td *ngIf="toggle_column_selected_headers.includes(column_headers[i]) && !hidden_columns.includes(column_headers[i])">
           <span
             *ngIf="
               column_headers[i] == 'placement_type' &&
