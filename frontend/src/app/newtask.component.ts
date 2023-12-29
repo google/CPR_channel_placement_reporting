@@ -56,7 +56,7 @@ export class NewtaskComponent implements OnInit {
   paginationForm: FormGroup;
   loading: boolean = false;
   column_headers: any[] = [];
-  toggle_column_headers: any[] = [];
+  toggle_column_all_headers: any[] = [];
   table_result: any[] = [];
   customer_list: any[] = [];
   finalGadsFilter: string = "";
@@ -213,7 +213,7 @@ export class NewtaskComponent implements OnInit {
     ["regexp", "match regexp"],
   ];
 
-  user_visible_columns: string[] = [];
+  toggle_column_selected_headers: string[] = [];
 
   hidden_columns: any[] = [
     "campaign_id",
@@ -248,7 +248,7 @@ export class NewtaskComponent implements OnInit {
         "topicCategories"
   ];
 
-  user_visible_columns_by_default: any[] = [
+  toggle_column_selected_headers_by_default: any[] = [
     "name",
     "placement_type"
   ];
@@ -300,8 +300,8 @@ export class NewtaskComponent implements OnInit {
   }
 
     private fillUserVisibilColumnDropDown() {
-        this.user_visible_columns_by_default.forEach(column => {
-            this.user_visible_columns.push(column);
+        this.toggle_column_selected_headers_by_default.forEach(column => {
+            this.toggle_column_selected_headers.push(column);
         });
     }
 
@@ -498,7 +498,7 @@ export class NewtaskComponent implements OnInit {
       this.table_result = flatened_data.rows;
       if (this.table_result.length > 0) {
         this.column_headers = flatened_data.headers;
-        this.toggle_column_headers = this.column_headers.filter(item => !this.hidden_columns.includes(item))
+        this.toggle_column_all_headers = this.column_headers.filter(item => !this.hidden_columns.includes(item))
         this.sort_table("default");
         this.no_data = false;
       } else {
@@ -804,7 +804,10 @@ export class NewtaskComponent implements OnInit {
 
     if (this.validateOperator() && this.validateValue()){
         this.fixFilterSyntax(selected_field, operator, field_value);
-        this.user_visible_columns.push(selected_field.split(":")[1])
+        this.toggle_column_selected_headers.push(
+            selected_field.toLowerCase().includes("youtube")
+              ? "yt_" + selected_field.split(":")[1]
+              : selected_field.split(":")[1])
     }
   }
 
@@ -1024,19 +1027,6 @@ export class NewtaskComponent implements OnInit {
       this._run_exclude_count(false);
   }
 
-  onFilterToggleChanged() {
-    // let filteredItems: string[][] = this.allMetricArray.slice();
-    // if (!this.data_youtube) {
-    //   filteredItems = filteredItems.filter(item => !item[0].startsWith('YOUTUBE_CHANNEL_INFO'));
-    // }
-    // if (!this.data_display) {
-    //   filteredItems = filteredItems.filter(item => !item[0].startsWith('WEBSITE_INFO'));
-    // }
-    // if (!this.data_mobile) {
-    //     filteredItems = filteredItems.filter(item => !item[0].startsWith('MOBILE'));
-    //   }
-    // this.relevantMetricArray = filteredItems;
-  }
   unsorted(a: any, b: any): number { return 0; }
   formatNumber(val: any, pct: boolean = false): any {
     if (typeof val === 'number') {
