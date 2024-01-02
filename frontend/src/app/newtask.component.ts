@@ -64,6 +64,7 @@ export class NewtaskComponent implements OnInit {
   conditionEnabled = true;
   no_data = false;
   exclude_count = 0;
+  associated_count = 0;
   subs: any;
   isChecked: boolean = false;
   save_button = "Save Task";
@@ -609,7 +610,22 @@ export class NewtaskComponent implements OnInit {
 
   _call_manual_service_success(response: ReturnPromise) {
       this._run_exclude_count(true);
-      this.openSnackBar("Successfully excluded " + response + " placement(s)", "Dismiss", "success-snackbar");
+      let exclusion_result = (Object.entries(response).find(([k, v]) => {
+          if (k == 'excluded_placements') {
+              this.exclude_count = v;
+            }
+          if (k == 'associated_with_list_placements') {
+              this.associated_count = v;
+            }
+          }
+        )
+      )
+      if (this.exclude_count) {
+        this.openSnackBar("Successfully excluded " + this.exclude_count + " placement(s)", "Dismiss", "success-snackbar");
+      }
+      if (this.associated_count) {
+        this.openSnackBar(this.associated_count + " placement(s) weren't excluded but associated with negative exclusion list", "Dismiss", "success-snackbar");
+      }
       this.loading = false;
   }
 
