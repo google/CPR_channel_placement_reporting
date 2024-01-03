@@ -219,6 +219,9 @@ export class TasksComponent implements OnInit {
     }
     return cronstrue.toString(index);
   }
+  displayAccounts(accounts: string[]) {
+    return accounts.join("\r\n");
+  }
   localizeDate(date:string) {
     return date.split(" ")[0]
   }

@@ -4,3 +4,6 @@
 .green-icon {
   color: green;
 }
+::ng-deep .cdk-overlay-container, .cdk-global-overlay-wrapper {
+  white-space: pre-line;
+}
