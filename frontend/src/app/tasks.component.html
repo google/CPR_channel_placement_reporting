@@ -61,13 +61,14 @@
     <thead>
       <tr>
         <th>Date Created</th>
-        <th>Task Name</th>
-        <th>Customer ID</th>
-        <th>Schedule</th>
         <th>Status</th>
+        <th>Output</th>
+        <th>Task Name</th>
+        <th>Accounts</th>
+        <th>Schedule</th>
+        <th>Last Run</th>
         <th class="align-centre">Edit</th>
         <th class="align-centre">Run Now</th>
-        <th class="align-centre">Delete</th>
       </tr>
     </thead>
     <tbody>
@@ -78,6 +79,24 @@
         "
       >
         <td>{{ localizeDate(data.creation_date) }}</td>
+        <td><mat-slide-toggle [checked]="data.status=='ACTIVE'" ></mat-slide-toggle></td>
+        <td>
+          <span *ngIf="data.output == 'NOTIFY'" class="valid_text">
+            <mat-icon matTooltip="Exclusions are disabled" class="grey-icon">label_off</mat-icon>
+            <mat-icon matTooltip="Notifications are enabled" class="green-icon">mail</mat-icon>
+            </span
+          >
+          <span *ngIf="data.output == 'EXCLUDE'" class="valid_text">
+            <mat-icon matTooltip="Exclusions are enabled" class="green-icon">label_on</mat-icon>
+            <mat-icon matTooltip="Notifications are disabled" class="grey-icon">mail</mat-icon>
+            </span
+          >
+          <span *ngIf="data.output == 'EXCLUDE_AND_NOTIFY'" class="valid_text">
+            <mat-icon matTooltip="Exclusions are enabled" class="green-icon">label_on</mat-icon>
+            <mat-icon matTooltip="Notifications are enabled" class="green-icon">mail</mat-icon>
+            </span
+          >
+        </td>
         <td>
           <a
             href="/newtask?task={{ data.id }}"
@@ -86,7 +105,8 @@
             >{{ data.name }}</a
           >
         </td>
-        <td>{{ data.customer_ids }}</td>
+        <td *ngIf="data.accounts.length==1">{{data.accounts}}</td>
+        <td *ngIf="data.accounts.length>1" matTooltip="{{displayAccounts(data.accounts.slice(1))}}" matTooltipClass="multiline-tooltip">{{data.accounts[0]}} & <i>{{data.accounts.length-1}} more accounts</i></td>
         <td *ngIf="data.next_run != 'Not scheduled'" matTooltip="Next run: {{data.next_run}}">{{ getScheduleValue(data.schedule) }}</td>
         <td *ngIf="data.next_run == 'Not scheduled'">{{ getScheduleValue(data.schedule) }}</td>
         <td>
@@ -116,21 +136,6 @@
             ></span
           >
 
-          <span *ngIf="data.output == 'NOTIFY'" class="valid_text">
-            <mat-icon matTooltip="Exclusions are disabled" class="grey-icon">label_off</mat-icon>
-            <mat-icon matTooltip="Notifications are enabled" class="green-icon">mail</mat-icon>
-            </span
-          >
-          <span *ngIf="data.output == 'EXCLUDE'" class="valid_text">
-            <mat-icon matTooltip="Exclusions are enabled" class="green-icon">label_on</mat-icon>
-            <mat-icon matTooltip="Notifications are disabled" class="grey-icon">mail</mat-icon>
-            </span
-          >
-          <span *ngIf="data.output == 'EXCLUDE_AND_NOTIFY'" class="valid_text">
-            <mat-icon matTooltip="Notifications are enabled" class="green-icon">mail</mat-icon>
-            <mat-icon matTooltip="Exclusions are enabled" class="green-icon">label_on</mat-icon>
-            </span
-          >
         </td>
         <td class="align-centre">
           <a
@@ -146,14 +151,6 @@
             target="_self"
             matTooltip="Run task and exclude now"
             ><mat-icon>play_arrow</mat-icon></a
-          >
-        </td>
-        <td class="align-centre">
-          <a
-            (click)="deleteNow(data.id, data.name)"
-            target="_self"
-            matTooltip="Permanently delete this task"
-            ><mat-icon>delete_forever</mat-icon></a
           >
         </td>
       </tr>
