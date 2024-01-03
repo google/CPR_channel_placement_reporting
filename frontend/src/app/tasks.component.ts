@@ -30,6 +30,8 @@ export class TasksComponent implements OnInit {
 
   horizontalPosition: MatSnackBarHorizontalPosition = 'center';
   verticalPosition: MatSnackBarVerticalPosition = 'top';
+  exclude_count: number = 0;
+  associated_count: number = 0;
   loading: boolean = false;
   task_table_data: any[] = [];
   no_data:boolean=false;
@@ -124,9 +126,23 @@ export class TasksComponent implements OnInit {
 
   async _run_task_from_file_success(response: ReturnPromise) {
     this.loading = false;
-    if(Number(response) > 0) {
-      this.openSnackBar("Successfully excluded " + response + " placement(s)", "Dismiss", "success-snackbar");
-    } else {
+    let exclusion_result = (Object.entries(response).find(([k, v]) => {
+        if (k == 'excluded_placements') {
+            this.exclude_count = v;
+          }
+        if (k == 'associated_with_list_placements') {
+            this.associated_count = v;
+          }
+        }
+      )
+    )
+    if (this.exclude_count) {
+      this.openSnackBar("Successfully excluded " + this.exclude_count + " placement(s)", "Dismiss", "success-snackbar");
+    }
+    if (this.associated_count) {
+      this.openSnackBar(this.associated_count + " placement(s) weren't excluded but associated with negative exclusion list", "Dismiss", "info-snackbar");
+    }
+    if (! this.exclude_count && ! this.associated_count ) {
       this.openSnackBar("No placements were excluded", "Dismiss", "success-snackbar");
     }
   }

@@ -90,9 +90,19 @@
         <td *ngIf="data.next_run != 'Not scheduled'" matTooltip="Next run: {{data.next_run}}">{{ getScheduleValue(data.schedule) }}</td>
         <td *ngIf="data.next_run == 'Not scheduled'">{{ getScheduleValue(data.schedule) }}</td>
         <td>
+          <span *ngIf="data.placements_excluded == undefined"
+            ><mat-icon matTooltip="Task has not run yet" color="accent"
+              >warning</mat-icon
+            ></span
+          >
           <span *ngIf="data.placements_excluded == 0"
             ><mat-icon matTooltip="No placements were excluded during the last run {{data.last_run}}" color="accent"
               >warning</mat-icon
+            ></span
+          >
+          <span *ngIf="data.placements_excluded > 0"
+            ><mat-icon matTooltip="{{data.placements_excluded}} placements were excluded during the last run {{data.last_run}}" class="green-icon"
+              >check_circle</mat-icon
             ></span
           >
           <span *ngIf="data.error_code > 0" class="error_text"
@@ -106,24 +116,20 @@
             ></span
           >
 
-          <span *ngIf="data.output == 'NOTIFY'" class="valid_text"
-            ><mat-icon matTooltip="Email alerts are enabled for this schedule"
-              >mail</mat-icon
-            ></span
+          <span *ngIf="data.output == 'NOTIFY'" class="valid_text">
+            <mat-icon matTooltip="Exclusions are disabled" class="grey-icon">label_off</mat-icon>
+            <mat-icon matTooltip="Notifications are enabled" class="green-icon">mail</mat-icon>
+            </span
           >
-          <span *ngIf="data.output == 'EXCLUDE'" class="valid_text"
-            ><mat-icon matTooltip="Exclusion is enabled for this schedule"
-              >label_off</mat-icon
-            ></span
+          <span *ngIf="data.output == 'EXCLUDE'" class="valid_text">
+            <mat-icon matTooltip="Exclusions are enabled" class="green-icon">label_on</mat-icon>
+            <mat-icon matTooltip="Notifications are disabled" class="grey-icon">mail</mat-icon>
+            </span
           >
-          <span
-            *ngIf="data.output == 'EXCLUDE_AND_NOTIFY'"
-            class="valid_text"
-            ><mat-icon matTooltip="Email alerts are enabled for this schedule"
-              >mail</mat-icon
-            ><mat-icon matTooltip="Exclusion is enabled for this schedule"
-              >label_off</mat-icon
-            ></span
+          <span *ngIf="data.output == 'EXCLUDE_AND_NOTIFY'" class="valid_text">
+            <mat-icon matTooltip="Notifications are enabled" class="green-icon">mail</mat-icon>
+            <mat-icon matTooltip="Exclusions are enabled" class="green-icon">label_on</mat-icon>
+            </span
           >
         </td>
         <td class="align-centre">
