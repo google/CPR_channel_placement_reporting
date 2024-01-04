@@ -34,6 +34,8 @@ export class TasksComponent implements OnInit {
   associated_count: number = 0;
   loading: boolean = false;
   task_table_data: any[] = [];
+  selected_tasks: Set<string> = new Set();
+  task_id: string = "";
   no_data:boolean=false;
 
   paginationForm: FormGroup;
@@ -102,6 +104,13 @@ export class TasksComponent implements OnInit {
   }
 
 
+  async runBatch(){
+    for(let task of this.selected_tasks) {
+      await this._continue_run_task(task);
+    }
+    this.selected_tasks.clear()
+  }
+
   async runNow(file_name:string, task_name:string){
     this.dialogService.openConfirmDialog(`Are you sure you want to run the task '`+task_name+`' (`+file_name+`) now?
 
@@ -152,6 +161,13 @@ export class TasksComponent implements OnInit {
     this.openSnackBar("Permission error: Check you have Authenticated in settings and that you have the correct permissions to the account and your Customer ID/MCC IDs are correct. If you have just changed your permissions in Google Ads, go back to Settings and click 'Save / Reauthenticate' to update permissions and try again", "Dismiss", "error-snackbar");
   }
 
+
+  async deleteBatch(){
+    for(let task of this.selected_tasks) {
+      await this._continue_task_delete(task);
+      }
+    this.selected_tasks.clear()
+    }
 
   async deleteNow(task_id:string, task_name:string){
     this.dialogService.openConfirmDialog(`Are you sure you want to delete '`+task_name+`' (`+task_id+`)?
@@ -219,10 +235,46 @@ export class TasksComponent implements OnInit {
     }
     return cronstrue.toString(index);
   }
+
   displayAccounts(accounts: string[]) {
     return accounts.join("\r\n");
   }
+
   localizeDate(date:string) {
     return date.split(" ")[0]
+  }
+
+  toggleTaskStatus(task_id: string) {
+  }
+
+  pauseBatch() {
+  }
+
+  toggleTaskSelection(task_id: string) {
+    if (this.selected_tasks.has(task_id)) {
+      this.removeTaskFromSelection(task_id)
+    } else {
+      this.addTaskToSelection(task_id)
+    }
+    if(this.selected_tasks.size == 1){
+      this.task_id = [...this.selected_tasks].join("")
+    }
+  }
+  addTaskToSelection(task_id: string) {
+    this.selected_tasks.add(task_id)
+  }
+
+  removeTaskFromSelection(task_id: string) {
+    this.selected_tasks.delete(task_id)
+  }
+  toggleCheckAll(event: any) {
+    const checked = event.checked;
+    this.task_table_data = this.task_table_data.map(item => ({...item, isSelected: checked}));
+    if (checked) {
+      this.task_table_data.forEach(item => this.toggleTaskSelection(item.id));
+    } else {
+      this.selected_tasks.clear();
+    }
+
   }
 }

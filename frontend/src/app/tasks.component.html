@@ -13,12 +13,48 @@
     <span>Tasks</span>
   </div>
     <form [formGroup]="paginationForm">
-      <div class="pagination-left">
+      <div *ngIf="selected_tasks.size == 0" class="pagination-left">
         <a routerLink="/newtask"
           ><button type="button" class="secondaryButton">
             <mat-icon>add_box</mat-icon>New Task
           </button></a
         >
+      </div>
+      <div *ngIf="selected_tasks.size" class="pagination-left">
+        <button type="button" class="secondaryButton" mat-button [matMenuTriggerFor]="menu"><mat-icon>arrow_drop_down_circle</mat-icon>Actions</button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item>
+          <a
+            (click)="runBatch()"
+            target="_self"
+            matTooltip="Run task(s) and exclude now">
+            <mat-icon class="green-icon">play_arrow</mat-icon>Run</a>
+          </button>
+          <div *ngIf="selected_tasks.size == 1">
+            <button mat-menu-item>
+            <a
+            href="/newtask?task={{task_id}}"
+            target="_self"
+            matTooltip="Edit current task">
+
+              <mat-icon class="grey-icon">edit</mat-icon>Edit</a>
+            </button>
+          </div>
+          <button mat-menu-item>
+          <a
+            (click)="pauseBatch()"
+            target="_self"
+            matTooltip="Pause this task">
+            <mat-icon class="grey-icon">pause</mat-icon>Pause</a>
+            </button>
+          <button mat-menu-item>
+          <a
+            (click)="deleteBatch()"
+            target="_self"
+            matTooltip="Delete this task">
+            <mat-icon class="red-icon">delete_forever</mat-icon>Delete</a>
+            </button>
+        </mat-menu>
       </div>
       <div class="pagination">
         <div class="label-input-block">
@@ -68,6 +104,8 @@
   <table *ngIf="task_table_data.length > 0" class="styled-table task-width">
     <thead>
       <tr>
+        <th> <mat-checkbox (change)="toggleCheckAll($event)"></mat-checkbox>
+        </th>
         <th>Date Created</th>
         <th>Status</th>
         <th>Output</th>
@@ -75,8 +113,6 @@
         <th>Accounts</th>
         <th>Schedule</th>
         <th>Last Run</th>
-        <th class="align-centre">Edit</th>
-        <th class="align-centre">Run Now</th>
       </tr>
     </thead>
     <tbody>
@@ -86,8 +122,17 @@
             | slice: pagination_start : pagination_start + pagination_rpp
         "
       >
+        <td>
+          <mat-checkbox
+            [value]="data.id"
+            type="checkbox"
+            (click)="toggleTaskSelection(data.id)"
+            [checked]="data.isSelected"
+
+            ></mat-checkbox>
+        </td>
         <td>{{ localizeDate(data.creation_date) }}</td>
-        <td><mat-slide-toggle [checked]="data.status=='ACTIVE'" ></mat-slide-toggle></td>
+        <td><mat-slide-toggle [checked]="data.status=='ACTIVE'" (click)="toggleTaskStatus(data.id)"></mat-slide-toggle></td>
         <td>
           <span *ngIf="data.output == 'NOTIFY'" class="valid_text">
             <mat-icon matTooltip="Exclusions are disabled" class="grey-icon">label_off</mat-icon>
@@ -144,22 +189,6 @@
             ></span
           >
 
-        </td>
-        <td class="align-centre">
-          <a
-            href="/newtask?task={{ data.id }}"
-            target="_self"
-            matTooltip="Edit current task"
-            ><mat-icon>edit</mat-icon></a
-          >
-        </td>
-        <td class="align-centre">
-          <a
-            (click)="runNow(data.id, data.name)"
-            target="_self"
-            matTooltip="Run task and exclude now"
-            ><mat-icon>play_arrow</mat-icon></a
-          >
         </td>
       </tr>
     </tbody>

@@ -41,6 +41,9 @@ import {MatInputModule} from '@angular/material/input';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatStepperModule} from '@angular/material/stepper';
 import { MatExpansionModule } from '@angular/material/expansion';
+import {MatMenuModule} from '@angular/material/menu';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+
 
 @NgModule({
   declarations: [
@@ -71,7 +74,9 @@ import { MatExpansionModule } from '@angular/material/expansion';
     MatInputModule,
     MatFormFieldModule,
     MatStepperModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatMenuModule,
+    MatCheckboxModule
   ],
   providers: [],
   bootstrap: [AppComponent],
