@@ -1,9 +1,17 @@
 <div class="task-width centre-table">
+  <br />
+    <div *ngIf="task_table_data.length == 0" align="center" >
+      There are no saved tasks!<p>
+        <a routerLink="/newtask"
+          ><button type="button" class="secondaryButton">
+            <mat-icon>add_box</mat-icon>Create your first task
+          </button></a
+        >
+      </div>
+  <div *ngIf="task_table_data.length > 0">
   <div class="heading">
     <span>Tasks</span>
   </div>
-  <br />
-  <div *ngIf="task_table_data.length > 0">
     <form [formGroup]="paginationForm">
       <div class="pagination-left">
         <a routerLink="/newtask"
@@ -156,7 +164,6 @@
       </tr>
     </tbody>
   </table>
-  <div *ngIf="no_data" class="empty-table">There are no saved tasks!</div>
 </div>
 
 <app-loading [showSpinner]="loading"></app-loading>
