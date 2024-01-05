@@ -180,15 +180,21 @@ export class NewtaskComponent implements OnInit {
       fields: [
         {value: "YOUTUBE_VIDEO_INFO:title", view: "Title", type:"string"},
         {value: "YOUTUBE_VIDEO_INFO:description", view: "Description", type:"string"},
-        {value: "YOUTUBE_VIDEO_INFO:viewCount", view: "Video Views Count", type:"numeric"},
+        {value: "YOUTUBE_VIDEO_INFO:viewCount", view: "Video Views", type:"numeric"},
+        {value: "YOUTUBE_VIDEO_INFO:likeCount", view: "Likes", type:"numeric"},
+        {value: "YOUTUBE_VIDEO_INFO:commentCount", view: "Comments", type:"numeric"},
+        {value: "YOUTUBE_VIDEO_INFO:tags", view: "Tags", type:"string"},
+        {value: "YOUTUBE_VIDEO_INFO:topicCategories", view: "Topics", type:"string"},
       ],
     },
     {name: "YouTube Channel",
       fields: [
         {value: "YOUTUBE_CHANNEL_INFO:title", view: "Title", type:"string"},
         {value: "YOUTUBE_CHANNEL_INFO:description", view: "Description", type:"string"},
-        {value: "YOUTUBE_CHANNEL_INFO:subscriberCount", view: "Subscriber Count", type:"numeric"},
-        {value: "YOUTUBE_CHANNEL_INFO:videoCount", view: "Video Count", type:"numeric"},
+        {value: "YOUTUBE_CHANNEL_INFO:subscriberCount", view: "Subscribers", type:"numeric"},
+        {value: "YOUTUBE_CHANNEL_INFO:videoCount", view: "# of Videos", type:"numeric"},
+        {value: "YOUTUBE_CHANNEL_INFO:viewCount", view: "Video Views", type:"numeric"},
+        {value: "YOUTUBE_VIDEO_INFO:topicCategories", view: "Topics", type:"string"},
       ],
     },
     {name: "Website Content",
@@ -251,7 +257,8 @@ export class NewtaskComponent implements OnInit {
 
   toggle_column_selected_headers_by_default: any[] = [
     "name",
-    "placement_type"
+    "placement_type",
+
   ];
 
   task_exists: any;
@@ -516,6 +523,7 @@ export class NewtaskComponent implements OnInit {
     for (const key in originalData) {
       const item = originalData[key];
       const transformedItem: any = {
+        // TODO: get everything but extra_info from originalData
         placement: item.placement,
         placement_type: item.placement_type,
         name: item.name,
