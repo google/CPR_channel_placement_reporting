@@ -515,41 +515,36 @@ export class NewtaskComponent implements OnInit {
       this.loading = false;
   }
 
-  fromServerToUiTable(originalData: any): any {
+  fromServerToUiTable(originalRows: any): any {
     let maxKeys = 0;
     let keysOfMaxItem: string[] = [];
-    const transformedData: any[] = [];
+    const transformedRows: any[] = [];
 
-    for (const key in originalData) {
-      const item = originalData[key];
-      const transformedItem: any = {
+    for (const rowIndex in originalRows) {
+      const OriginalDataRow = originalRows[rowIndex];
+      const transformedRow: any = {
         // TODO: get everything but extra_info from originalData
-        placement: item.placement,
-        placement_type: item.placement_type,
-        name: item.name,
+        ...OriginalDataRow,
         ...Object.fromEntries(
-            this.yt_columns_in_extra.map((col) => [`yt_${col}`, item.extra_info?.[col] !== null ? item.extra_info?.[col] : 'empty'])
-            ),
-        extra_info: {
-          ...(item.extra_info || {}),
-        },
-      };
+            this.yt_columns_in_extra.map((col) => [`yt_${col}`, OriginalDataRow.extra_info?.[col] !== null ? OriginalDataRow.extra_info?.[col] : 'empty'])
+            )
+        }
 
-    // Remove the yt_columns_in_extra from extra_info
+    if (transformedRow.extra_info) {
     this.yt_columns_in_extra.forEach((col) => {
-        delete transformedItem.extra_info[col];
+        delete transformedRow.extra_info[col];
         });
-
-      transformedData.push(transformedItem);
+      }
+      transformedRows.push(transformedRow);
 
       // Check if the current item has more keys than the previous maximum
-      const itemKeys = Object.keys(transformedItem);
+      const itemKeys = Object.keys(transformedRow);
       if (itemKeys.length > maxKeys) {
         maxKeys = itemKeys.length;
         keysOfMaxItem = itemKeys;
       }
     }
-    return { rows: transformedData, headers: keysOfMaxItem };
+    return { rows: transformedRows, headers: keysOfMaxItem };
   }
 
   private handleEmptyTable(message: string, css_class: string) {
