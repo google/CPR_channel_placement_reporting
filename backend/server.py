@@ -24,9 +24,15 @@ from googleads_housekeeper.adapters import publisher
 app = Flask(__name__)
 STATIC_DIR = os.getenv('STATIC_DIR') or 'static'
 
-bus = bootstrap.Bootstrapper(type=os.getenv("ADS_HOUSEKEEPER_DEPLOYMENT_TYPE",
-                                            "Dev"),
+DEPLOYMENT_TYPE = os.getenv("ADS_HOUSEKEEPER_DEPLOYMENT_TYPE", "Dev")
+
+bus = bootstrap.Bootstrapper(type=DEPLOYMENT_TYPE,
                              topic_prefix="cpr").bootstrap_app()
+
+if DEPLOYMENT_TYPE == "Google Cloud":
+    from google.appengine.api import wrap_wsgi_app
+
+    app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
 
 
 @app.route('/', defaults={'path': ''})
@@ -74,7 +80,8 @@ def run_task_from_task_id():
     data = request.get_json(force=True)
     data.update({"save_to_db": config.get("save_to_db", True)})
     cmd = commands.RunTask(**data)
-    result = bus.handle(cmd)
+    result, message_payload = bus.handle(cmd)
+    bus.dependencies.get("notification_service").send(message_payload)
     return _build_response(json.dumps(result))
 
 
