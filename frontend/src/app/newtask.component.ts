@@ -210,6 +210,7 @@ export class NewtaskComponent implements OnInit {
   metricsByTypeDict: { [key: string]: Set<string> } = {};
   numericOperators: Set<string | null > = new Set(["<", ">", "=", "!="]);
   stringOperators: Set<string | null> = new Set(["contains", "regexp", "=", "!="]);
+  englishOperators: Set<string | null> = new Set(["english", "non_english"]);
 
   gadsOperatorsArray = [
     ["<", "less than"],
@@ -218,6 +219,8 @@ export class NewtaskComponent implements OnInit {
     ["!=", "not equal to"],
     ["contains", "contains"],
     ["regexp", "match regexp"],
+    ["english", "english only"],
+    ["non_english", "non english"],
   ];
 
   toggle_column_selected_headers: string[] = [];
@@ -839,7 +842,7 @@ export class NewtaskComponent implements OnInit {
         this.filter_value_error = true;
         this.filter_value_error_msg = msg;
     }
-}
+  }
 
   validateOperator(){
     let isValid = true;
@@ -853,7 +856,7 @@ export class NewtaskComponent implements OnInit {
         isValid = false;
         }
     } else if (this.metricsByTypeDict[MetricType.String].has(selected_field)){
-        if (!this.stringOperators.has(operator)){
+        if (!(this.stringOperators.has(operator) || this.englishOperators.has(operator))){
             this.showError(FilterField.Operator, "Not compatible with the selected field");
             isValid = false;
             }
@@ -865,6 +868,7 @@ export class NewtaskComponent implements OnInit {
     let isValid = true;
 
     let selected_field = this.selectedField.value?? "";
+    let operator = this.selectedOperator.value?? "";
     let field_value = this.selectedValue.value?? "";
 
     if (this.metricsByTypeDict[MetricType.Number].has(selected_field)){
@@ -872,11 +876,13 @@ export class NewtaskComponent implements OnInit {
             this.showError(FilterField.Value, "Should be numeric");
             isValid = false;
         }
+    } else if (this.englishOperators.has(operator)){
+        this.selectedValue.setValue(" ");
     } else if (this.metricsByTypeDict[MetricType.String].has(selected_field)){
-            if (Number(field_value)){
-             this.showError(FilterField.Value, "Please type in not just digits");
-             isValid = false;
-            }
+      if (Number(field_value)){
+       this.showError(FilterField.Value, "Please type in not just digits");
+       isValid = false;
+      }
     }
     return isValid;
   }
@@ -899,7 +905,8 @@ export class NewtaskComponent implements OnInit {
   }
 
     private fixFilterSyntax(selected_field: string, operator: string, field_value: string) {
-        if (selected_field != "" && operator != "" && field_value != "" && this.conditionEnabled) {
+        if (selected_field != "" && operator != "" && field_value != "" && this.conditionEnabled)
+        {
             let finalValue = field_value;
             if (!this.finalGadsFilter.endsWith("(") && this.finalGadsFilter != "") {
                 this.finalGadsFilter += " ";
