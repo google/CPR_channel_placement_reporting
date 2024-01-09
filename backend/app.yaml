@@ -13,6 +13,7 @@
 # limitations under the License.
 
 runtime: python311
+service: default
 entrypoint: gunicorn -b :$PORT server:app --timeout 0 --workers 2
 
 runtime_config:
