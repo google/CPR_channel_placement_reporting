@@ -206,11 +206,11 @@ export class NewtaskComponent implements OnInit {
     }
   ];
 
-
   metricsByTypeDict: { [key: string]: Set<string> } = {};
+
   numericOperators: Set<string | null > = new Set(["<", ">", "=", "!="]);
   stringOperators: Set<string | null> = new Set(["contains", "regexp", "=", "!="]);
-  englishOperators: Set<string | null> = new Set(["english", "non_english"]);
+  boolOperators: Set<string | null> = new Set(["has latin letters"]);
 
   gadsOperatorsArray = [
     ["<", "less than"],
@@ -219,8 +219,7 @@ export class NewtaskComponent implements OnInit {
     ["!=", "not equal to"],
     ["contains", "contains"],
     ["regexp", "match regexp"],
-    ["english", "english only"],
-    ["non_english", "non english"],
+    ["has_latin_letters", "has latin letters"]
   ];
 
   toggle_column_selected_headers: string[] = [];
@@ -857,10 +856,10 @@ export class NewtaskComponent implements OnInit {
         isValid = false;
         }
     } else if (this.metricsByTypeDict[MetricType.String].has(selected_field)){
-        if (!(this.stringOperators.has(operator) || this.englishOperators.has(operator))){
-            this.showError(FilterField.Operator, "Not compatible with the selected field");
-            isValid = false;
-            }
+      if (!(this.stringOperators.has(operator) || this.boolOperators.has(operator))){
+          this.showError(FilterField.Operator, "Not compatible with the selected field");
+          isValid = false;
+          }
     }
     return isValid;
   }
@@ -877,8 +876,12 @@ export class NewtaskComponent implements OnInit {
             this.showError(FilterField.Value, "Should be numeric");
             isValid = false;
         }
-    } else if (this.englishOperators.has(operator)){
-        this.selectedValue.setValue(" ");
+    } else if (this.boolOperators.has(operator)){
+      const lowerCaseValue = field_value.toLowerCase();
+      if (!(lowerCaseValue === 'true' || lowerCaseValue === 'false')){
+        this.showError(FilterField.Value, "Should be True/False");
+        isValid = false;
+      }
     } else if (this.metricsByTypeDict[MetricType.String].has(selected_field)){
       if (Number(field_value)){
        this.showError(FilterField.Value, "Please type in not just digits");
