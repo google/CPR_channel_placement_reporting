@@ -25,7 +25,7 @@ PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID | grep projectNumber | sed
 PROJECT_ALIAS=$(git config -f $SETTING_FILE config.name)
 GCS_BASE_PATH=gs://$PROJECT_ID/$PROJECT_ALIAS
 CF_REGION=$(git config -f $SETTING_FILE functions.region)
-APPENGINE_SERVICE_NAME=$(git config -f $SETTING_FILE config.service)
+APPENGINE_SERVICE_NAME=$(git config -f $SETTING_FILE appengine.service)
 USER_EMAIL=$(gcloud config get-value account 2> /dev/null)
 SERVICE_ACCOUNT=$PROJECT_ID@appspot.gserviceaccount.com
 
