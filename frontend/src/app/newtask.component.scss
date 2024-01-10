@@ -1,13 +1,22 @@
 .example-full-width {
     width: 100%;
-  }
+}
 
-  .button-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .toggle-column-select {
-    margin-left: 16px; /* Adjust margin as needed */
-  }
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggle-column-select {
+  margin-left: 16px; /* Adjust margin as needed */
+}
+::ng-deep .mat-step-header .mat-step-icon-selected {
+  background-color: blue;
+}
+::ng-deep .mat-step-header .mat-step-icon-state-edit {
+  background-color: green;
+}
+.button-container {
+  display: flex;
+}

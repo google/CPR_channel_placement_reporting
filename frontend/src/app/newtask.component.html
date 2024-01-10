@@ -65,7 +65,7 @@
           </mat-form-field>
         </div>
         <div>
-          <button mat-button matStepperNext>Next</button>
+          <button mat-button matStepperNext class="secondaryButton">Next</button>
         </div>
       </mat-step>
       <mat-step>
@@ -249,19 +249,19 @@
         </mat-accordion>
         <br />
         <br />
-        <div>
-          <button mat-button matStepperNext>Next</button>
-        </div>
-        <br>
-        <div>
+        <div class="button-container">
+          <button mat-button matStepperNext class="secondaryButton">Next</button>
           <button
             type="button"
-            class="secondaryButton"
+            class="primaryButton"
             (click)="togglePanel(); previewPlacements()"
             value="Preview"
           >
             Preview Results
           </button>
+        </div>
+        <br>
+        <div>
         </div>
       </mat-step>
       <mat-step>
@@ -494,7 +494,7 @@
 
       <ng-container
         *ngFor="let item of data | keyvalue: unsorted; let i = index"
-      >     
+      >
         <td *ngIf="toggle_column_selected_headers.includes(column_headers[i]) && !hidden_columns.includes(column_headers[i])">
           <span
             *ngIf="
