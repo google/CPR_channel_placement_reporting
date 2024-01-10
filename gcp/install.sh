@@ -25,6 +25,7 @@ PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID | grep projectNumber | sed
 PROJECT_ALIAS=$(git config -f $SETTING_FILE config.name)
 GCS_BASE_PATH=gs://$PROJECT_ID/$PROJECT_ALIAS
 CF_REGION=$(git config -f $SETTING_FILE functions.region)
+APPENGINE_SERVICE_NAME=$(git config -f $SETTING_FILE config.service)
 USER_EMAIL=$(gcloud config get-value account 2> /dev/null)
 SERVICE_ACCOUNT=$PROJECT_ID@appspot.gserviceaccount.com
 
@@ -139,6 +140,7 @@ enable_api() {
 deploy_app() {
 	echo -e "${COLOR}Deploying app to GAE...${NC}"
 	cd $SCRIPT_PATH/../backend
+  sed -i'.bak' -e "s/service: default/service: $APPENGINE_SERVICE_NAME/" app.yaml
   sed -i'.bak' -e "s^path/to/google-ads.yaml^$GCS_BASE_PATH/google-ads.yaml^" app.yaml
   sed -i'.bak' -e "s^your-youtube-api-key^$youtube_api_key^" app.yaml
 	gcloud app deploy -q
