@@ -27,7 +27,6 @@ Web application that can be used for performing ad-hoc placement exclusions as w
 1. Credentials for Google Ads API access - `google-ads.yaml`.
    See details here - https://github.com/google/ads-api-report-fetcher/blob/main/docs/how-to-authenticate-ads-api.md \
    Normally you need OAuth2 credentials (Client ID, Client Secret), a Google Ads developer token and a refresh token.
-1. API Key to access YouTube Data API -  more at [Setting up API keys](https://support.google.com/googleapi/answer/6158862?hl=en).
 1. Access to repository configured. In order to clone this repository you need
 	to do the following:
 
@@ -55,12 +54,10 @@ git clone https://professional-services.googlesource.com/solutions/cpr_placement
 
 1. Optionally adjust settings in `gcp/settings.ini`
 
-1. Export YouTube API key - `export YOUTUBE_DATA_API_KEY=<YOUR_API_KEY>`
-
 1. Run installation:
 
 ```
-./gcp/install.sh
+./gcp/install.sh deploy_all
 ```
 
 > You can update the existing installation by running `./gcp/update.sh`
@@ -70,6 +67,7 @@ git clone https://professional-services.googlesource.com/solutions/cpr_placement
 After Google cloud installation is completed, you'll be presented with a URL when Channel Placement Exclusion is running.
 
 Alternatively you can open `default` services in [Appengine Services](https://corp.google.com/appengine/services) to access the application.
+> If you changed `service` name in look for this service name in Appengine.
 
 ## Disclaimer
 This is not an officially supported Google product.
