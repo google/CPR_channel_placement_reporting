@@ -173,7 +173,7 @@ export class NewtaskComponent implements OnInit {
       fields: [
         {value: "GOOGLE_ADS_INFO:conversion_name", view: "Conversion Name", type:"string"},
         {value: "GOOGLE_ADS_INFO:cost_per_conversion_", view: "CPA for selected conversion(s)", type:"numeric"},
-        {value: "GOOGLE_ADS_INFO:conversions_", view: "Selected conversion(s)", type:"string"},
+        {value: "GOOGLE_ADS_INFO:conversions_", view: "# of selected conversion(s)", type:"string"},
       ],
     },
     {name: "YouTube Video",
@@ -595,7 +595,8 @@ export class NewtaskComponent implements OnInit {
     let formRawValue = {
         'customer_ids': this.selectedCidList.value,
         'header': this.column_headers,
-        'placements': exclusion_list
+        'placements': exclusion_list,
+        'exclusion_level': this.selectedExclusionLevelFormControl.value
     };
     this._call_manual_service(JSON.stringify(formRawValue));
 }
