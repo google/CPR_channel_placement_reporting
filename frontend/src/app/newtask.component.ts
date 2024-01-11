@@ -174,7 +174,7 @@ export class NewtaskComponent implements OnInit {
       fields: [
         {value: "GOOGLE_ADS_INFO:conversion_name", view: "Conversion Name", type:"string"},
         {value: "GOOGLE_ADS_INFO:cost_per_conversion_", view: "CPA for selected conversion(s)", type:"numeric"},
-        {value: "GOOGLE_ADS_INFO:conversions_", view: "# of selected conversion(s)", type:"string"},
+        {value: "GOOGLE_ADS_INFO:conversions_", view: "# of selected conversion(s)", type:"numeric"},
       ],
     },
     {name: "YouTube Video",
@@ -810,11 +810,14 @@ export class NewtaskComponent implements OnInit {
           this.gads_data_error = true;
           error_count++;
       }
+      if (!this.validateFinalFilter()){
+          this.openSnackBar("Error in some of your fields. Please review and correct them", "Dismiss", "error-snackbar");
+          error_count++;
+      }
       if (error_count == 0) {
           return true;
       } else {
-          // this.openSnackBar("Error in some of your fields. Please review and correct them", "Dismiss", "error-snackbar");
-          return true;
+          return false;
       }
   }
 
@@ -844,6 +847,25 @@ export class NewtaskComponent implements OnInit {
     }
   }
 
+
+ 
+  validateFinalFilter() {
+    let result = true;
+  
+    const hasConversions = this.finalGadsFilter.includes(MetricType.Conversions);
+    const hasCostPerConversion = this.finalGadsFilter.includes(MetricType.CostPerConversion);
+    const hasConversionName = this.finalGadsFilter.includes(MetricType.ConversionName);
+  
+    if ((hasConversions || hasCostPerConversion) && !hasConversionName) {
+      result = false;
+      this.filter_extra_instructions = "If 'conversion split metrics' are specified, please include 'Conversion Name'.";
+    } else if (hasConversionName && !(hasConversions || hasCostPerConversion)) {
+      result = false;
+      this.filter_extra_instructions = "If 'Conversion Name' is specified, please include at least one 'conversion split metrics'.";
+    }
+  
+    return result;
+  }
 
   validateOperatorAndThenValue(){
     let result = true;
