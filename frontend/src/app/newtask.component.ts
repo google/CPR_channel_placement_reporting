@@ -82,6 +82,7 @@ export class NewtaskComponent implements OnInit {
   filter_operator_error_msg = "";
   filter_value_error = false;
   filter_value_error_msg = "";
+  filter_extra_instructions = "";
   gads_data_error = false;
   customer_id_error = false;
   lookback_error = false;
@@ -210,7 +211,7 @@ export class NewtaskComponent implements OnInit {
 
   numericOperators: Set<string | null > = new Set(["<", ">", "=", "!="]);
   stringOperators: Set<string | null> = new Set(["contains", "regexp", "=", "!="]);
-  boolOperators: Set<string | null> = new Set(["has latin letters"]);
+  boolOperators: Set<string | null> = new Set(["has_latin_letters"]);
 
   gadsOperatorsArray = [
     ["<", "less than"],
@@ -818,13 +819,12 @@ export class NewtaskComponent implements OnInit {
   }
 
   gadsAddFilter() {
-    this.filter_operator_error = false;
-    this.filter_value_error = false;
+    this.clearHintsAndErrors("allFilterErrors");
     let selected_field = this.selectedField.value?? "";
     let operator = this.selectedOperator.value?? "";
     let field_value = this.selectedValue.value?? "";
 
-    if (this.validateOperator() && this.validateValue()){
+    if (this.validateOperatorAndThenValue()){
         this.fixFilterSyntax(selected_field, operator, field_value);
         this.toggle_column_selected_headers.push(
             selected_field.toLowerCase().includes("youtube")
@@ -844,6 +844,19 @@ export class NewtaskComponent implements OnInit {
     }
   }
 
+
+  validateOperatorAndThenValue(){
+    let result = true;
+    this.clearHintsAndErrors("allFilterErrors");
+    if (!this.validateOperator()){
+      result = false;
+    }
+    else if (!this.validateValue()){
+      result = false;
+    }
+    return result;
+  }
+
   validateOperator(){
     let isValid = true;
 
@@ -860,6 +873,9 @@ export class NewtaskComponent implements OnInit {
           this.showError(FilterField.Operator, "Not compatible with the selected field");
           isValid = false;
           }
+      else if (this.boolOperators.has(operator)){
+          this.filter_extra_instructions = "Please enter True/False as a value"
+        }
     }
     return isValid;
   }
@@ -892,19 +908,30 @@ export class NewtaskComponent implements OnInit {
   }
 
 
-  clearErrors(controlName: string) {
+  clearHintsAndErrors(controlName: string) {
     switch (controlName)
     {
+      case "allFilterErrors":
+        {   
+            this.filter_extra_instructions = "";
+            this.filter_operator_error_msg = "";
+            this.filter_operator_error = false;
+            this.filter_value_error_msg = "";
+            this.filter_value_error = false;
+            break;
+        }
         case "selectedOperator":
-            {
-                this.filter_operator_error = false;
-                break;
-            }
-            case "selectedValue":
-            {
-                this.filter_value_error = false;
-                break;
-            }
+        {                
+            this.filter_operator_error_msg = "";
+            this.filter_operator_error = false;
+            break;
+        }
+        case "selectedValue":
+        {
+            this.filter_value_error_msg = "";
+            this.filter_value_error = false;
+            break;
+        }
     }
   }
 
