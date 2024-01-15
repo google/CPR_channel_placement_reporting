@@ -279,7 +279,6 @@ export class NewtaskComponent implements OnInit {
       private dialogService: DialogService, private route: ActivatedRoute) {
       this.gadsForm = this.fb.group({
           taskName: [''],
-          gadsCustomerId: [''],
           fromDaysAgo: [''],
           lookbackDays: [''],
           exclusionLevel: [''],
@@ -787,9 +786,7 @@ export class NewtaskComponent implements OnInit {
               error_count++;
           }
       }
-      let cus_id = this.gadsForm.controls['gadsCustomerId'].value;
-      cus_id = cus_id.replace(new RegExp('-', 'g'), '');
-      this.gadsForm.controls['gadsCustomerId'].setValue(cus_id);
+      let cus_id = this.selectedCidList.value?.join(",");
       if (this.finalGadsFilter.endsWith("(") || this.finalGadsFilter.endsWith("AND")) {
           this.gads_filter_error = true;
           error_count++;
@@ -852,9 +849,9 @@ export class NewtaskComponent implements OnInit {
   validateFinalFilter() {
     let result = true;
   
-    const hasConversions = this.finalGadsFilter.includes(MetricType.Conversions);
-    const hasCostPerConversion = this.finalGadsFilter.includes(MetricType.CostPerConversion);
-    const hasConversionName = this.finalGadsFilter.includes(MetricType.ConversionName);
+    const hasConversions = this.containsExactSubstring(this.finalGadsFilter, "GOOGLE_ADS_INFO:conversions_");
+    const hasCostPerConversion = this.finalGadsFilter.includes("cost_per_conversion");
+    const hasConversionName = this.finalGadsFilter.includes("conversion_name");
   
     if ((hasConversions || hasCostPerConversion) && !hasConversionName) {
       result = false;
@@ -866,6 +863,21 @@ export class NewtaskComponent implements OnInit {
   
     return result;
   }
+
+
+  containsExactSubstring(mainString: string, substring: string): boolean {    
+    const substringIndex = mainString.indexOf(substring);
+    if (substringIndex === -1) {
+        return false;
+    }
+
+    // Check if the substring is an exact match or part of a larger word
+    const isExactMatchBefore = substringIndex === 0 || !mainString[substringIndex - 1].match(/\w/);
+    const isExactMatchAfter = (substringIndex + substring.length === mainString.length) || !mainString[substringIndex + substring.length].match(/\w/);
+
+    return isExactMatchBefore && isExactMatchAfter;
+  }
+
 
   validateOperatorAndThenValue(){
     let result = true;
