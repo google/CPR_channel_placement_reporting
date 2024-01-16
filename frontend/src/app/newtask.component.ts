@@ -279,6 +279,7 @@ export class NewtaskComponent implements OnInit {
       private dialogService: DialogService, private route: ActivatedRoute) {
       this.gadsForm = this.fb.group({
           taskName: [''],
+          gadsCustomerId: [''],
           fromDaysAgo: [''],
           lookbackDays: [''],
           exclusionLevel: [''],
@@ -787,6 +788,7 @@ export class NewtaskComponent implements OnInit {
           }
       }
       let cus_id = this.selectedCidList.value?.join(",");
+      this.gadsForm.controls['gadsCustomerId'].setValue(cus_id);
       if (this.finalGadsFilter.endsWith("(") || this.finalGadsFilter.endsWith("AND")) {
           this.gads_filter_error = true;
           error_count++;
@@ -845,14 +847,14 @@ export class NewtaskComponent implements OnInit {
   }
 
 
- 
+
   validateFinalFilter() {
     let result = true;
-  
+
     const hasConversions = this.containsExactSubstring(this.finalGadsFilter, "GOOGLE_ADS_INFO:conversions_");
     const hasCostPerConversion = this.finalGadsFilter.includes("cost_per_conversion");
     const hasConversionName = this.finalGadsFilter.includes("conversion_name");
-  
+
     if ((hasConversions || hasCostPerConversion) && !hasConversionName) {
       result = false;
       this.filter_extra_instructions = "If 'conversion split metrics' are specified, please include 'Conversion Name'.";
@@ -860,12 +862,12 @@ export class NewtaskComponent implements OnInit {
       result = false;
       this.filter_extra_instructions = "If 'Conversion Name' is specified, please include at least one 'conversion split metrics'.";
     }
-  
+
     return result;
   }
 
 
-  containsExactSubstring(mainString: string, substring: string): boolean {    
+  containsExactSubstring(mainString: string, substring: string): boolean {
     const substringIndex = mainString.indexOf(substring);
     if (substringIndex === -1) {
         return false;
@@ -946,7 +948,7 @@ export class NewtaskComponent implements OnInit {
     switch (controlName)
     {
       case "allFilterErrors":
-        {   
+        {
             this.filter_extra_instructions = "";
             this.filter_operator_error_msg = "";
             this.filter_operator_error = false;
@@ -955,7 +957,7 @@ export class NewtaskComponent implements OnInit {
             break;
         }
         case "selectedOperator":
-        {                
+        {
             this.filter_operator_error_msg = "";
             this.filter_operator_error = false;
             break;
