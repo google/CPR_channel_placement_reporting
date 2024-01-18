@@ -706,10 +706,8 @@ export class NewtaskComponent implements OnInit {
 
   async _call_save_task_success(response: ReturnPromise) {
       let schedule_text = "";
-      if (this.gadsForm.controls['schedule'].value != "0") {
+      if (this.gadsForm.controls['schedule'].value) {
           schedule_text = " and scheduled to run every " + this.gadsForm.controls['schedule'].value + " hours";
-      } else {
-          schedule_text = " and removed any schedules that were running"
       }
       const task_name = this.gadsForm.controls['taskName'].value;
       this.openSnackBar("Successfully saved task '" + task_name + "' (" +
