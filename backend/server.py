@@ -398,6 +398,13 @@ def get_all_mcc_ids():
     return _build_response(json.dumps(mcc_ids))
 
 
+@app.route("/api/updateMccIds", methods=['POST'])
+def update_mcc_ids():
+    cmd = commands.GetMccIds()
+    mcc_ids = bus.handle(cmd)
+    return _build_response(json.dumps(mcc_ids))
+
+
 @app.route("/api/getCustomerIds", methods=['GET'])
 def get_customer_ids():
     if config := views.config(bus.uow):
@@ -411,6 +418,27 @@ def get_customer_ids():
         cmd = commands.GetCustomerIds(mcc_id=mcc_id)
         result = bus.handle(cmd)
     return _build_response(json.dumps(result))
+
+
+@app.route("/api/updateCustomerIds", methods=['POST'])
+def update_customer_ids():
+    if not request.values:
+        mcc_ids = [account.get("id") for account in views.mcc_ids(bus.uow)]
+    else:
+        data = request.get_json(force=True)
+        if not (mcc_id := data.get("mcc_id")):
+            if config := views.config(bus.uow):
+                mcc_id = config[0].get("mcc_id")
+            else:
+                ads_client = bus.dependencies.get("ads_api_client").client
+                if not (mcc_id := ads_client.login_customer_id):
+                    mcc_id = ads_client.linked_customer_id
+        mcc_ids = [mcc_id]
+    results = []
+    for mcc_id in mcc_ids:
+        cmd = commands.GetCustomerIds(mcc_id=mcc_id)
+        results.append(bus.handle(cmd))
+    return _build_response(json.dumps(results))
 
 
 @app.route("/api/getAllowlistedPlacements", methods=['GET'])
