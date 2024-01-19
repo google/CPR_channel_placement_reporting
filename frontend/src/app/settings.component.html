@@ -1,34 +1,51 @@
 <div class="centre-form">
-    <form [formGroup]="settingsForm">
-       <div>
-          <div class="heading">
-             <span>Settings</span>
-          </div>
-       </div>
-       <p></p>
-       <div>
-          <div class="label-input-block yt-label">
-             <label for="mcc_list">MCC ID</label>
-          </div>
-          <div class="label-input-block">
-             <select name="gadsMccId" class="inputElement" formControlName="gadsMccId" id="gadsMccId">
-                <option *ngFor="let mcc of mcc_list" [value]=mcc.id>{{ mcc.account_name }} [{{ mcc.id }}]</option>
-             </select>
-          </div>
-          <div>
-             <div class="label-input-block yt-label">
-                <label for="emailAddress">Email Address</label>
-             </div>
-             <div class="label-input-block">
-                <input type="text" class="inputElement" formControlName="emailAddress" name="emailAddress">
-             </div>
-          </div>
-          <div class="label-input-block centre-form">
-             <div class="label-input-block">
-                <button type="button" class="primaryButton" (click)="save_settings()">Save</button>
-             </div>
-          </div>
-       </div>
-    </form>
- </div>
- <app-loading [showSpinner]=loading></app-loading>
+  <form [formGroup]="settingsForm">
+    <div>
+      <div class="heading">
+        <span>Settings</span>
+      </div>
+    </div>
+    <p></p>
+    <div>
+      <div class="label-input-block yt-label">
+        <label for="mcc_list">MCC ID</label>
+      </div>
+      <div class="label-input-block">
+        <select
+          name="gadsMccId"
+          class="inputElement"
+          formControlName="gadsMccId"
+          id="gadsMccId"
+        >
+          <option *ngFor="let mcc of mcc_list" [value]="mcc.id">
+            {{ mcc.account_name }} [{{ mcc.id }}]
+          </option>
+        </select>
+      </div>
+      <button mat-button (click)="refresh_mcc_ids()">
+         <mat-icon>refresh</mat-icon>
+      </button>
+      <div>
+        <div class="label-input-block yt-label">
+          <label for="emailAddress">Email Address</label>
+        </div>
+        <div class="label-input-block">
+          <input
+            type="text"
+            class="inputElement"
+            formControlName="emailAddress"
+            name="emailAddress"
+          />
+        </div>
+      </div>
+      <div class="label-input-block centre-form">
+        <div class="label-input-block">
+          <button type="button" class="primaryButton" (click)="save_settings()">
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+<app-loading [showSpinner]="loading"></app-loading>
