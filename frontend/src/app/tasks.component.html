@@ -42,13 +42,6 @@
           </div>
           <button mat-menu-item>
           <a
-            (click)="pauseBatch()"
-            target="_self"
-            matTooltip="Pause this task">
-            <mat-icon class="grey-icon">pause</mat-icon>Pause</a>
-            </button>
-          <button mat-menu-item>
-          <a
             (click)="deleteBatch()"
             target="_self"
             matTooltip="Delete this task">
@@ -132,7 +125,7 @@
             ></mat-checkbox>
         </td>
         <td>{{ localizeDate(data.creation_date) }}</td>
-        <td><mat-slide-toggle [checked]="data.status=='ACTIVE'" (click)="toggleTaskStatus(data.id)"></mat-slide-toggle></td>
+        <td><mat-slide-toggle [checked]="data.status=='ACTIVE'" (click)="toggleTaskStatus(data)"></mat-slide-toggle></td>
         <td>
           <span *ngIf="data.output == 'NOTIFY'" class="valid_text">
             <mat-icon matTooltip="Exclusions are disabled" class="grey-icon">label_off</mat-icon>
