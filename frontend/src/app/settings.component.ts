@@ -90,6 +90,16 @@
        });
    }
 
+   async refresh_mcc_ids()
+   {
+    this.subs = (await ((this.service.refresh_mcc_list())))
+       .subscribe({
+         next: (response: ReturnPromise) => this._populate_mcc_list(response),
+         error: (err: any) => this.file_status="Unknown error!",
+         complete: () => this.loading=false
+       });
+   }
+
    _populate_mcc_list(response: ReturnPromise)
    {
     this.mcc_list = Object.values(response);
