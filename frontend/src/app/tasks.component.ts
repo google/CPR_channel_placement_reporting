@@ -244,10 +244,11 @@ export class TasksComponent implements OnInit {
     return date.split(" ")[0]
   }
 
-  toggleTaskStatus(task_id: string) {
-  }
-
-  pauseBatch() {
+  toggleTaskStatus(task: any) {
+    console.log(task)
+    if (task.status == "ACTIVE") {
+      this.deleteNow(task.id, task.name);
+    }
   }
 
   toggleTaskSelection(task_id: string) {
