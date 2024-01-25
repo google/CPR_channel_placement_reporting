@@ -5,3 +5,5 @@ tags
 google-ads.yaml
 backend/package-lock.json
 .vscode/
+frontend/package-lock.json
+frontend/package.json

@@ -50,6 +50,7 @@ enum FilterField {
   templateUrl: './newtask.component.html',
   styleUrls: ['./newtask.component.scss']
 })
+
 export class NewtaskComponent implements OnInit {
   formBuilder: any;
   gadsForm: FormGroup;
@@ -90,7 +91,8 @@ export class NewtaskComponent implements OnInit {
   gads_filter_error = false;
   memory_error = false;
   gads_filter_lock = true;
-  data_youtube: boolean = true;
+  data_youtube_video: boolean = true;
+  data_youtube_channel: boolean = true;
   data_display: boolean = true;
   data_mobile: boolean = true;
 
@@ -143,7 +145,8 @@ export class NewtaskComponent implements OnInit {
   ];
 
   relevantMetricArray: string[][] = [];
-  allMetricArray: FieldGroup[] = [
+
+  staticMetricArray: FieldGroup[] = [
     {name: "Dimensions",
       fields: [
         {value: "GOOGLE_ADS_INFO:account_name", view: "Account Name" , type:"string"},
@@ -206,6 +209,9 @@ export class NewtaskComponent implements OnInit {
       ],
     }
   ];
+
+  allMetricArray: FieldGroup[] = [];
+
 
   metricsByTypeDict: { [key: string]: Set<string> } = {};
 
@@ -285,7 +291,8 @@ export class NewtaskComponent implements OnInit {
           exclusionLevel: [''],
           task_output: [''],
           schedule: [''],
-          gadsDataYouTube: [''],
+          gadsDataYouTubeChannel: [''],
+          gadsDataYouTubeVideo: [''],
           gadsDataDisplay: [''],
           gadsDataMobile: [''],
           gadsField: [''],
@@ -296,6 +303,7 @@ export class NewtaskComponent implements OnInit {
           date_to: ""
       });
 
+      this.allMetricArray = JSON.parse(JSON.stringify(this.staticMetricArray));
       this.gadsForm.controls['lookbackDays'].setValue(7);
       this.gadsForm.controls['fromDaysAgo'].setValue("0");
       this.selectedSchedule.setValue('0');
@@ -419,8 +427,11 @@ export class NewtaskComponent implements OnInit {
             }
           }
           if (k == 'placement_types') {
-            if (!v.includes('YOUTUBE')) {
-                this.gadsForm.controls['gadsDataYouTube'].setValue(false);
+            if (!v.includes('YOUTUBE_VIDEO')) {
+                this.gadsForm.controls['gadsDataYouTubeVideo'].setValue(false);
+            }
+            if (!v.includes('YOUTUBE_CHANNEL')) {
+              this.gadsForm.controls['gadsDataYouTubeChannel'].setValue(false);
             }
             if (!v.includes('MOBILE')) {
                 this.gadsForm.controls['gadsDataMobile'].setValue(false);
@@ -450,8 +461,11 @@ export class NewtaskComponent implements OnInit {
       if (this.validate_fields(false)) {
           this.pagination_start = 0;
           var placement_types = [];
-          if (this.data_youtube) {
-            placement_types.push("YOUTUBE_CHANNEL", "YOUTUBE_VIDEO");
+          if (this.data_youtube_channel) {
+            placement_types.push("YOUTUBE_CHANNEL");
+          }
+          if (this.data_youtube_video) {
+            placement_types.push("YOUTUBE_VIDEO");
           }
           if (this.data_display) {
             placement_types.push("WEBSITE");
@@ -580,7 +594,7 @@ export class NewtaskComponent implements OnInit {
       }
     }
     if (exclusion_list.length > 0) {
-        if (this.data_youtube && this.selectedExclusionLevelFormControl.value != "ACCOUNT" ){
+        if ((this.data_youtube_video || this.data_youtube_channel)&& this.selectedExclusionLevelFormControl.value != "ACCOUNT" ){
             this.dialogService.openConfirmDialog("For now, CPR tool can exclude video placements at an account level only (regardless of 'success' indication). Do you wish to proceed?")
             .afterClosed().subscribe(res => {
                 if (res) {
@@ -670,8 +684,11 @@ export class NewtaskComponent implements OnInit {
 
   async _finalise_save_task(task_id: string) {
       var placement_types = [];
-      if (this.data_youtube) {
-        placement_types.push("YOUTUBE_CHANNEL", "YOUTUBE_VIDEO");
+      if (this.data_youtube_video) {
+        placement_types.push("YOUTUBE_VIDEO");
+      }
+      if (this.data_youtube_channel) {
+        placement_types.push("YOUTUBE_CHANNEL");
       }
       if (this.data_display) {
         placement_types.push("WEBSITE");
@@ -803,7 +820,7 @@ export class NewtaskComponent implements OnInit {
           this.customer_id_error = true;
           error_count++;
       }
-      if (!this.data_display && !this.data_youtube && !this.data_mobile) {
+      if (!this.data_display && !this.data_youtube_video && !this.data_youtube_channel && !this.data_mobile) {
           this.gads_data_error = true;
           error_count++;
       }
@@ -1030,6 +1047,23 @@ export class NewtaskComponent implements OnInit {
   paginationChange() {
       this.pagination_rpp = Number(this.paginationForm.controls['paginationValue'].value);
       this.pagination_start = 0;
+  }
+
+
+  onToggleChange(toggleName: string, groupName: string): void {
+    if (this.gadsForm.controls[toggleName].value) {
+        // If toggle is ON, add back the entire FieldGroup
+        const fieldGroupToAdd = this.staticMetricArray.find(group => group.name === groupName);
+        if (fieldGroupToAdd) {
+          this.allMetricArray.push(fieldGroupToAdd);
+        }
+    } else {
+      // If toggle is OFF, remove the entire FieldGroup
+      const indexToRemove = this.allMetricArray.findIndex(group => group.name === groupName);
+      if (indexToRemove !== -1) {
+        this.allMetricArray.splice(indexToRemove, 1);
+      }
+    }
   }
 
   scheduleChange() {
