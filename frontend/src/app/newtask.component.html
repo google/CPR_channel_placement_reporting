@@ -79,26 +79,41 @@
                 : 'label-input-block'
             "
           >
-            YouTube
+
+          YouTube Video
+          <mat-slide-toggle
+            name="gadsDataYouTubeVideo"
+            [(ngModel)]="data_youtube_video"
+            formControlName="gadsDataYouTubeVideo"
+            (change)="onToggleChange('gadsDataYouTubeVideo','YouTube Video')"
+            id="gadsDataYouTubeVideo"
+          ></mat-slide-toggle>
+
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;YouTube Channel
             <mat-slide-toggle
-              name="gadsDataYouTube"
-              [(ngModel)]="data_youtube"
-              formControlName="gadsDataYouTube"
-              id="gadsDataYouTube"
+              name="gadsDataYouTubeChannel"
+              [(ngModel)]="data_youtube_channel"
+              formControlName="gadsDataYouTubeChannel"
+              (change)="onToggleChange('gadsDataYouTubeChannel','YouTube Channel')"
+              id="gadsDataYouTubeChannel"
             ></mat-slide-toggle>
+
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Website
             Display
             <mat-slide-toggle
               name="gadsDataDisplay"
               [(ngModel)]="data_display"
               formControlName="gadsDataDisplay"
+              (change)="onToggleChange('gadsDataDisplay','Website Content')"
               id="gadsDataDisplay"
             ></mat-slide-toggle>
+
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Mobile
             <mat-slide-toggle
               name="gadsDataMobile"
               [(ngModel)]="data_mobile"
               formControlName="gadsDataMobile"
+              (change)="onToggleChange('gadsDataMobile','Mobile')"
               id="gadsDataMobile"
             ></mat-slide-toggle>
             <span class="error_text" *ngIf="gads_data_error"
