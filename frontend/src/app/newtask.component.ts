@@ -146,7 +146,7 @@ export class NewtaskComponent implements OnInit {
 
   relevantMetricArray: string[][] = [];
 
-  staticMetricArray: FieldGroup[] = [
+  allMetricArray: FieldGroup[] = [
     {name: "Dimensions",
       fields: [
         {value: "GOOGLE_ADS_INFO:account_name", view: "Account Name" , type:"string"},
@@ -209,8 +209,6 @@ export class NewtaskComponent implements OnInit {
       ],
     }
   ];
-
-  allMetricArray: FieldGroup[] = [];
 
 
   metricsByTypeDict: { [key: string]: Set<string> } = {};
@@ -303,7 +301,6 @@ export class NewtaskComponent implements OnInit {
           date_to: ""
       });
 
-      this.allMetricArray = JSON.parse(JSON.stringify(this.staticMetricArray));
       this.gadsForm.controls['lookbackDays'].setValue(7);
       this.gadsForm.controls['fromDaysAgo'].setValue("0");
       this.selectedSchedule.setValue('0');
@@ -1051,19 +1048,11 @@ export class NewtaskComponent implements OnInit {
 
 
   onToggleChange(toggleName: string, groupName: string): void {
-    if (this.gadsForm.controls[toggleName].value) {
-        // If toggle is ON, add back the entire FieldGroup
-        const fieldGroupToAdd = this.staticMetricArray.find(group => group.name === groupName);
-        if (fieldGroupToAdd) {
-          this.allMetricArray.push(fieldGroupToAdd);
-        }
-    } else {
-      // If toggle is OFF, remove the entire FieldGroup
-      const indexToRemove = this.allMetricArray.findIndex(group => group.name === groupName);
-      if (indexToRemove !== -1) {
-        this.allMetricArray.splice(indexToRemove, 1);
-      }
+    const fieldGroupToAdd = this.allMetricArray.find(group => group.name === groupName);
+    if (!fieldGroupToAdd) {
+      return;
     }
+    fieldGroupToAdd.disabled = !this.gadsForm.controls[toggleName].value;
   }
 
   scheduleChange() {
