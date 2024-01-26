@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { FormGroup, FormBuilder, FormControl } from '@angular/forms';
+import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
 import { Component, OnInit } from '@angular/core';
 import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
 import { ActivatedRoute } from '@angular/router';
@@ -273,7 +273,7 @@ export class NewtaskComponent implements OnInit {
   task_exists: any;
   file_exists: any;
 
-  selectedCidList = new FormControl(['']);
+  selectedCidList = new FormControl([''], [Validators.required]);
   selectedSchedule = new FormControl('0');
   selectedExclusionLevelFormControl = new FormControl('AD_GROUP');
   selectedField = new FormControl('');
@@ -284,10 +284,10 @@ export class NewtaskComponent implements OnInit {
   constructor(private snackbar: MatSnackBar, private service: PostService, private fb: FormBuilder,
       private dialogService: DialogService, private route: ActivatedRoute) {
       this.gadsForm = this.fb.group({
-          taskName: [''],
+          taskName: ['', [Validators.required]],
           gadsCustomerId: [''],
-          fromDaysAgo: [''],
-          lookbackDays: [''],
+          fromDaysAgo: ['', [Validators.required, Validators.min(0), Validators.max(90)]],
+          lookbackDays: ['', [Validators.required, Validators.min(0), Validators.max(90)]],
           exclusionLevel: [''],
           task_output: [''],
           schedule: [''],
