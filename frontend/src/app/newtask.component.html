@@ -135,18 +135,24 @@
               <mat-form-field>
                 <mat-label>Metrics & Dimensions</mat-label>
                 <mat-select [formControl]="selectedField">
-                  <mat-optgroup
-                    *ngFor="let group of allMetricArray"
-                    [label]="group.name"
-                    [disabled]="group.disabled"
-                  >
-                    <mat-option
-                      *ngFor="let field of group.fields"
-                      [value]="field.value"
+                  
+                  <ng-container *ngFor="let group of allMetricArray">
+                    <!-- Use *ngIf to conditionally render the mat-optgroup -->
+                    <mat-optgroup
+                      *ngIf="!group.disabled"
+                      [label]="group.name"
+                      [disabled]="group.disabled"
                     >
-                      {{ field.view }}
-                    </mat-option>
-                  </mat-optgroup>
+                    <mat-option
+                    *ngFor="let field of group.fields"
+                    [value]="field.value"
+                  >
+                    {{ field.view }}
+                  </mat-option>
+                    </mat-optgroup>
+                  </ng-container>
+                  
+                  
                 </mat-select>
               </mat-form-field>
             </div>
