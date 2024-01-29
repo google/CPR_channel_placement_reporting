@@ -119,7 +119,7 @@
         <td *ngIf="data.next_run == 'Not scheduled'">{{ getScheduleValue(data.schedule) }}</td>
         <td>
           <span *ngIf="data.placements_excluded == undefined"
-            ><mat-icon matTooltip="Task has not run yet" color="accent"
+            ><mat-icon matTooltip="Task has not run yet" class="custom-icon"
               >warning</mat-icon
             ></span
           >
