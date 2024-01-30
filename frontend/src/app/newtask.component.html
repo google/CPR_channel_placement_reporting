@@ -17,16 +17,15 @@
           <mat-form-field
             name="gadsCustomerId"
             formControlName="gadsCustomerId"
-            id="gadsCustomerId"
-          >
-            <ng-template matStepLabel>Select accounts</ng-template>
-            <mat-label>Select-accounts</mat-label>
+            id="gadsCustomerId">
+            <mat-label>Select accounts</mat-label>
             <mat-select [formControl]="selectedCidList" multiple>
               <mat-option *ngFor="let cid of customer_list" [value]="cid.id">
                 {{ cid.account_name }} [{{ cid.id }}]
               </mat-option>
             </mat-select>
           </mat-form-field>
+          
         </div>
         <ng-template matStepLabel>Configure date range</ng-template>
         <div class="label-input-block top-centre-form">
@@ -34,12 +33,12 @@
             <mat-label>From Days Ago</mat-label>
             <input type="number"
               name="fromDaysAgo"
-              formControlName="fromDaysAgo"
               id="fromDaysAgo"
               matInput
             />
           </mat-form-field>
         </div>
+
         <div class="label-input-block top-centre-form">
           <mat-form-field>
             <mat-label>LookbackDays</mat-label>
