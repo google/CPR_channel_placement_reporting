@@ -92,6 +92,7 @@
 
    async refresh_mcc_ids()
    {
+    this.loading=true;
     this.subs = (await ((this.service.refresh_mcc_list())))
        .subscribe({
          next: (response: ReturnPromise) => this._populate_mcc_list(response),
