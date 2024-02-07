@@ -60,9 +60,9 @@ export class TasksComponent implements OnInit {
     ["24", "Every 1 day"],
     ["48", "Every 2 days"]
   ];
+  isTasksTableCheckAll: boolean = false;
 
   constructor(private snackbar: MatSnackBar, private fb: FormBuilder, private service: PostService, private dialogService: DialogService) {
-
     this.paginationForm = this.fb.group({
       paginationValue: ['']
     });
@@ -103,12 +103,11 @@ export class TasksComponent implements OnInit {
     this.openSnackBar("Not able to retrieve list of tasks. Make sure you have provided the details in Settings and Authenticated with Google Ads", "Dismiss", "error-snackbar");
   }
 
-
   async runBatch(){
     for(let task of this.selected_tasks) {
       await this._continue_run_task(task);
     }
-    this.selected_tasks.clear()
+    this.toggleCheckAll({ checked: false});
   }
 
   async runNow(file_name:string, task_name:string){
@@ -161,12 +160,11 @@ export class TasksComponent implements OnInit {
     this.openSnackBar("Permission error: Check you have Authenticated in settings and that you have the correct permissions to the account and your Customer ID/MCC IDs are correct. If you have just changed your permissions in Google Ads, go back to Settings and click 'Save / Reauthenticate' to update permissions and try again", "Dismiss", "error-snackbar");
   }
 
-
   async deleteBatch(){
     for(let task of this.selected_tasks) {
       await this._continue_task_delete(task);
       }
-    this.selected_tasks.clear()
+    this.toggleCheckAll({ checked: false});
     }
 
   async deleteNow(task_id:string, task_name:string){
@@ -216,6 +214,7 @@ export class TasksComponent implements OnInit {
       this.pagination_start += this.pagination_rpp;
     }
   }
+
   pagination_prev() {
     if (this.pagination_start - this.pagination_rpp >= 0) {
       this.pagination_start -= this.pagination_rpp;
@@ -261,6 +260,7 @@ export class TasksComponent implements OnInit {
       this.task_id = [...this.selected_tasks].join("")
     }
   }
+
   addTaskToSelection(task_id: string) {
     this.selected_tasks.add(task_id)
   }
@@ -268,14 +268,14 @@ export class TasksComponent implements OnInit {
   removeTaskFromSelection(task_id: string) {
     this.selected_tasks.delete(task_id)
   }
-  toggleCheckAll(event: any) {
+  toggleCheckAll(event: any) {    
     const checked = event.checked;
+    this.isTasksTableCheckAll = checked;
     this.task_table_data = this.task_table_data.map(item => ({...item, isSelected: checked}));
     if (checked) {
       this.task_table_data.forEach(item => this.toggleTaskSelection(item.id));
     } else {
       this.selected_tasks.clear();
     }
-
   }
 }
