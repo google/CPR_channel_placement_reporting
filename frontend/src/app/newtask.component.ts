@@ -413,6 +413,7 @@ export class NewtaskComponent implements OnInit {
           }
           if (k == 'name') {
               this.gadsForm.controls['taskName'].setValue(v);
+              this.task_name = v;
           }
           if (k == 'customer_ids') {
               this.selectedCidList.setValue(v.split(","));
