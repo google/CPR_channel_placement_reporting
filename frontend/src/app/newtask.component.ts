@@ -18,6 +18,8 @@ import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms'
 import { Component, OnInit } from '@angular/core';
 import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
 import { ActivatedRoute } from '@angular/router';
+import {STEPPER_GLOBAL_OPTIONS} from '@angular/cdk/stepper';
+
 
 import { PostService, ReturnPromise } from './services/post.service';
 import { DialogService } from './services/dialog.service';
@@ -45,11 +47,17 @@ enum FilterField {
     Value,
   }
 
-@Component({
-  selector: 'app-newtask',
-  templateUrl: './newtask.component.html',
-  styleUrls: ['./newtask.component.scss']
-})
+  @Component({
+    selector: 'app-newtask',
+    templateUrl: './newtask.component.html',
+    providers: [
+      {
+        provide: STEPPER_GLOBAL_OPTIONS,
+        useValue: {showError: true},
+      },
+    ],
+    styleUrls: ['./newtask.component.scss']
+  })
 
 export class NewtaskComponent implements OnInit {
   formBuilder: any;
@@ -278,7 +286,8 @@ export class NewtaskComponent implements OnInit {
   selectedTaskOutput = new FormControl('EXCLUDE_AND_NOTIFY');
   selectedOperator = new FormControl('');
   selectedValue = new FormControl('');
-
+  stepperErrorMessage: string = "Account is required."
+  
   constructor(private snackbar: MatSnackBar, private service: PostService, private fb: FormBuilder,
       private dialogService: DialogService, private route: ActivatedRoute) {
       this.gadsForm = this.fb.group({
@@ -342,6 +351,17 @@ export class NewtaskComponent implements OnInit {
           });
 
       this._populate_customer_list();
+      this.selectedCidList.valueChanges.subscribe(value =>{
+        if (value && value.length > 0){
+          this.gadsForm.patchValue({
+              gadsCustomerId: value.join(",")
+          });          
+          this.stepperErrorMessage = "";
+        }
+        else {
+        this.stepperErrorMessage = "Account is required."
+        }
+    });
   }
 
   ngAfterViewInit(): void {

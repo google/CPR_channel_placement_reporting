@@ -12,21 +12,21 @@
       <span *ngIf="task_id == undefined || this.task_id == ''">New Task</span>
     </div>
     <mat-stepper #stepper>
-      <mat-step>
-        <div class="label-input-block top-centre-form">
-          <mat-form-field
+      <mat-step [stepControl]="gadsForm" [errorMessage]="stepperErrorMessage" [hasError]="stepperErrorMessage !== ''">
+          <div class="label-input-block top-centre-form">
+            <mat-form-field
             name="gadsCustomerId"
             formControlName="gadsCustomerId"
             id="gadsCustomerId">
-            <mat-label>Select accounts</mat-label>
-            <mat-select [formControl]="selectedCidList" multiple>
-              <mat-option *ngFor="let cid of customer_list" [value]="cid.id">
-                {{ cid.account_name }} [{{ cid.id }}]
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-          
-        </div>
+              <mat-label>Select accounts</mat-label>
+              <mat-select [formControl]="selectedCidList" multiple>
+                <mat-option *ngFor="let cid of customer_list" [value]="cid.id">
+                  {{ cid.account_name }} [{{ cid.id }}]
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+          </div>     
         <ng-template matStepLabel>Configure date range</ng-template>
         <div class="label-input-block top-centre-form">
           <mat-form-field>
@@ -63,7 +63,7 @@
             </mat-select>
           </mat-form-field>
         </div>
-        <div>
+        <div>          
           <button mat-button matStepperNext class="secondaryButton">Next</button>
         </div>
       </mat-step>
