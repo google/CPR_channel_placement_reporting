@@ -695,7 +695,7 @@ export class NewtaskComponent implements OnInit {
         ...OriginalDataRow,
         ...Object.fromEntries(
           this.yt_columns_in_extra.map((col) => [
-            `yt_${col}`,
+            `YT ${col}`,
             OriginalDataRow.extra_info?.[col] !== null
               ? OriginalDataRow.extra_info?.[col]
               : "empty",
