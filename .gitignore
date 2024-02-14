@@ -7,3 +7,5 @@ backend/package-lock.json
 .vscode/
 frontend/package-lock.json
 frontend/package.json
+frontend/package-lock.json
+frontend/package.json
