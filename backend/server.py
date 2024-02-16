@@ -15,7 +15,7 @@
 """Main entrypoint for the application."""
 
 import os
-from flask import Flask, request, render_template, send_from_directory
+from flask import Flask, request, send_from_directory
 import json
 
 from googleads_housekeeper import bootstrap, views
