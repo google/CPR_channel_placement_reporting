@@ -97,7 +97,7 @@
   <table *ngIf="task_table_data.length > 0" class="styled-table task-width">
     <thead>
       <tr>
-        <th> <mat-checkbox [checked]="this.isTasksTableCheckAll" (change)="toggleCheckAll($event)"></mat-checkbox>
+        <th> <mat-checkbox [checked]="isTasksTableCheckAll" (change)="toggleCheckAll($event)"></mat-checkbox>
         </th>
         <th>Date Created</th>
         <th>Status</th>
