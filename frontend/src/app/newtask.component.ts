@@ -687,23 +687,26 @@ export class NewtaskComponent implements OnInit {
     let maxKeys = 0;
     let keysOfMaxItem: string[] = [];
     const transformedRows: any[] = [];
+    let transformedRow: {"extra_info" : []};
 
     for (const rowIndex in originalRows) {
       const OriginalDataRow = originalRows[rowIndex];
-      const transformedRow: any = {
-        // TODO: get everything but extra_info from originalData
-        ...OriginalDataRow,
-        ...Object.fromEntries(
-          this.yt_columns_in_extra.map((col) => [
-            `YT ${col}`,
-            OriginalDataRow.extra_info?.[col] !== null
-              ? OriginalDataRow.extra_info?.[col]
-              : "empty",
-          ])
-        ),
-      };
-
-      if (transformedRow.extra_info) {
+      
+      if (OriginalDataRow.extra_info === undefined) {
+        transformedRow = { ...OriginalDataRow };
+      } else {
+        transformedRow = {
+            ...OriginalDataRow,
+            ...Object.fromEntries(
+                this.yt_columns_in_extra.map((col) => [
+                    `YT ${col}`,
+                    OriginalDataRow.extra_info[col] !== null
+                        ? OriginalDataRow.extra_info[col]
+                        : "empty",
+                ])
+            ),
+        };
+    
         this.yt_columns_in_extra.forEach((col) => {
           delete transformedRow.extra_info[col];
         });
