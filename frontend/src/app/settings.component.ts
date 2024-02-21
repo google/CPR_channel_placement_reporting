@@ -70,13 +70,16 @@
 
   _parse_config(response: ReturnPromise) {
      let config = (Object.entries(response).find(([k, v]) => {
-       if(k=='mcc_id') {
+       if(k==='mcc_id') {
          this.settingsForm.controls['gadsMccId'].setValue(v);
          this.populate_mcc_ids();
        }
-       if(k=='email_address') {
+       if(k==='email_address') {
          this.settingsForm.controls['emailAddress'].setValue(v);
        }
+       if(k==='call_yt_for_preview') {
+        this.settingsForm.controls['callYtForPreview'].setValue(v);
+      }
      }));
    }
 
@@ -118,7 +121,8 @@
      let formRawValue = {
        'mcc_id': mcc_id,
        'email_address': this.settingsForm.controls['emailAddress'].value,
-       'save_to_db': this.settingsForm.controls['saveToDB'].value
+       'save_to_db': this.settingsForm.controls['saveToDB'].value,
+       'call_yt_for_preview': this.settingsForm.controls['callYtForPreview'].value
      };
 
      this.subs = (await ((this.service.set_config(JSON.stringify(formRawValue)))))
