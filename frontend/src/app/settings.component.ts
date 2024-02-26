@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
- import { ANALYZE_FOR_ENTRY_COMPONENTS, Component, OnInit } from '@angular/core';
+ import { Component, OnInit } from '@angular/core';
  import { FormBuilder, FormGroup } from '@angular/forms';
  import { PostService, ReturnPromise } from './services/post.service';
  import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
@@ -77,8 +77,8 @@
        if(k==='email_address') {
          this.settingsForm.controls['emailAddress'].setValue(v);
        }
-       if(k==='call_yt_for_preview') {
-        this.settingsForm.controls['callYtForPreview'].setValue(v);
+       if(k==='always_fetch_youtube_preview_mode') {
+        this.settingsForm.controls['alwaysFetchYoutubePreviewMode'].setValue(v);
       }
      }));
    }
@@ -122,7 +122,7 @@
        'mcc_id': mcc_id,
        'email_address': this.settingsForm.controls['emailAddress'].value,
        'save_to_db': this.settingsForm.controls['saveToDB'].value,
-       'call_yt_for_preview': this.settingsForm.controls['callYtForPreview'].value
+       'always_fetch_youtube_preview_mode': this.settingsForm.controls['alwaysFetchYoutubePreviewMode'].value
      };
 
      this.subs = (await ((this.service.set_config(JSON.stringify(formRawValue)))))
