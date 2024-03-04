@@ -14,12 +14,20 @@
  * limitations under the License.
  */
 
-import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
-import { Component, OnInit } from '@angular/core';
-import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
-import { ActivatedRoute } from '@angular/router';
-import {STEPPER_GLOBAL_OPTIONS} from '@angular/cdk/stepper';
-
+import {
+  FormGroup,
+  FormBuilder,
+  FormControl,
+  Validators,
+} from "@angular/forms";
+import { Component, OnInit } from "@angular/core";
+import {
+  MatSnackBar,
+  MatSnackBarHorizontalPosition,
+  MatSnackBarVerticalPosition,
+} from "@angular/material/snack-bar";
+import { ActivatedRoute } from "@angular/router";
+import { STEPPER_GLOBAL_OPTIONS } from "@angular/cdk/stepper";
 
 import { PostService, ReturnPromise } from "./services/post.service";
 import { DialogService } from "./services/dialog.service";
@@ -687,29 +695,29 @@ export class NewtaskComponent implements OnInit {
     let maxKeys = 0;
     let keysOfMaxItem: string[] = [];
     const transformedRows: any[] = [];
-    let transformedRow: {"extra_info" : []};
-
+    let transformedRow: { [key: string]: any } = { extra_info: [] };
     for (const rowIndex in originalRows) {
-      const OriginalDataRow = originalRows[rowIndex];
-      
-      if (OriginalDataRow.extra_info === undefined) {
-        transformedRow = { ...OriginalDataRow };
+      const originalDataRow = originalRows[rowIndex];
+      if (originalDataRow.extra_info === undefined) {
+        transformedRow = { ...originalDataRow };
       } else {
-        transformedRow = {
-            ...OriginalDataRow,
+        const firstKey = Object.keys(originalDataRow.extra_info)[0];
+        const firstChild = originalDataRow.extra_info[firstKey];
+        if (firstChild) {
+          transformedRow = {
+            ...originalDataRow,
             ...Object.fromEntries(
-                this.yt_columns_in_extra.map((col) => [
-                    `YT ${col}`,
-                    OriginalDataRow.extra_info[col] !== null
-                        ? OriginalDataRow.extra_info[col]
-                        : "empty",
-                ])
+              Object.entries(firstChild).map(([key, value]) => [
+                `YT ${key}`,
+                value,
+              ])
             ),
-        };
-    
-        this.yt_columns_in_extra.forEach((col) => {
-          delete transformedRow.extra_info[col];
-        });
+          };
+          // Remove the first child from extra_info
+          delete transformedRow["extra_info"][firstKey];
+        } else {
+          transformedRow = { ...originalDataRow };
+        }
       }
       transformedRows.push(transformedRow);
 
