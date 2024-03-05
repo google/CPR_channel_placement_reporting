@@ -42,7 +42,8 @@ services:
       context: scheduler/.
     image: cpr-scheduler
     container_name: cpr_scheduler
-    restart: on-failure
+    environment:
+      - API_HOST=cpr_backend:5000
     depends_on:
       - backend
     links:
