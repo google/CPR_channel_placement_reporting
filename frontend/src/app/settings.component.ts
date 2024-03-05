@@ -39,6 +39,7 @@
      this.settingsForm = this.fb.group({
        gadsMccId: [''],
        emailAddress: [''],
+       alwaysFetchYoutubePreviewMode: [''],
        saveToDB: ['']
      });
    }
@@ -76,6 +77,9 @@
        }
        if(k==='email_address') {
          this.settingsForm.controls['emailAddress'].setValue(v);
+       }
+       if(k==='save_to_db') {
+         this.settingsForm.controls['saveToDB'].setValue(v);
        }
        if(k==='always_fetch_youtube_preview_mode') {
         this.settingsForm.controls['alwaysFetchYoutubePreviewMode'].setValue(v);
@@ -170,4 +174,3 @@
    }
 
  }
-
