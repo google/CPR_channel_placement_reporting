@@ -36,7 +36,13 @@ convert_answer() {
 
 check_ads_config() {
 	echo -e "\n${COLOR}Setting up Google Ads authentication...${NC}"
-  if [[ -f "./google-ads.yaml" ]]; then
+	gsutil -q stat $GCS_BASE_PATH/google-ads.yaml
+	remote_ads_config_exists=`echo $?`
+  if [[ $remote_ads_config_exists -eq 0 ]]; then
+    echo -n "Found save config at $GCS_BASE_PATH/google-ads.yaml, would you like to use it: (Y/n)?: "
+    read -r use_google_ads_config
+    use_google_ads_config=$(convert_answer $use_google_ads_config 'Y')
+  elif [[ -f "./google-ads.yaml" ]]; then
     echo -n "Would you like to use google-ads.yaml (Y/n)?: "
     read -r use_google_ads_config
     use_google_ads_config=$(convert_answer $use_google_ads_config 'Y')
@@ -131,6 +137,7 @@ enable_api() {
 	gcloud services enable cloudresourcemanager.googleapis.com
 	gcloud services enable iamcredentials.googleapis.com
 	gcloud services enable cloudbuild.googleapis.com
+	gcloud services enable cloudfunctions.googleapis.com
 	gcloud services enable firestore.googleapis.com
 	gcloud services enable googleads.googleapis.com
 	gcloud services enable youtube.googleapis.com
@@ -143,6 +150,10 @@ deploy_app() {
   sed -i'.bak' -e "s/service: default/service: $APPENGINE_SERVICE_NAME/" app.yaml
   sed -i'.bak' -e "s^path/to/google-ads.yaml^$GCS_BASE_PATH/google-ads.yaml^" app.yaml
   sed -i'.bak' -e "s^your-youtube-api-key^$youtube_api_key^" app.yaml
+	APP_EXISTS=$(gcloud app describe)
+	if [[ ! -n $APP_EXISTS ]]; then
+		gcloud app create
+	fi
 	gcloud app deploy -q
 	cd $SCRIPT_PATH
 }
@@ -222,12 +233,14 @@ deploy_files () {
 
 
   gsutil -m rm -r $GCS_BASE_PATH/
-  if [[ -f ./google-ads.yaml ]]; then
-    gsutil -h "Content-Type:text/plain" cp ./google-ads.yaml $GCS_BASE_PATH/google-ads.yaml
-  elif [[ -f $HOME/google-ads.yaml ]]; then
-    gsutil -h "Content-Type:text/plain" cp $HOME/google-ads.yaml $GCS_BASE_PATH/google-ads.yaml
-  else
-    echo "Please upload google-ads.yaml"
+  if [[ $remote_ads_config_exists -eq 1 ]]; then
+    if [[ -f ./google-ads.yaml ]]; then
+      gsutil -h "Content-Type:text/plain" cp ./google-ads.yaml $GCS_BASE_PATH/google-ads.yaml
+    elif [[ -f $HOME/google-ads.yaml ]]; then
+      gsutil -h "Content-Type:text/plain" cp $HOME/google-ads.yaml $GCS_BASE_PATH/google-ads.yaml
+    else
+      echo "Please upload google-ads.yaml"
+    fi
   fi
 }
 
