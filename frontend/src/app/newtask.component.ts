@@ -34,6 +34,7 @@ import { DialogService } from "./services/dialog.service";
 import { saveAs } from "file-saver";
 
 interface Field {
+  hidden?: boolean;
   value: string;
   view: string;
   type: string;
@@ -1332,6 +1333,35 @@ export class NewtaskComponent implements OnInit {
       return;
     }
     fieldGroupToAdd.disabled = !this.gadsForm.controls[toggleName].value;
+  }
+
+  onExclusionLevelChange(event: any) {
+    const exclusion_level = event.value.toLowerCase();
+    this.allMetricArray.forEach(group => {
+      group.fields.forEach(field => {
+        switch (exclusion_level) {
+          case "account":
+            if (field.view.toLowerCase().includes("campaign") || field.view.toLowerCase().includes("adgroup")) {
+              field.hidden = true;
+            }
+            break;
+  
+          case "campaign":
+            if (field.view.toLowerCase().includes("campaign")) {
+              field.hidden = false;
+            }
+            if (field.view.toLowerCase().includes("adgroup")) {
+              field.hidden = true;
+            }
+            break;
+  
+          case "ad group":
+          default:
+            field.hidden = false;
+            break;
+          }
+      });
+    });
   }
 
   scheduleChange() {
