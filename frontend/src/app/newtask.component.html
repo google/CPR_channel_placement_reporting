@@ -38,7 +38,7 @@
         <div class="label-input-block top-centre-form">
           <mat-form-field>
             <mat-label>Specify exclusion level</mat-label>
-            <mat-select [formControl]="selectedExclusionLevelFormControl" (selectionChange)="onExclusionLevelChange($event)">
+            <mat-select [formControl]="selectedExclusionLevelFormControl" (selectionChange)="onExclusionLevelChange($event.value)">
               <mat-option *ngFor="let item of exclusionLevelArray" [value]="item[0]">
                 {{ item[1] }}
               </mat-option>
