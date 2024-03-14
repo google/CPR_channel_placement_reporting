@@ -321,44 +321,44 @@
       <ng-container *ngFor="let item of data | keyvalue: unsorted; let i = index">
         <td *ngIf="toggle_column_selected_headers.includes(column_headers[i]) && !hidden_columns.includes(column_headers[i])">
           <span *ngIf="
-              column_headers[i] == 'placement_type' &&
+              column_headers[i] == 'Placement Type' &&
               item.value == 'YOUTUBE_CHANNEL'
             ">
             <mat-icon matTooltip="YouTube Channel">video_library</mat-icon>
           </span>
           <span *ngIf="
-              column_headers[i] == 'placement_type' &&
+              column_headers[i] == 'Placement Type' &&
               item.value == 'YOUTUBE_VIDEO'
             ">
             <mat-icon matTooltip="YouTube Video">video_label</mat-icon>
           </span>
           <span *ngIf="
-              column_headers[i] == 'placement_type' && item.value == 'WEBSITE'
+              column_headers[i] == 'Placement Type' && item.value == 'WEBSITE'
             ">
             <mat-icon matTooltip="Website">computers</mat-icon>
           </span>
           <span *ngIf="
-              column_headers[i] == 'placement_type' &&
+              column_headers[i] == 'Placement Type' &&
               item.value == 'MOBILE_APPLICATION'
             ">
             <mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon>
           </span>
           <span *ngIf="
-              column_headers[i] == 'placement_type' &&
+              column_headers[i] == 'Placement Type' &&
               item.value == 'MOBILE_APP_CATEGORY'
             ">
             <mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon>
           </span>
-          <span *ngIf="column_headers[i] == 'name'">
+          <span *ngIf="column_headers[i] == 'Name'">
             <a href="https://{{ data['url'] }}" target="_blank">{{ item.value
             }}</a>
           </span>
           <span *ngIf="value_columns.includes(column_headers[i])">{{ formatNumber(item.value) | number: "1.2-2"
           }}</span>
-          <span *ngIf="column_headers[i] == 'reason'" matTooltip="{{ data['extra_info'] | json }}">{{ item.value }}</span>
+          <span *ngIf="column_headers[i] == 'Reason'" matTooltip="{{ data['Extra Info'] | json }}">{{ item.value }}</span>
           <span *ngIf="
               !value_columns.includes(column_headers[i]) &&
-              !['placement_type', 'name', 'extra_info', 'reason'].includes(
+              !['Placement Type', 'Name', 'Extra Info', 'Reason'].includes(
                 column_headers[i]
               )
             ">{{ item.value }}</span>
