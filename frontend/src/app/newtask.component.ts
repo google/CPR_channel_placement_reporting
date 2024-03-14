@@ -35,7 +35,6 @@ import { saveAs } from "file-saver";
 
 interface Field {
   hidden?: boolean;
-  hidden?: boolean;
   value: string;
   view: string;
   type: string;
@@ -352,39 +351,32 @@ export class NewtaskComponent implements OnInit {
   toggle_column_selected_headers: string[] = [];
 
   hidden_columns: any[] = [
-    "campaign_id",
-    "ad_group_id",
-    "criterion_id",
-    "customer_id",
-    "account_id",
-    "placement",
-    "url",
-    "extra_info",
-  ];
-  value_columns: any[] = [
-    "cost",
-    "avg_cpc",
-    "avg_cpm",
-    "avg_cpv",
-    "video_view_rate",
-    "ctr",
-    "cost_per_conversion",
-    "cost_per_all_conversion",
-    "all_conversion_rate",
-    "interaction_rate",
-    "conversions_from_interactions_rate",
-  ];
-  yt_columns_in_extra: any[] = [
-    "title",
-    "description",
-    "country",
-    "viewCount",
-    "subscriberCount",
-    "videoCount",
-    "topicCategories",
+    "Campaign ID",
+    "Ad Group ID",
+    "Criterion ID",
+    "Customer ID",
+    "Account ID",
+    "Placement",
+    "URL",
+    "Extra Info",
   ];
 
-  toggle_column_selected_headers_by_default: any[] = ["name", "placement_type"];
+  value_columns: any[] = [
+    "Cost",
+    "Avg Cpc",
+    "Avg Cpm",
+    "Avg Cpv",
+    "Video View Rate",
+    "Ctr",
+    "Cost Per Conversion",
+    "Cost Per All Conversion",
+    "All Conversion Rate",
+    "Interaction Rate",
+    "Conversions From Interactions Rate",
+  ];
+  removeFromExtraInfo: any[] = ["isProcessed"];
+
+  toggle_column_selected_headers_by_default: any[] = ["Name", "Placement Type"];
 
   task_exists: any;
   file_exists: any;
@@ -709,10 +701,9 @@ export class NewtaskComponent implements OnInit {
           transformedRow = {
             ...originalDataRow,
             ...Object.fromEntries(
-              Object.entries(firstChild).map(([key, value]) => [
-                `YT ${key}`,
-                value,
-              ])
+              Object.entries(firstChild)
+                .filter(([key, _]) => !this.removeFromExtraInfo.includes(key))
+                .map(([key, value]) => [`YT ${key}`, value])
             ),
           };
           // Remove the first child from extra_info
@@ -730,7 +721,10 @@ export class NewtaskComponent implements OnInit {
         keysOfMaxItem = itemKeys;
       }
     }
-    return { rows: transformedRows, headers: keysOfMaxItem };
+    return {
+      rows: transformedRows,
+      headers: convertListToTitleCase(keysOfMaxItem),
+    };
   }
 
   private handleEmptyTable(message: string, css_class: string) {
@@ -1342,7 +1336,10 @@ export class NewtaskComponent implements OnInit {
       group.fields.forEach((field) => {
         switch (exclusion_level) {
           case "account":
-            if (field.view.toLowerCase().includes("campaign") || field.view.toLowerCase().includes("adgroup")) {
+            if (
+              field.view.toLowerCase().includes("campaign") ||
+              field.view.toLowerCase().includes("adgroup")
+            ) {
               field.hidden = true;
             }
             break;
@@ -1358,7 +1355,7 @@ export class NewtaskComponent implements OnInit {
           default:
             field.hidden = false;
             break;
-          }
+        }
       });
     });
   }
@@ -1493,4 +1490,23 @@ export class NewtaskComponent implements OnInit {
   togglePanel() {
     this.filtersOpenState = !this.filtersOpenState;
   }
+}
+
+function convertToTitleCase(input: string): string {
+  // Replace underscores with spaces
+  let result = input.replace(/_/g, ' ');
+
+  // Add space before a middle capital letter if there isn't already
+  result = result.replace(/([a-z])([A-Z])/g, '$1 $2');
+
+  // Capitalize first letter of each word
+  result = result.toLowerCase().replace(/(?:^|\s)\S/g, function(a) {
+    return a.toUpperCase();
+  });
+
+  return result;
+}
+
+function convertListToTitleCase(inputList: string[]): string[] {
+  return inputList.map(convertToTitleCase);
 }
