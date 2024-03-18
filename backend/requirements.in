@@ -1,0 +1,6 @@
+googleads-housekeeper[gcp]==0.1.0.dev13
+appengine-python-standard>=1.0.0
+gunicorn
+flask
+flask-cors
+redis
