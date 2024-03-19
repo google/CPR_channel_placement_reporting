@@ -281,7 +281,7 @@ def run_task_from_task_id():
     data.update({'save_to_db': config.get('save_to_db', True)})
     cmd = commands.RunTask(**data)
     result, message_payload = bus.handle(cmd)
-    if message_payload.total_placements_excluded:
+    if message_payload.total_placement_excluded:
         bus.dependencies.get('notification_service').send(message_payload)
     return _build_response(json.dumps(result))
 
