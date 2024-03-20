@@ -374,7 +374,7 @@ export class NewtaskComponent implements OnInit {
     "Interaction Rate",
     "Conversions From Interactions Rate",
   ];
-  removeFromExtraInfo: any[] = ["isProcessed"];
+  removeFromExtraInfo: any[] = ["processed"];
 
   toggle_column_selected_headers_by_default: any[] = ["Name", "Placement Type"];
 
@@ -702,7 +702,7 @@ export class NewtaskComponent implements OnInit {
             ...originalDataRow,
             ...Object.fromEntries(
               Object.entries(firstChild)
-                .filter(([key, _]) => !this.removeFromExtraInfo.includes(key))
+                .filter(([key, _]) => !this.removeFromExtraInfo.includes(key.toLowerCase))
                 .map(([key, value]) => [`YT ${key}`, value])
             ),
           };
