@@ -72,7 +72,7 @@ export class NewtaskComponent implements OnInit {
   gadsForm: FormGroup;
   paginationForm: FormGroup;
   loading: boolean = false;
-  column_headers: any[] = [];
+  column_headers: string[] = [];
   toggle_column_all_headers: any[] = [];
   table_result: any[] = [];
   customer_list: any[] = [];
@@ -788,7 +788,7 @@ export class NewtaskComponent implements OnInit {
   manualExcludeConfirmed(exclusion_list: Object[][]) {
     let formRawValue = {
       customer_ids: this.selectedCidList.value,
-      header: this.column_headers,
+      header: this.column_headers.map(header => header.toLowerCase().replace(/\s+/g, "_")),
       placements: exclusion_list,
       exclusion_level: this.selectedExclusionLevelFormControl.value,
     };
