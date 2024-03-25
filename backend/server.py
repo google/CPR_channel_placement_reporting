@@ -94,7 +94,8 @@ def run_task_from_scheduler(task_id):
     cmd = commands.RunTask(id=task_id,
                            type=execution.ExecutionTypeEnum.SCHEDULED)
     result, message_payload = bus.handle(cmd)
-    bus.dependencies.get('notification_service').send(message_payload)
+    if message_payload.total_placement_excluded:
+        bus.dependencies.get('notification_service').send(message_payload)
     return _build_response(json.dumps(result))
 
 
