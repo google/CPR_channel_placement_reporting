@@ -2,7 +2,7 @@ FROM python:3.10-slim-buster
 EXPOSE 5000
 WORKDIR /app
 ADD requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --require-hashes -r requirements.txt --no-deps
 COPY server.py .
 COPY static static
 ARG youtube_data_api_key
