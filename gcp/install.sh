@@ -27,6 +27,8 @@ GCS_BASE_PATH=gs://$PROJECT_ID/$PROJECT_ALIAS
 CF_REGION=$(git config -f $SETTING_FILE functions.region)
 APPENGINE_SERVICE_NAME=$(git config -f $SETTING_FILE appengine.service)
 APPENGINE_REGION=$(git config -f $SETTING_FILE appengine.region)
+DB_NAME=$(git config -f $SETTING_FILE firestore.name)
+DB_REGION=$(git config -f $SETTING_FILE firestore.region)
 USER_EMAIL=$(gcloud config get-value account 2> /dev/null)
 SERVICE_ACCOUNT=$PROJECT_ID@appspot.gserviceaccount.com
 
@@ -180,17 +182,16 @@ build_frontend() {
   cp img/gtechlogo.png static/img/gtechlogo.png
 }
 
-create_datastore() {
-  DB_NAME=channel-placement-excluder
+create_firestore() {
   DB_EXISTS=$(gcloud firestore databases list --filter="name=projects/'$PROJECT_ID'/databases/'$DB_NAME'" --format="get(name)")
   if [[ ! -n $DB_EXISTS ]]; then
-    echo -e "\n${COLOR}Creating Datastore...${NC}"
+    echo -e "\n${COLOR}Creating Firestore...${NC}"
     gcloud firestore databases create \
       --database=$DB_NAME \
-      --location=eur3 \
-      --type=datastore-mode
+      --location=$DB_REGION \
+      --type=firestore-native
   else
-    echo -e "\n${COLOR}Datastore exists.${NC}"
+    echo -e "\n${COLOR}Firestore exists.${NC}"
   fi
 }
 
