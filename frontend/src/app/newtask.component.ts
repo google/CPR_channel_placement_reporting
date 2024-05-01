@@ -702,7 +702,10 @@ export class NewtaskComponent implements OnInit {
             ...originalDataRow,
             ...Object.fromEntries(
               Object.entries(firstChild)
-                .filter(([key, _]) => !this.removeFromExtraInfo.includes(key.toLowerCase))
+                .filter(
+                  ([key, _]) =>
+                    !this.removeFromExtraInfo.includes(key.toLowerCase)
+                )
                 .map(([key, value]) => [`YT ${key}`, value])
             ),
           };
@@ -723,7 +726,7 @@ export class NewtaskComponent implements OnInit {
     }
     return {
       rows: transformedRows,
-      headers: convertListToTitleCase(keysOfMaxItem),
+      headers: keysOfMaxItem.map(convertToTitleCase),
     };
   }
 
@@ -788,11 +791,15 @@ export class NewtaskComponent implements OnInit {
   manualExcludeConfirmed(exclusion_list: Object[][]) {
     let formRawValue = {
       customer_ids: this.selectedCidList.value,
-      header: this.column_headers.map(header => header.toLowerCase().replace(/\s+/g, "_")),
+      header: this.column_headers.map((header) => this.toSnakeCase(header)),
       placements: exclusion_list,
       exclusion_level: this.selectedExclusionLevelFormControl.value,
     };
     this._call_manual_service(JSON.stringify(formRawValue));
+  }
+
+  toSnakeCase(header: string): string {
+    return header.toLowerCase().replace(/\s+/g, "_");
   }
 
   //the call to the server
@@ -1102,7 +1109,6 @@ export class NewtaskComponent implements OnInit {
 
   validateFinalFilter() {
     let result = true;
-
     const hasConversions = this.containsExactSubstring(
       this.finalGadsFilter,
       "GOOGLE_ADS_INFO:conversions_"
@@ -1111,7 +1117,6 @@ export class NewtaskComponent implements OnInit {
       "cost_per_conversion"
     );
     const hasConversionName = this.finalGadsFilter.includes("conversion_name");
-
     if ((hasConversions || hasCostPerConversion) && !hasConversionName) {
       result = false;
       this.filter_extra_instructions =
@@ -1121,7 +1126,6 @@ export class NewtaskComponent implements OnInit {
       this.filter_extra_instructions =
         "If 'Conversion Name' is specified, please include at least one 'conversion split metrics'.";
     }
-
     return result;
   }
 
@@ -1130,7 +1134,6 @@ export class NewtaskComponent implements OnInit {
     if (substringIndex === -1) {
       return false;
     }
-
     // Check if the substring is an exact match or part of a larger word
     const isExactMatchBefore =
       substringIndex === 0 || !mainString[substringIndex - 1].match(/\w/);
@@ -1493,20 +1496,13 @@ export class NewtaskComponent implements OnInit {
 }
 
 function convertToTitleCase(input: string): string {
-  // Replace underscores with spaces
-  let result = input.replace(/_/g, ' ');
-
+  let result = input.replace(/_/g, " ");
   // Add space before a middle capital letter if there isn't already
-  result = result.replace(/([a-z])([A-Z])/g, '$1 $2');
-
+  result = result.replace(/([a-z])([A-Z])/g, "$1 $2");
   // Capitalize first letter of each word
-  result = result.toLowerCase().replace(/(?:^|\s)\S/g, function(a) {
-    return a.toUpperCase();
-  });
-
+  result = result.toLowerCase().replace(/(?:^|\s)\S/g, (a) => a.toUpperCase());
+  result = result.replace(/\b(yt)\s/gi, "YT ");
   return result;
-}
-
-function convertListToTitleCase(inputList: string[]): string[] {
-  return inputList.map(convertToTitleCase);
+  result = result.replace(/\b(yt)\s/gi, "YT ");
+  return result;
 }
