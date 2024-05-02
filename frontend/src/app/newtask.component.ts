@@ -726,7 +726,7 @@ export class NewtaskComponent implements OnInit {
     }
     return {
       rows: transformedRows,
-      headers: keysOfMaxItem.map(convertToTitleCase),
+      headers: keysOfMaxItem.map(convertToTitleCase).map(renameHeaders),
     };
   }
 
@@ -1505,4 +1505,16 @@ function convertToTitleCase(input: string): string {
   return result;
   result = result.replace(/\b(yt)\s/gi, "YT ");
   return result;
+}
+
+function renameHeaders(input: string): string {
+  const replacements: { [key: string]: string } = {
+      "name": "Identifier",
+      "cpv": "CPV",
+      "cpm": "CPM",
+      "cpc": "CPC",
+      "ctr": "CTR"
+  };
+  const regex = /\b(?:Cpm|Ctr|Cpc|Cpv)\b/g;
+  return input.replace(regex, (match) => replacements[match.toLowerCase()] || match);
 }
