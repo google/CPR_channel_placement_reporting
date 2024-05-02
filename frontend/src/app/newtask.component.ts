@@ -362,17 +362,17 @@ export class NewtaskComponent implements OnInit {
   ];
 
   value_columns: any[] = [
-    "Cost",
-    "Avg Cpc",
-    "Avg Cpm",
-    "Avg Cpv",
-    "Video View Rate",
-    "Ctr",
-    "Cost Per Conversion",
-    "Cost Per All Conversion",
-    "All Conversion Rate",
-    "Interaction Rate",
-    "Conversions From Interactions Rate",
+    'Cost',
+    'Avg CPC',
+    'Avg CPM',
+    'Avg CPV',
+    'Video View Rate',
+    'CTR',
+    'Cost Per Conversion',
+    'Cost Per All Conversion',
+    'All Conversion Rate',
+    'Interaction Rate',
+    'Conversions From Interactions Rate'
   ];
   removeFromExtraInfo: any[] = ["processed"];
 
@@ -674,6 +674,7 @@ export class NewtaskComponent implements OnInit {
       this.toggle_column_all_headers = this.column_headers.filter(
         (item) => !this.hidden_columns.includes(item)
       );
+      this.toggle_column_selected_headers.sort((a, b) => a.localeCompare(b));
       this.sort_table("default");
       this.no_data = false;
     } else {
@@ -1091,7 +1092,7 @@ export class NewtaskComponent implements OnInit {
       this.fixFilterSyntax(selected_field, operator, field_value);
       this.toggle_column_selected_headers.push(
         selected_field.toLowerCase().includes("youtube")
-          ? "yt_" + selected_field.split(":")[1]
+          ? "YT " + selected_field.split(":")[1]
           : selected_field.split(":")[1]
       );
     }
@@ -1509,12 +1510,15 @@ function convertToTitleCase(input: string): string {
 
 function renameHeaders(input: string): string {
   const replacements: { [key: string]: string } = {
-      "name": "Identifier",
-      "cpv": "CPV",
-      "cpm": "CPM",
-      "cpc": "CPC",
-      "ctr": "CTR"
+    name: 'Identifier',
+    cpv: 'CPV',
+    cpm: 'CPM',
+    cpc: 'CPC',
+    ctr: 'CTR',
   };
   const regex = /\b(?:Cpm|Ctr|Cpc|Cpv)\b/g;
-  return input.replace(regex, (match) => replacements[match.toLowerCase()] || match);
+  return input.replace(
+    regex,
+    (match) => replacements[match.toLowerCase()] || match
+  );
 }
