@@ -674,7 +674,9 @@ export class NewtaskComponent implements OnInit {
       this.toggle_column_all_headers = this.column_headers.filter(
         (item) => !this.hidden_columns.includes(item)
       );
-      this.toggle_column_selected_headers.sort((a, b) => a.localeCompare(b));
+      this.toggle_column_all_headers.sort((a, b) =>
+        a.toLowerCase() > b.toLowerCase() ? 1 : -1
+      );
       this.sort_table("default");
       this.no_data = false;
     } else {
