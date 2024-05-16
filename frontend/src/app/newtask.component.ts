@@ -372,7 +372,7 @@ export class NewtaskComponent implements OnInit {
     'Cost Per All Conversion',
     'All Conversion Rate',
     'Interaction Rate',
-    'Conversions From Interactions Rate'
+    'Conversions From Interactions Rate',
   ];
   removeFromExtraInfo: any[] = ["processed"];
 
@@ -1513,21 +1513,11 @@ function convertToTitleCase(input: string): string {
   result = result.toLowerCase().replace(/(?:^|\s)\S/g, (a) => a.toUpperCase());
   result = result.replace(/\b(yt)\s/gi, "YT ");
   return result;
-  result = result.replace(/\b(yt)\s/gi, "YT ");
-  return result;
 }
 
 function renameHeaders(input: string): string {
-  const replacements: { [key: string]: string } = {
-    name: 'Identifier',
-    cpv: 'CPV',
-    cpm: 'CPM',
-    cpc: 'CPC',
-    ctr: 'CTR',
-  };
-  const regex = /\b(?:Cpm|Ctr|Cpc|Cpv)\b/g;
-  return input.replace(
-    regex,
-    (match) => replacements[match.toLowerCase()] || match
-  );
+  const regex = /\b(cpv|cpm|cpc|ctr)\b/gi;
+  return input.toLowerCase().trim() === 'name'
+    ? 'Identifier'
+    : input.replace(regex, (_, capturedMatch) => capturedMatch.toUpperCase());
 }
