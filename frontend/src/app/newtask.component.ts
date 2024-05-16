@@ -1092,11 +1092,18 @@ export class NewtaskComponent implements OnInit {
 
     if (this.validateOperatorAndThenValue()) {
       this.fixFilterSyntax(selected_field, operator, field_value);
-      this.toggle_column_selected_headers.push(
-        selected_field.toLowerCase().includes("youtube")
-          ? "YT " + selected_field.split(":")[1]
-          : selected_field.split(":")[1]
-      );
+      this.addToDropDownIfNew(selected_field);
+    }
+  }
+
+  private addToDropDownIfNew(selected_field: string) {
+    const filterTitle = convertToTitleCase(selected_field.split(":")[1]);
+    const newItem = selected_field.toLowerCase().includes("youtube")
+      ? `YT ${filterTitle}`
+      : filterTitle;
+
+    if (!this.toggle_column_selected_headers.includes(newItem)) {
+      this.toggle_column_selected_headers.push(newItem);
     }
   }
 
