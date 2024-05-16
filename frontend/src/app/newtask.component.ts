@@ -1071,7 +1071,7 @@ export class NewtaskComponent implements OnInit {
     }
     if (!this.validateFinalFilter()) {
       this.openSnackBar(
-        "Error in some of your fields. Please review and correct them",
+        "Error in some of your dates fields. Please correct the red highlighted fields.",
         "Dismiss",
         "error-snackbar"
       );
