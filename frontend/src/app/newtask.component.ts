@@ -1092,9 +1092,9 @@ export class NewtaskComponent implements OnInit {
     }
     if (!this.validateFinalFilter()) {
       this.openSnackBar(
-        "Error in some of your dates fields. Please correct the red highlighted fields.",
-        "Dismiss",
-        "error-snackbar"
+        'Error in some of your filters. Please correct the red highlighted fields.',
+        'Dismiss',
+        'error-snackbar'
       );
       error_count++;
     }
