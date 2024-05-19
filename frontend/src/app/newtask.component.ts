@@ -1329,6 +1329,7 @@ export class NewtaskComponent implements OnInit {
           this.orAndEnabled = false;
           this.finalGadsFilter = "";
           this.gads_filter_error = false;
+          this.toggle_column_selected_headers = this.toggle_column_selected_headers_by_default;
         }
       });
   }
