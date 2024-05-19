@@ -868,7 +868,7 @@ export class NewtaskComponent implements OnInit {
   _call_service_error(err: ErrorEvent) {
     this.loading = false;
     this.openSnackBar(
-      "Error - This could be due to credential issues or filter issues. Check your credentials and any manual edits to your filters",
+      `Error - ${err.error}`,
       "Dismiss",
       "error-snackbar"
     );
