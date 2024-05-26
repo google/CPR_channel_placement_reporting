@@ -1091,6 +1091,7 @@ export class NewtaskComponent implements OnInit {
       error_count++;
     }
     if (!this.validateFinalFilter()) {
+      this.filtersOpenState = true;
       this.openSnackBar(
         'Error in some of your filters. Please correct the red highlighted fields.',
         'Dismiss',
