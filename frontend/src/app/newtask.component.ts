@@ -1156,7 +1156,9 @@ export class NewtaskComponent implements OnInit {
     } else if (hasConversionName && !(hasConversions || hasCostPerConversion)) {
       result = false;
       this.filter_extra_instructions =
-        "If 'Conversion Name' is specified, please include at least one 'conversion split metrics'.";
+        'If "Conversion Name" is specified, please include ' +
+        "related metric (# of selected conversions, CPA for " +
+        "selected conversion(s), etc.).";
     }
     return result;
   }
@@ -1330,7 +1332,8 @@ export class NewtaskComponent implements OnInit {
           this.orAndEnabled = false;
           this.finalGadsFilter = "";
           this.gads_filter_error = false;
-          this.toggle_column_selected_headers = this.toggle_column_selected_headers_by_default;
+          this.toggle_column_selected_headers =
+            this.toggle_column_selected_headers_by_default;
         }
       });
   }

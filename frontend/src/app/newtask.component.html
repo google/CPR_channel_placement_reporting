@@ -116,7 +116,7 @@
             <div class="label-input-block">
               <button type="button" id="gadsAddOr" class="focusButton" (click)="gadsAddOrAnd('OR')" [disabled]="!orAndEnabled"> OR </button>
             </div>
-            <p class="error_text" *ngIf="filter_extra_instructions">{{ filter_extra_instructions
+            <p class="error_text" *ngIf="filter_extra_instructions" style="font-size: 14px;">{{ filter_extra_instructions
             }}</p>
             <div>
               <div class="label-input-block"> &nbsp; &nbsp; &nbsp; <mat-icon class="bigicon">subdirectory_arrow_right</mat-icon> &nbsp; <input [className]="
