@@ -409,6 +409,7 @@ export class NewtaskComponent implements OnInit {
   selectedCidList = new FormControl([""], [Validators.required]);
   selectedSchedule = new FormControl("0");
   selectedExclusionLevelFormControl = new FormControl("AD_GROUP");
+  selectedExclusionLevelNameColumn: string = 'Ad Group Name';
   selectedField = new FormControl("");
   selectedTaskOutput = new FormControl("EXCLUDE_AND_NOTIFY");
   selectedOperator = new FormControl("");
@@ -704,6 +705,7 @@ export class NewtaskComponent implements OnInit {
       );
       this.sort_table("default");
       this.no_data = false;
+      this.addNameColumnIfDuplicatedRows();
     } else {
       this.handleEmptyTable(
         "Successful run, but no data matches criteria",
@@ -1348,12 +1350,58 @@ export class NewtaskComponent implements OnInit {
       this.table_result.length
     ) {
       this.pagination_start += this.pagination_rpp;
+      this.addNameColumnIfDuplicatedRows();
     }
   }
   pagination_prev() {
     if (this.pagination_start - this.pagination_rpp >= 0) {
       this.pagination_start -= this.pagination_rpp;
+      this.addNameColumnIfDuplicatedRows();
     }
+  }
+
+  addNameColumnIfDuplicatedRows() {
+    if (this.isTwoVisibleRowsWithSameIdentifier()) {
+      this.toggle_column_selected_headers.push(
+        this.selectedExclusionLevelNameColumn
+      );
+    } else {
+      const index = this.toggle_column_selected_headers.indexOf(
+        this.selectedExclusionLevelNameColumn
+      );
+      if (index !== -1) {
+        this.toggle_column_selected_headers.splice(index, 1);
+      }
+    }
+  }
+
+  isTwoVisibleRowsWithSameIdentifier(): boolean {
+    const nameSet = new Set<string>();
+    for (
+      let i = this.pagination_start;
+      i <
+      Math.min(
+        this.pagination_start + this.pagination_rpp,
+        this.table_result.length
+      );
+      i++
+    ) {
+      const nameValue = this.table_result[i].name;
+      if (
+        nameValue === undefined ||
+        typeof nameValue !== "string"
+      ) {
+        console.warn(
+          `Identifier property at index ${i} is not a string or undefined. Skipping check.`
+        );
+        continue;
+      }
+      if (nameSet.has(nameValue)) {
+        return true;
+      }
+      nameSet.add(nameValue);
+    }
+    return false;
   }
 
   paginationChange() {
@@ -1361,6 +1409,7 @@ export class NewtaskComponent implements OnInit {
       this.paginationForm.controls["paginationValue"].value
     );
     this.pagination_start = 0;
+    this.addNameColumnIfDuplicatedRows();
   }
 
   onToggleChange(toggleName: string, groupName: string): void {
@@ -1375,6 +1424,7 @@ export class NewtaskComponent implements OnInit {
 
   onExclusionLevelChange(exclusionLevel: string) {
     const exclusion_level = exclusionLevel.toLowerCase();
+    this.selectedExclusionLevelNameColumn = `${convertToTitleCase(exclusionLevel)} Name`;
     this.allMetricArray.forEach((group) => {
       group.fields.forEach((field) => {
         switch (exclusion_level) {
