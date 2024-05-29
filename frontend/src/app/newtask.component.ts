@@ -397,7 +397,11 @@ export class NewtaskComponent implements OnInit {
   ];
   removeFromExtraInfo: any[] = ["processed"];
 
-  toggle_column_selected_headers_by_default: any[] = ["Name", "Placement Type"];
+  toggle_column_selected_headers_by_default: any[] = [
+    'Name',
+    'Placement Type',
+    'Identifier',
+  ];
 
   task_exists: any;
   file_exists: any;
@@ -750,7 +754,7 @@ export class NewtaskComponent implements OnInit {
     }
     return {
       rows: transformedRows,
-      headers: keysOfMaxItem.map(convertToTitleCase).map(renameHeaders),
+      headers: keysOfMaxItem.map(convertToTitleCase),
     };
   }
 
@@ -1538,10 +1542,10 @@ function convertToTitleCase(input: string): string {
   // Capitalize first letter of each word
   result = result.toLowerCase().replace(/(?:^|\s)\S/g, (a) => a.toUpperCase());
   result = result.replace(/\b(yt)\s/gi, "YT ");
-  return result;
+  return renameCpvHeaders(result);
 }
 
-function renameHeaders(input: string): string {
+function renameCpvHeaders(input: string): string {
   const regex = /\b(cpv|cpm|cpc|ctr)\b/gi;
   return input.toLowerCase().trim() === 'name'
     ? 'Identifier'
