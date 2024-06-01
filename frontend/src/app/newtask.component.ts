@@ -359,11 +359,7 @@ export class NewtaskComponent implements OnInit {
     'Placement',    
     'Allowlisted',
     'Extra Info',
-    'YT Is Processed',
-    'YT Last Processed Time',
     'YT Country',
-    'YT Id',
-    'YT Placement',
     'Reason',
     'Url',
     'Matching Placement',
@@ -378,11 +374,9 @@ export class NewtaskComponent implements OnInit {
     'YT Favourite Count',
     'YT Like Count',
     'YT Media For Kids',
-    'YT Placement',
-    'YT Tags',
   ];
 
-  value_columns: any[] = [
+  value_columns: string[] = [
     'Cost',
     'Avg CPC',
     'Avg CPM',
@@ -395,9 +389,10 @@ export class NewtaskComponent implements OnInit {
     'Interaction Rate',
     'Conversions From Interactions Rate',
   ];
-  removeFromExtraInfo: any[] = ["processed"];
 
-  toggle_column_selected_headers_by_default: any[] = [
+  subWordsToRemoveFromExtraInfo: string[] = ['processed', 'id', 'placement', 'tags'];
+
+  toggle_column_selected_headers_by_default: string[] = [
     'Name',
     'Placement Type',
     'Identifier',
@@ -734,12 +729,18 @@ export class NewtaskComponent implements OnInit {
               Object.entries(firstChild)
                 .filter(
                   ([key, _]) =>
-                    !this.removeFromExtraInfo.includes(key.toLowerCase)
+                    this.subWordsToRemoveFromExtraInfo
+                    .every(w => !key.toLowerCase().includes(w))
                 )
-                .map(([key, value]) => [`YT ${key}`, value])
+                .map(([key, value]) =>
+                firstKey.includes('youtube')
+                ? [`YT ${key}`, value]
+                : firstKey.includes('website')
+                ? [`Website ${key}`, value]
+                : [key, value] // Default: no modification
+                )
             ),
           };
-          // Remove the first child from extra_info
           delete transformedRow["extra_info"][firstKey];
         } else {
           transformedRow = { ...originalDataRow };
