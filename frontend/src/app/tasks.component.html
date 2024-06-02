@@ -162,12 +162,12 @@
             ></span
           >
           <span *ngIf="data.placements_excluded == 0"
-            ><mat-icon matTooltip="No placements were excluded during the last run {{data.last_run}}" color="accent"
+            ><mat-icon matTooltip="No placements were {{getTooltipAction(data.output)}} during the last run {{data.last_run}}" color="accent"
               >warning</mat-icon
             ></span
           >
           <span *ngIf="data.placements_excluded > 0"
-            ><mat-icon matTooltip="{{data.placements_excluded}} placements were excluded during the last run {{data.last_run}}" class="green-icon"
+            ><mat-icon matTooltip="{{data.placements_excluded}} placements were {{getTooltipAction(data.output)}} during the last run {{data.last_run}}" class="green-icon"
               >check_circle</mat-icon
             ></span
           >
