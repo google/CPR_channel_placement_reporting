@@ -207,6 +207,17 @@ export class TasksComponent implements OnInit {
     this.openSnackBar("Unknown error deleting task", "Dismiss", "error-snackbar");
   }
 
+  getTooltipAction(taskOutput: string) {
+    switch (taskOutput) {
+      case 'NOTIFY':
+        return 'detected';
+      case 'EXCLUDE':
+      case 'EXCLUDE_AND_NOTIFY':
+      default:
+        return 'excluded';
+    }
+  }
+
   openSnackBar(message: string, button: string, type: string) {
     this.snackbar.open(message, button, {
       duration: 10000,
