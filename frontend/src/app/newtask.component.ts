@@ -395,7 +395,7 @@ export class NewtaskComponent implements OnInit {
   toggle_column_selected_headers_by_default: string[] = [
     'Name',
     'Placement Type',
-    'Identifier',
+    'Content',
   ];
 
   task_exists: any;
@@ -1604,6 +1604,6 @@ function convertToTitleCase(input: string): string {
 function renameCpvHeaders(input: string): string {
   const regex = /\b(cpv|cpm|cpc|ctr)\b/gi;
   return input.toLowerCase().trim() === 'name'
-    ? 'Identifier'
+    ? 'Content'
     : input.replace(regex, (_, capturedMatch) => capturedMatch.toUpperCase());
 }
