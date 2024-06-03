@@ -236,7 +236,6 @@ deploy_files () {
     gsutil mb -b on gs://$PROJECT_ID
   fi
 
-  gsutil -m rm -r $GCS_BASE_PATH/
   if [[ $remote_ads_config_exists -eq 1 ]]; then
     if [[ -f ./google-ads.yaml ]]; then
       gsutil -h "Content-Type:text/plain" cp ./google-ads.yaml $GCS_BASE_PATH/google-ads.yaml
