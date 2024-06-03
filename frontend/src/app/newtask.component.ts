@@ -360,6 +360,7 @@ export class NewtaskComponent implements OnInit {
     'Allowlisted',
     'Extra Info',
     'YT Country',
+    'Excluded already',
     'Reason',
     'Url',
     'Matching Placement',
