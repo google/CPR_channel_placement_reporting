@@ -4,3 +4,4 @@ gunicorn
 flask
 flask-cors
 redis
+pandas
