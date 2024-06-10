@@ -344,7 +344,7 @@ google-ads==24.1.0 \
     --hash=sha256:617ef1ab55f942238348435c6caf11aababac100fdc11fb883ea1ee63ffe6b9d \
     --hash=sha256:b77f0169e1e3f075f2482ee9b4a8b6a5acb8565ec4c35b8550a752d0cd557bc9
     # via google-ads-api-report-fetcher
-google-ads-api-report-fetcher==1.14.0 \
+google-ads-api-report-fetcher[pandas]==1.14.0 \
     --hash=sha256:30423163d218290de3c152f143c21d782f7c34e438463a8d704c930d8231de33
     # via googleads-housekeeper
 google-api-core[grpc]==2.19.0 \
@@ -476,8 +476,8 @@ google-resumable-media==2.7.0 \
     --hash=sha256:5f18f5fa9836f4b083162064a1c2c98c17239bfda9ca50ad970ccf905f3e625b \
     --hash=sha256:79543cfe433b63fd81c0844b7803aba1bb8950b47bedf7d980c38fa123937e08
     # via google-cloud-storage
-googleads-housekeeper[gcp]==0.1.0.dev31 \
-    --hash=sha256:b40f367cae76fbd087162a2655537b8b16f4ba7b4290cae140631ed886ce3af2
+googleads-housekeeper[gcp]==0.1.0.dev33 \
+    --hash=sha256:7225c97be292e4eb297cdc1602d9992052c6f7d74de692117dbb692f90a697be
     # via -r backend/requirements.in
 googleapis-common-protos[grpc]==1.63.1 \
     --hash=sha256:0e1c2cdfcbc354b76e4a211a35ea35d6926a835cba1377073c4861db904a1877 \
@@ -845,7 +845,9 @@ numpy==1.26.4 \
     --hash=sha256:edd8b5fe47dab091176d21bb6de568acdd906d1887a4584a15a9a96a1dca06ef \
     --hash=sha256:f870204a840a60da0b12273ef34f7051e98c3b5961b61b0c2c1be6dfd64fbcd3 \
     --hash=sha256:ffa75af20b44f8dba823498024771d5ac50620e6915abac414251bd971b4529f
-    # via pandas
+    # via
+    #   googleads-housekeeper
+    #   pandas
 oauthlib==3.2.2 \
     --hash=sha256:8139f29aac13e25d502680e9e19963e83f16838d48a0d71c287fe40e7067fbca \
     --hash=sha256:9859c40929662bec5d64f34d01c99e093149682a3f38915dc0655d5a633dd918
@@ -884,7 +886,7 @@ pandas==2.2.2 \
     --hash=sha256:ddf818e4e6c7c6f4f7c8a12709696d193976b591cc7dc50588d3d1a6b5dc8772 \
     --hash=sha256:e9b79011ff7a0f4b1d6da6a61aa1aa604fb312d6647de5bad20013682d1429ce \
     --hash=sha256:eee3a87076c0756de40b05c5e9a6069c035ba43e8dd71c379e68cab2c20f16ad
-    # via -r backend/requirements.in
+    # via google-ads-api-report-fetcher
 pillow==10.3.0 \
     --hash=sha256:048ad577748b9fa4a99a0548c64f2cb8d672d5bf2e643a739ac8faff1164238c \
     --hash=sha256:048eeade4c33fdf7e08da40ef402e748df113fd0b4584e32c4af74fe78baaeb2 \
