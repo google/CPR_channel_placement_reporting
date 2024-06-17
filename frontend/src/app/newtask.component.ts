@@ -864,13 +864,10 @@ export class NewtaskComponent implements OnInit {
     }
     if (this.associated_count) {
       this.openSnackBar(
-        `For VIDEO campaigns and exclusion level AD_GROUP / CAMPAIGN placements 
-        are added to a negative exclusion list instead being excluded.
-        Please manually add relevant campaign(s) to this list (list name 
-        contains campaign_id).
+        `For VIDEO campaigns and exclusion level (AD_GROUP/CAMPAIGN) placements are added to a negative exclusion list instead being excluded.
+        Please manually add relevant campaign(s) to this list (list name contains campaign_id).
 
-        ${this.associated_count} placement(s) were added to negative exclusion 
-        list`,
+        ${this.associated_count} placement(s) were added to negative exclusion list`,
         'Dismiss',
         'success-snackbar'
       );
