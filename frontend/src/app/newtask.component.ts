@@ -231,26 +231,6 @@ export class NewtaskComponent implements OnInit {
       ],
     },
     {
-      name: "Conversion Split",
-      fields: [
-        {
-          value: "GOOGLE_ADS_INFO:conversion_name",
-          view: "Conversion Name",
-          type: "string",
-        },
-        {
-          value: "GOOGLE_ADS_INFO:cost_per_conversion_",
-          view: "CPA for selected conversion(s)",
-          type: "numeric",
-        },
-        {
-          value: "GOOGLE_ADS_INFO:conversions_",
-          view: "# of selected conversion(s)",
-          type: "numeric",
-        },
-      ],
-    },
-    {
       name: "YouTube Video",
       fields: [
         { value: "YOUTUBE_VIDEO_INFO:title", view: "Title", type: "string" },
