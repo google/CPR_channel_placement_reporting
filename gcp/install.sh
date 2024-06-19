@@ -153,14 +153,15 @@ enable_api() {
 deploy_app() {
   echo -e "${COLOR}Deploying app to GAE...${NC}"
   cd $SCRIPT_PATH/../backend
-  sed -i'.bak' -e "s/service: default/service: $APPENGINE_SERVICE_NAME/" app.yaml
-  sed -i'.bak' -e "s^path/to/google-ads.yaml^$GCS_BASE_PATH/google-ads.yaml^" app.yaml
-  sed -i'.bak' -e "s^your-youtube-api-key^$youtube_api_key^" app.yaml
+  sed -i'.bak' -e "s|service: default|service: $APPENGINE_SERVICE_NAME|" app.yaml
+  sed -i'.bak' -e "s|.*GOOGLE_ADS_PATH_TO_CONFIG:.*|  GOOGLE_ADS_PATH_TO_CONFIG: $GCS_BASE_PATH/google-ads.yaml|" app.yaml
+  sed -i'.bak' -e "s|.*YOUTUBE_DATA_API_KEY:.*|  YOUTUBE_DATA_API_KEY: $youtube_api_key|" app.yaml
   gcloud app describe
   APP_EXISTS=$?
   if [[ $APP_EXISTS -ne 0 ]]; then
     gcloud app create --region $APPENGINE_REGION
   fi
+  update_permissions
   gcloud app deploy -q
   cd $SCRIPT_PATH
 }
@@ -198,7 +199,30 @@ create_firestore() {
 
 update_permissions() {
   # Grant GAE service account with the Service Account Token Creator role so it could create GCS signed urls
-  gcloud projects add-iam-policy-binding $PROJECT_ID --member=serviceAccount:$SERVICE_ACCOUNT --role=roles/iam.serviceAccountTokenCreator
+  gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
+    --role='roles/storage.objectAdmin'
+
+  ROLES=("roles/storage.objectAdmin" "roles/storage.objectViewer" "roles/logging.logWriter" "roles/artifactregistry.reader" "roles/artifactregistry.writer")
+  SERVICE_ACCOUNTS=("$PROJECT_ID@appspot.gserviceaccount.com") # App Engine default service account
+  SERVICE_ACCOUNTS+=("$PROJECT_NUMBER-compute@developer.gserviceaccount.com")
+
+  # Iterate over service accounts
+  for SA_EMAIL in "${SERVICE_ACCOUNTS[@]}"; do
+      # No need for string replacement since we have the exact emails
+      MEMBER="serviceAccount:$SA_EMAIL"
+      # Iterate over roles
+      for ROLE in "${ROLES[@]}"; do
+          echo "Adding role $ROLE to $MEMBER"
+          gcloud projects add-iam-policy-binding $PROJECT_ID \
+              --member="$MEMBER" \
+              --role="$ROLE"
+      done
+  done
+
+  gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member=serviceAccount:$SERVICE_ACCOUNT \
+    --role=roles/iam.serviceAccountTokenCreator
   gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:$PROJECT_ID@appspot.gserviceaccount.com" \
     --role="roles/cloudscheduler.jobRunner"
@@ -214,8 +238,8 @@ create_oauth_for_iap() {
     --display_name=iap \
     --format=json
   # --format=json 2> /dev/null |\
-  # 	python3 -c "import sys, json; res=json.load(sys.stdin); i = res['name'].rfind('/'); print(res['name'][i+1:]); print(res['secret'])" \
-  # 		> .oauth
+  	# python3 -c "import sys, json; res=json.load(sys.stdin); i = res['name'].rfind('/'); print(res['name'][i+1:]); print(res['secret'])" \
+  	# 	> .oauth
     # Now in .oauth file we have two line, first client id, second is client secret
   lines=()
   while IFS= read -r line; do lines+=("$line"); done < .oauth
@@ -270,9 +294,8 @@ deploy_all() {
   deploy_app
   create_topics
   deploy_cloud_functions
-  create_datastore
+  create_firestore
   create_oauth_for_iap
-  update_permissions
   print_welcome_message
 }
 
