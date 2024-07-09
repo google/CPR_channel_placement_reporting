@@ -193,7 +193,8 @@ create_firestore() {
       --location=$DB_REGION \
       --type=firestore-native
   else
-    echo -e "\n${COLOR}Firestore exists.${NC}"
+    echo -e "\n${COLOR}Firestore exists. Changing to native mode..${NC}"
+    gcloud firestore databases update --database=$DB_NAME --type=firestore-native
   fi
 }
 
