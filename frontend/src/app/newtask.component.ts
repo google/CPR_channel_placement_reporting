@@ -231,6 +231,26 @@ export class NewtaskComponent implements OnInit {
       ],
     },
     {
+      name: "Conversion Split",
+      fields: [
+        {
+          value: "GOOGLE_ADS_INFO:conversion_name",
+          view: "Conversion Name(s)",
+          type: "string",
+        },
+        {
+          value: "GOOGLE_ADS_INFO:cost_per_custom_conversions",
+          view: "CPA for selected conversion(s)",
+          type: "numeric",
+        },
+        {
+          value: "GOOGLE_ADS_INFO:custom_conversions",
+          view: "# of selected conversion(s)",
+          type: "numeric",
+        },
+      ],
+    },
+    {
       name: "YouTube Video",
       fields: [
         { value: "YOUTUBE_VIDEO_INFO:title", view: "Title", type: "string" },
@@ -336,7 +356,8 @@ export class NewtaskComponent implements OnInit {
     'Criterion Id',
     'Customer Id',
     'Account Id',
-    'Placement',    
+    'Placement',
+    'Conversion Name',
     'Allowlisted',
     'Extra Info',
     'YT Country',
@@ -1131,24 +1152,14 @@ export class NewtaskComponent implements OnInit {
 
   validateFinalFilter() {
     let result = true;
-    const hasConversions = this.containsExactSubstring(
-      this.finalGadsFilter,
-      "GOOGLE_ADS_INFO:conversions_"
-    );
-    const hasCostPerConversion = this.finalGadsFilter.includes(
-      "cost_per_conversion"
-    );
+    const hasNamedConversionsMetrics = this.finalGadsFilter
+    .includes("custom_conversions");
     const hasConversionName = this.finalGadsFilter.includes("conversion_name");
-    if ((hasConversions || hasCostPerConversion) && !hasConversionName) {
+    if (hasNamedConversionsMetrics !== hasConversionName) {
       result = false;
       this.filter_extra_instructions =
-        "If 'conversion split metrics' are specified, please include 'Conversion Name'.";
-    } else if (hasConversionName && !(hasConversions || hasCostPerConversion)) {
-      result = false;
-      this.filter_extra_instructions =
-        'If "Conversion Name" is specified, please include ' +
-        "related metric (# of selected conversions, CPA for " +
-        "selected conversion(s), etc.).";
+        'Please choose "Conversion Name" with (# of selected conversions,'+
+        'CPA for selected conversion(s)). Or choose none of the above';
     }
     return result;
   }
