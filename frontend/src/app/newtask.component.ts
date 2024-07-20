@@ -447,7 +447,7 @@ export class NewtaskComponent implements OnInit {
     });
 
     this.gadsForm.controls["lookbackDays"].setValue(7);
-    this.gadsForm.controls["fromDaysAgo"].setValue("0");
+    this.gadsForm.controls["fromDaysAgo"].setValue(0);
     this.selectedSchedule.setValue("0");
 
     this.fillUserVisibilColumnDropDown();
@@ -562,9 +562,6 @@ export class NewtaskComponent implements OnInit {
         this.gadsForm.controls["fromDaysAgo"].setValue(v);
       }
       if (k == "date_range") {
-        this.gadsForm.controls["lookbackDays"].setValue(v);
-      } else if (k == "date_range") {
-        //To be backwards compatible for older tasks
         this.gadsForm.controls["lookbackDays"].setValue(v);
       }
       if (k == "exclusion_level") {
