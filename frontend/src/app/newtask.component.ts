@@ -361,7 +361,7 @@ export class NewtaskComponent implements OnInit {
     'Allowlisted',
     'Extra Info',
     'YT Country',
-    'Excluded already',
+    'Excluded Already',
     'Reason',
     'Url',
     'Matching Placement',
@@ -692,8 +692,11 @@ export class NewtaskComponent implements OnInit {
     if (this.table_result.length > 0) {
       this.column_headers = flatened_data.headers;
       this.toggle_column_all_headers = this.column_headers.filter(
-        (item) => !this.hidden_columns.includes(item)
-      );
+        item => {
+          const lowerCaseItem = item.toLowerCase();
+          return !this.hidden_columns.some(
+            hiddenItem => hiddenItem.toLowerCase() === lowerCaseItem);
+        });
       this.toggle_column_all_headers.sort((a, b) =>
         a.toLowerCase() > b.toLowerCase() ? 1 : -1
       );
