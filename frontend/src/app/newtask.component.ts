@@ -1082,7 +1082,6 @@ export class NewtaskComponent implements OnInit {
     }
     if (
       isNaN(Number(this.gadsForm.controls["fromDaysAgo"].value)) ||
-      this.gadsForm.controls["fromDaysAgo"].value == "" ||
       Number(this.gadsForm.controls["fromDaysAgo"].value) > 90
     ) {
       this.from_lookback_error = true;
