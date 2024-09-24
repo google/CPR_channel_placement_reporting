@@ -141,9 +141,30 @@
         </mat-accordion>
         <br />
         <br />
-        <div class="button-container">
-          <button mat-button matStepperNext class="secondaryButton">Next</button>
+        <div class="button-container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <div>
+            <button mat-button matStepperNext class="secondaryButton">Next</button>
+          </div>
+          <div style="display: flex; align-items: center;">
+            <div style="margin-right: 5px;">
+                 <label for="previewPage" style="margin-right: 5px;" matTooltip="Each chunk contains 300 items">
+                    Get chuck# from server:
+                 </label>
+              <input
+                id="previewPage"
+                type="number"
+                min="1"
+                [(ngModel)]="preview_pagination_index_one_based"
+                placeholder="Enter number above 0"
+                [value]="1"
+                [ngClass]="{'error': !isPreviewPaginationIndexValid()}"
+                [ngModelOptions]="{standalone: true}"
+                style="width: 50px; padding: 5px;"
+                required
+              />
+            </div>
           <button type="button" class="primaryButton" (click)="togglePanel(); previewPlacements()" value="Preview"> Preview Results </button>
+        </div>
         </div>
         <br>
         <div></div>
