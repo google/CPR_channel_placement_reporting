@@ -126,6 +126,7 @@ export class NewtaskComponent implements OnInit {
   verticalPosition: MatSnackBarVerticalPosition = "top";
 
   pagination_values = [["10"], ["25"], ["50"], ["100"], ["200"], ["500"]];
+  preview_pagination_index_one_based = 1;
 
   exclusionLevelArray = [
     ["AD_GROUP", "Ad Group"],
@@ -484,6 +485,9 @@ export class NewtaskComponent implements OnInit {
     }
   }
 
+
+
+
   ngOnInit(): void {
     this.task_id = "";
     this.route.queryParams.subscribe((params) => {
@@ -618,7 +622,7 @@ export class NewtaskComponent implements OnInit {
   previewPlacements() {
     if (this.validate_fields(false)) {
       this.pagination_start = 0;
-      var placement_types = [];
+      const placement_types = [];
       if (this.data_youtube_channel) {
         placement_types.push("YOUTUBE_CHANNEL");
       }
@@ -638,6 +642,7 @@ export class NewtaskComponent implements OnInit {
         exclusion_level: this.selectedExclusionLevelFormControl.value,
         exclusion_rule: this.finalGadsFilter,
         placement_types: placement_types.toString(),
+        preview_pagination_index_one_based: this.preview_pagination_index_one_based
       };
       if (this.finalGadsFilter == "") {
         this.dialogService
@@ -1091,6 +1096,9 @@ export class NewtaskComponent implements OnInit {
       this.customer_id_error = true;
       error_count++;
     }
+    if (!this.isPreviewPaginationIndexValid()) {
+      error_count++;
+    }
     if (
       !this.data_display &&
       !this.data_youtube_video &&
@@ -1176,6 +1184,11 @@ export class NewtaskComponent implements OnInit {
       !mainString[substringIndex + substring.length].match(/\w/);
 
     return isExactMatchBefore && isExactMatchAfter;
+  }
+
+  isPreviewPaginationIndexValid(){
+    const value = Number(this.preview_pagination_index_one_based);
+    return !isNaN(value) && value >= 1;
   }
 
   validateOperatorAndThenValue() {
