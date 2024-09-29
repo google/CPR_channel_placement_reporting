@@ -330,23 +330,23 @@ export class NewtaskComponent implements OnInit {
 
   metricsByTypeDict: { [key: string]: Set<string> } = {};
 
-  numericOperators: Set<string | null> = new Set(["<", ">", "=", "!="]);
+  numericOperators: Set<string | null> = new Set(['<', '>', '=', '!=']);
   stringOperators: Set<string | null> = new Set([
-    "contains",
-    "regexp",
-    "=",
-    "!=",
+    'contains',
+    'regexp',
+    '=',
+    '!=',
+    'letter_set'
   ]);
-  boolOperators: Set<string | null> = new Set(["has_latin_letters"]);
 
   gadsOperatorsArray = [
-    ["<", "less than"],
-    [">", "greater than"],
-    ["=", "equal to"],
-    ["!=", "not equal to"],
-    ["contains", "contains"],
-    ["regexp", "match regexp"],
-    ["has_latin_letters", "has latin letters"],
+    ['<', 'less than'],
+    ['>', 'greater than'],
+    ['=', 'equal to'],
+    ['!=', 'not equal to'],
+    ['contains', 'contains'],
+    ['regexp', 'match regexp'],
+    ['letter_set', 'letter set'],
   ];
 
   toggle_column_selected_headers: string[] = [];
@@ -1217,18 +1217,12 @@ export class NewtaskComponent implements OnInit {
         isValid = false;
       }
     } else if (this.metricsByTypeDict[MetricType.String].has(selected_field)) {
-      if (
-        !(
-          this.stringOperators.has(operator) || this.boolOperators.has(operator)
-        )
-      ) {
+      if (!this.stringOperators.has(operator)) {
         this.showError(
           FilterField.Operator,
           "Not compatible with the selected field"
         );
         isValid = false;
-      } else if (this.boolOperators.has(operator)) {
-        this.filter_extra_instructions = "Please enter True/False as a value";
       }
     }
     return isValid;
@@ -1241,18 +1235,16 @@ export class NewtaskComponent implements OnInit {
     let operator = this.selectedOperator.value ?? "";
     let field_value = this.selectedValue.value ?? "";
 
-    if (this.metricsByTypeDict[MetricType.Number].has(selected_field)) {
-      if (isNaN(Number(field_value))) {
+    if (this.metricsByTypeDict[MetricType.Number].has(selected_field) &&  isNaN(Number(field_value))){
         this.showError(FilterField.Value, "Should be numeric");
         isValid = false;
-      }
-    } else if (this.boolOperators.has(operator)) {
-      const lowerCaseValue = field_value.toLowerCase();
-      if (!(lowerCaseValue === "true" || lowerCaseValue === "false")) {
-        this.showError(FilterField.Value, "Should be True/False");
+    }
+    else if
+    (operator === "letter_set" && !["no_latin", "latin_only"].includes(field_value.toLowerCase())) {
+        this.showError(FilterField.Value, "Should be no_latin/latin_only");
         isValid = false;
-      }
-    } else if (this.metricsByTypeDict[MetricType.String].has(selected_field)) {
+    } else if
+    (this.metricsByTypeDict[MetricType.String].has(selected_field)) {
       if (Number(field_value)) {
         this.showError(FilterField.Value, "Please type in not just digits");
         isValid = false;

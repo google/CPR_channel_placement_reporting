@@ -27,7 +27,7 @@
           <mat-form-field>
             <mat-label>Timeframe ended X Days Ago</mat-label>
             <input type="number" name="fromDaysAgo" formControlName="fromDaysAgo" id="fromDaysAgo"
-                   matTooltip="E.g 0 means ended yesterday" matInput />
+                   matTooltip="E.g 1 means ended yesterday" matInput />
           </mat-form-field>
         </div>
         <div class="label-input-block top-centre-form">
@@ -41,7 +41,7 @@
           <mat-form-field>
             <mat-label>Specify exclusion level</mat-label>
             <mat-select [formControl]="selectedExclusionLevelFormControl" (selectionChange)="onExclusionLevelChange($event.value)"
-              matTooltip="E.g 'Account' means: all metrics are per account level and placement will be excluded per accounts">
+              matTooltip="E.g 'Account' means: metrics and exclusions are per account">
               <mat-option *ngFor="let item of exclusionLevelArray" [value]="item[0]">
                 {{ item[1] }}
               </mat-option>
