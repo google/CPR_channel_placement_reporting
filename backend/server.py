@@ -38,6 +38,12 @@ if DEPLOYMENT_TYPE == 'Google Cloud':
     app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
 
 
+@app.before_request
+def check_youtube_data_api_key():
+    if not os.getenv('YOUTUBE_DATA_API_KEY'):
+        raise RuntimeError('YOUTUBE_DATA_API_KEY is not set')
+
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def catch_all(path):
