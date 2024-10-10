@@ -104,6 +104,10 @@ export class PostService {
     return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/setReauth");
   }
 
+    async migrate_old_tasks() {
+    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/migrateOldTasks");
+  }
+
   async get_customer_list() {
     return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getCustomerIds");
   }
