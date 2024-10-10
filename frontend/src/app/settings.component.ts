@@ -137,6 +137,16 @@
        });
    }
 
+   async migrate_old_tasks() {
+    this.loading=true
+    this.subs = (await ((this.service.migrate_old_tasks())))
+    .subscribe({
+      next: (response: ReturnPromise) => this._redirect(response),
+      error: (err: any) => this.openSnackBar("Error migrating old tasks", "Dismiss", "error-snackbar"),
+      complete: () => this.loading=false
+    });
+   }
+
    async reauth() {
     this.loading=true
     this.subs = (await ((this.service.set_reauth())))

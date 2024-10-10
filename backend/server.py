@@ -188,6 +188,12 @@ def get_task():
     return _build_response(json.dumps(result, default=str))
 
 
+@app.route('/api/migrateOldTasks', methods=['GET'])
+def migrate_old_tasks():
+    cmd = commands.MigrateFromOldTasks()
+    bus.handle(cmd)
+    return _build_response(json.dumps({'Migration request sent'}))
+
 @app.route('/api/getConfig', methods=['GET'])
 def get_config():
     result = views.config(bus.uow)
