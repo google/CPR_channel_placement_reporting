@@ -151,8 +151,8 @@
           <div style="display: flex; align-items: center;">
             <div style="margin-right: 5px;">
                  <label for="previewPage" style="margin-right: 5px;"
-                        matTooltip="Server response is split for a quick reply">
-                    Get chuck# from server:
+                        matTooltip="Data from server is split into chunks.">
+                    Get chunk # from server:
                  </label>
               <input
                 id="previewPage"
@@ -167,7 +167,9 @@
                 required
               />
             </div>
-          <button type="button" class="primaryButton" (click)="togglePanel(); previewPlacements()" value="Preview"> Preview Results </button>
+          <button type="button" class="primaryButton" (click)="togglePanel(); previewPlacements()" value="Preview"
+          matTooltip="Data from server is split into chunks.
+                          Please check the last placements in each chunk have no more data to sum in the following chunk"> Preview Results </button>
         </div>
         </div>
         <br>
