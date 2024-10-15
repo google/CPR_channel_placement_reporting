@@ -14,6 +14,7 @@
 """Main entrypoint for the application."""
 from __future__ import annotations
 
+import configparser
 import json
 import os
 
@@ -29,8 +30,11 @@ STATIC_DIR = os.getenv('STATIC_DIR') or 'static'
 
 DEPLOYMENT_TYPE = os.getenv('ADS_HOUSEKEEPER_DEPLOYMENT_TYPE', 'Dev')
 
+config = configparser.ConfigParser()
+config.read('../gcp/settings.ini')
+project_name = config.get('config', 'name', fallback='cpr_v2')
 bus = bootstrap.Bootstrapper(type=DEPLOYMENT_TYPE,
-                             topic_prefix='cpr').bootstrap_app()
+                             topic_prefix=project_name).bootstrap_app()
 
 if DEPLOYMENT_TYPE == 'Google Cloud':
     from google.appengine.api import wrap_wsgi_app

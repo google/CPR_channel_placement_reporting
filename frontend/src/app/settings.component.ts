@@ -158,21 +158,22 @@
    }
 
    _redirect(response: ReturnPromise) {
-    let url = response.toString();
-    if(url.includes("http"))
+    const strResponse = response.toString();
+    if(strResponse.includes("http"))
     {
       this.hideAuth=false;
-      window.open(url,'_blank');
+      window.open(strResponse,'_blank');
     }
-    else {
+    else if(strResponse.toLowerCase().includes("migration")){
+        this.openSnackBar(strResponse, "Dismiss", "success-snackbar");
+        }
+    else{
       this.openSnackBar("Config Saved!", "Dismiss", "success-snackbar");
       if(this.mcc_list.length == 0) {
         this.populate_mcc_ids();
       }
     }
    }
-
-
 
    openSnackBar(message: string, button: string, type: string) {
      this.snackbar.open(message, button, {

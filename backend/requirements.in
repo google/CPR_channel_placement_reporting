@@ -1,4 +1,4 @@
-googleads-housekeeper[gcp]==0.1.0.dev55
+googleads-housekeeper[gcp]==0.1.0.dev56
 appengine-python-standard>=1.0.0
 gunicorn
 flask
