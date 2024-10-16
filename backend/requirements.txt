@@ -476,8 +476,8 @@ google-resumable-media==2.7.0 \
     --hash=sha256:5f18f5fa9836f4b083162064a1c2c98c17239bfda9ca50ad970ccf905f3e625b \
     --hash=sha256:79543cfe433b63fd81c0844b7803aba1bb8950b47bedf7d980c38fa123937e08
     # via google-cloud-storage
-googleads-housekeeper[gcp]==0.1.0.dev56 \
-    --hash=sha256:f91240901fd1eab60d2e20f8337edc5523d0a6ed46ce6de161743c10dae11690
+googleads-housekeeper[gcp]==0.1.0.dev57 \
+    --hash=sha256:7d3778574e5e8bdd54f56bfb1c1fa5f157587bfb114e83d15650dcd87fbbf680
     # via -r requirements.in
 googleapis-common-protos[grpc]==1.63.1 \
     --hash=sha256:0e1c2cdfcbc354b76e4a211a35ea35d6926a835cba1377073c4861db904a1877 \
