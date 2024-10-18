@@ -392,8 +392,9 @@ def get_task():
 @app.route('/api/migrateOldTasks', methods=['GET'])
 def migrate_old_tasks():
     cmd = commands.MigrateFromOldTasks()
-    bus.handle(cmd)
-    return _build_response(json.dumps('Migration completed', default=str))
+    migrated = bus.handle(cmd)
+    return _build_response(json.dumps(f'''Migrated {migrated} old tasks''',
+                                      default=str))
 
 @app.route('/api/getConfig', methods=['GET'])
 def get_config():
