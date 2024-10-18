@@ -141,7 +141,7 @@
     this.loading=true
     this.subs = (await ((this.service.migrate_old_tasks())))
     .subscribe({
-      next: (response: ReturnPromise) => this._redirect(response),
+      next: (response: ReturnPromise) => this.openSnackBar(response.toString(), "Dismiss", "success-snackbar"),
       error: (err: any) => this.openSnackBar("Error migrating old tasks", "Dismiss", "error-snackbar"),
       complete: () => this.loading=false
     });
@@ -158,16 +158,13 @@
    }
 
    _redirect(response: ReturnPromise) {
-    const strResponse = response.toString();
-    if(strResponse.includes("http"))
+    let url = response.toString();
+    if(url.includes("http"))
     {
       this.hideAuth=false;
-      window.open(strResponse,'_blank');
+      window.open(url,'_blank');
     }
-    else if(strResponse.toLowerCase().includes("migration")){
-        this.openSnackBar(strResponse, "Dismiss", "success-snackbar");
-        }
-    else{
+    else {
       this.openSnackBar("Config Saved!", "Dismiss", "success-snackbar");
       if(this.mcc_list.length == 0) {
         this.populate_mcc_ids();
