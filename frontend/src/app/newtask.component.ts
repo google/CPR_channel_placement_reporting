@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {
   FormGroup,
   FormBuilder,
@@ -72,9 +71,17 @@ export class NewtaskComponent implements OnInit {
   gadsForm: FormGroup;
   paginationForm: FormGroup;
   loading: boolean = false;
-  column_headers: string[] = [];
-  toggle_column_all_headers: any[] = [];
-  table_result: any[] = [];
+
+  columnHeaders: string[] = [];
+  previewTableResultsColumnHeaders: string[] = [];
+
+  toggleColumnAllHeaders: string[] = [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tableResults: Array<Record<string, any>> = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  previewTableResults : Array<Record<string, string>> = [];
+
   customer_list: any[] = [];
   finalGadsFilter: string = "";
   orAndEnabled = false;
@@ -126,7 +133,7 @@ export class NewtaskComponent implements OnInit {
   verticalPosition: MatSnackBarVerticalPosition = "top";
 
   pagination_values = [["10"], ["25"], ["50"], ["100"], ["200"], ["500"]];
-  preview_pagination_index_one_based = 1;
+  previewPaginationIndexOneBased = 1;
 
   exclusionLevelArray = [
     ["AD_GROUP", "Ad Group"],
@@ -451,7 +458,7 @@ export class NewtaskComponent implements OnInit {
     this.gadsForm.controls["fromDaysAgo"].setValue(0);
     this.selectedSchedule.setValue("0");
 
-    this.fillUserVisibilColumnDropDown();
+    this.fillUserVisibilityColumnDropDown();
 
     this.paginationForm = this.fb.group({
       paginationValue: [""],
@@ -463,7 +470,7 @@ export class NewtaskComponent implements OnInit {
     this.initMetricsByTypeDict();
   }
 
-  private fillUserVisibilColumnDropDown() {
+  private fillUserVisibilityColumnDropDown() {
     this.toggle_column_selected_headers_by_default.forEach((column) => {
       this.toggle_column_selected_headers.push(column);
     });
@@ -484,8 +491,6 @@ export class NewtaskComponent implements OnInit {
       });
     }
   }
-
-
 
 
   ngOnInit(): void {
@@ -619,6 +624,96 @@ export class NewtaskComponent implements OnInit {
     });
   }
 
+async refreshPreviewTasksTable() {
+    this.loading = true;
+    try {
+        const observable = await this.service.refresh_preview_tasks_table();
+        this.subs = observable.subscribe({
+            next: (response: ReturnPromise) => {
+                const jsonResponse = JSON.parse(JSON.stringify(response));
+                if (!jsonResponse.data) {
+                    this.handleServerMalformedResponse();
+                } else {
+                    this.fillPreviewTasksTable(response);
+                }
+            },
+            error: (err) => this.handleErrorGenerically(err),
+            complete: () => console.log("callServerRefreshPreviewTasksTable Completed")
+        });
+    } catch (err: unknown) {
+      this.handleErrorGenericallyAfterAssertion(err);
+    }finally {
+        this.loading = false;
+    }
+}
+
+private handleErrorGenericallyAfterAssertion(e: unknown) {
+  if (!(e instanceof ErrorEvent)) {
+    const message =
+      `Non-error object: ${this.safeToString(e)}`;
+    throw new Error(message);
+  }
+  this.handleErrorGenerically(e);
+}
+
+private safeToString(e: unknown): string {
+  if (e && typeof e === "object" && "toString" in e && typeof e.toString === "function") {
+    return e.toString();
+  }
+  return String(e);
+}
+
+private handleServerMalformedResponse() {
+    this.loading = false;
+    this.openSnackBar(
+        "Server error, please investigate the logs",
+        "Dismiss",
+        "error-snackbar"
+    );
+}
+
+private handleErrorGenerically(err: ErrorEvent) {
+    this.loading = false;
+    const errorMessage = err.message;
+    this.openSnackBar(
+        `Error - ${errorMessage}`,
+        "Dismiss",
+        "error-snackbar"
+    );
+}
+
+
+async getResultsForSpecificPreviewTask(previewTaskId: unknown): Promise<void> {
+    if (typeof previewTaskId !== 'string') {
+        throw new Error("Invalid type: 'value' must be a string.");
+     }
+    this.loading = true;
+    try {
+        const observable = await this.service.get_preview_result_for_specific_preview_task(
+                JSON.stringify({
+            previewTaskId: String(previewTaskId),
+            previewPaginationIndexOneBased: String(this.previewPaginationIndexOneBased),
+        }));
+
+        this.subs = observable.subscribe({
+            next: (response: ReturnPromise) => {
+                const jsonResponse = JSON.parse(JSON.stringify(response));
+                if (!jsonResponse.data) {
+                    this.handleServerMalformedResponse();
+                } else {
+                    this.callAutoServiceSuccess(response);
+                }
+            },
+            error: (err) => this.handleErrorGenerically(err),
+            complete: () => console.log("callServerGetPreviewTaskResult Completed")
+        });
+    } catch (err: unknown) {
+      this.handleErrorGenericallyAfterAssertion(err);
+    }finally {
+        this.loading = false;
+    }
+}
+
   previewPlacements() {
     if (this.validate_fields(false)) {
       this.pagination_start = 0;
@@ -641,8 +736,7 @@ export class NewtaskComponent implements OnInit {
         date_range: this.gadsForm.controls["lookbackDays"].value,
         exclusion_level: this.selectedExclusionLevelFormControl.value,
         exclusion_rule: this.finalGadsFilter,
-        placement_types: placement_types.toString(),
-        preview_pagination_index_one_based: this.preview_pagination_index_one_based
+        placement_types: placement_types.toString()
       };
       if (this.finalGadsFilter == "") {
         this.dialogService
@@ -653,38 +747,88 @@ export class NewtaskComponent implements OnInit {
           .subscribe((res) => {
             if (res) {
               this.loading = true;
-              this._call_auto_service(JSON.stringify(formRawValue));
+              this.callAsyncPreview(JSON.stringify(formRawValue));
             }
           });
       } else {
         this.loading = true;
-        this._call_auto_service(JSON.stringify(formRawValue));
+        this.callAsyncPreview(JSON.stringify(formRawValue));
       }
     }
   }
 
-  async _call_auto_service(formRawValue: string) {
-    this.loading = true;
+async callAsyncPreview(formRawValue: string) {
+  this.loading = true;
+  try {
     this.subs = (await this.service.preview_form(formRawValue)).subscribe({
-      next: (response: ReturnPromise) =>
-        this._call_auto_service_success(response),
-      error: (err) => this._call_service_error(err),
+      next: (response: ReturnPromise) => this.callAsyncPreviewSuccess(response),
+      error: (err) => this.handleErrorGenerically(err),
       complete: () => console.log("Completed"),
     });
+  } catch (err: unknown) {
+      this.handleErrorGenericallyAfterAssertion(err);
+  } finally {
+     this.loading = false;
+  }
+}
+
+private fillPreviewTasksTable(response: ReturnPromise) {
+    const jsonResponse = JSON.parse(JSON.stringify(response));
+    if (!jsonResponse.data) {
+            this.handleServerMalformedResponse();
+      return;
+    }
+    this.previewTableResults = jsonResponse.data.rows;
+    if (this.previewTableResults.length > 0) {
+      this.previewTableResultsColumnHeaders = jsonResponse.data.headers;
+    } else {
+      this.handleEmptyTable(
+        "Successful run, but no data matches criteria",
+        "success-snackbar"
+      );
+    }
   }
 
-  _call_auto_service_success(response: ReturnPromise) {
+  private callAsyncPreviewSuccess(response: ReturnPromise) {
+    const jsonResponse = JSON.parse(JSON.stringify(response));
+    if (!jsonResponse.data) {
+        this.handleServerMalformedResponse();
+      return;
+    }
+    const dates = jsonResponse["dates"];
+    this.date_from = dates["date_from"];
+    this.date_to = dates["date_to"];
+    const flattened_data = this.fromServerToUiTable(jsonResponse.data);
+    this.tableResults = flattened_data.rows;
+    if (this.tableResults.length > 0) {
+      this.columnHeaders = flattened_data.headers;
+      this.toggleColumnAllHeaders = this.columnHeaders.filter(
+        item => {
+          const lowerCaseItem = item.toLowerCase();
+          return !this.hidden_columns.some(
+            hiddenItem => hiddenItem.toLowerCase() === lowerCaseItem);
+        });
+      this.toggleColumnAllHeaders.sort((a, b) =>
+        a.toLowerCase() > b.toLowerCase() ? 1 : -1
+      );
+      this.sort_table("default");
+      this.no_data = false;
+      this.addNameColumnIfDuplicatedRows();
+    } else {
+      this.handleEmptyTable(
+        "Successful run, but no data matches criteria",
+        "success-snackbar"
+      );
+    }
+    this.loading = false;
+  }
+
+
+  callAutoServiceSuccess(response: ReturnPromise) {
     const jsonResponse = JSON.parse(JSON.stringify(response));
     if (!jsonResponse.data) {
       this.handleEmptyTable(
-        "Server error, please investigate the cloud logs",
-        "error-snackbar"
-      );
-      return;
-    }
-    if (!jsonResponse.data) {
-      this.handleEmptyTable(
-        "Server error, please investigate the cloud logs",
+        "Server error, please investigate the logs",
         "error-snackbar"
       );
       return;
@@ -692,17 +836,17 @@ export class NewtaskComponent implements OnInit {
     const dates = jsonResponse["dates"];
     this.date_from = dates["date_from"];
     this.date_to = dates["date_to"];
-    const flatened_data = this.fromServerToUiTable(jsonResponse.data);
-    this.table_result = flatened_data.rows;
-    if (this.table_result.length > 0) {
-      this.column_headers = flatened_data.headers;
-      this.toggle_column_all_headers = this.column_headers.filter(
+    const flattened_data = this.fromServerToUiTable(jsonResponse.data);
+    this.tableResults = flattened_data.rows;
+    if (this.tableResults.length > 0) {
+      this.columnHeaders = flattened_data.headers;
+      this.toggleColumnAllHeaders = this.columnHeaders.filter(
         item => {
           const lowerCaseItem = item.toLowerCase();
           return !this.hidden_columns.some(
             hiddenItem => hiddenItem.toLowerCase() === lowerCaseItem);
         });
-      this.toggle_column_all_headers.sort((a, b) =>
+      this.toggleColumnAllHeaders.sort((a, b) =>
         a.toLowerCase() > b.toLowerCase() ? 1 : -1
       );
       this.sort_table("default");
@@ -722,8 +866,7 @@ export class NewtaskComponent implements OnInit {
     let keysOfMaxItem: string[] = [];
     const transformedRows: any[] = [];
     let transformedRow: { [key: string]: any } = { extra_info: [] };
-    for (const rowIndex in originalRows) {
-      const originalDataRow = originalRows[rowIndex];
+    for (const originalDataRow of originalRows) {
       if (originalDataRow.extra_info === undefined) {
         transformedRow = { ...originalDataRow };
       } else {
@@ -777,30 +920,30 @@ export class NewtaskComponent implements OnInit {
 
   sort_table(element: string) {
     if (element == "default") {
-      this.table_result.sort((a, b) => (a.allowlist > b.allowlist ? 1 : -1));
-      this.table_result.sort((a, b) =>
-        a.exclude_from_account > b.exclude_from_account ? 1 : -1
+      this.tableResults.sort((a, b) => (a['allowlist'] > b['allowlist'] ? 1 : -1));
+      this.tableResults.sort((a, b) =>
+        a['exclude_from_account'] > b['exclude_from_account'] ? 1 : -1
       );
-      this.table_result.sort((a, b) =>
-        a.excluded_already > b.excluded_already ? 1 : -1
+      this.tableResults.sort((a, b) =>
+        a['excluded_already'] > b['excluded_already'] ? 1 : -1
       );
       this.revSort = "";
     } else if (this.revSort == element) {
-      this.table_result.sort((a, b) => (a[element] > b[element] ? 1 : -1));
+      this.tableResults.sort((a, b) => (a[element] > b[element] ? 1 : -1));
       this.revSort = "";
     } else {
-      this.table_result.sort((a, b) => (a[element] < b[element] ? 1 : -1));
+      this.tableResults.sort((a, b) => (a[element] < b[element] ? 1 : -1));
       this.revSort = element;
     }
   }
 
   runManualExcludeForm() {
     let exclusion_list: Object[][] = [];
-    for (let data of this.table_result) {
+    for (const data of this.tableResults) {
       if (
-        data.exclude_from_account &&
-        !data.excluded_already &&
-        !data.allowlist
+        data['exclude_from_account'] &&
+        !data['excluded_already'] &&
+        !data['allowlist']
       ) {
         exclusion_list.push(Object.values(data));
       }
@@ -829,7 +972,7 @@ export class NewtaskComponent implements OnInit {
   manualExcludeConfirmed(exclusion_list: Object[][]) {
     let formRawValue = {
       customer_ids: this.selectedCidList.value,
-      header: this.column_headers.map((header) => this.toSnakeCase(header)),
+      header: this.columnHeaders.map((header) => this.toSnakeCase(header)),
       placements: exclusion_list,
       exclusion_level: this.selectedExclusionLevelFormControl.value,
     };
@@ -1002,23 +1145,23 @@ export class NewtaskComponent implements OnInit {
   _run_exclude_count(edit_table: boolean) {
     this.exclude_count = 0;
     this.memory_error = false;
-    for (let i in this.table_result) {
+
+    for (const row of this.tableResults) {
       if (
-        this.table_result[i]["exclude_from_account"] &&
-        !this.table_result[i]["excluded_already"] &&
-        !this.table_result[i]["allowlist"]
+        row["exclude_from_account"] &&
+        !row["excluded_already"] &&
+        !row["allowlist"]
       ) {
         this.exclude_count++;
         if (edit_table) {
-          this.table_result[i]["excluded_already"] = true;
+          row["excluded_already"] = true;
           this.exclude_count--;
         }
       }
-      if (this.table_result[i]["memory_warning"] != null) {
+      if (row["memory_warning"] != null) {
         this.memory_error = true;
       }
     }
-    //this.sort_table("default");
   }
 
   row_class(
@@ -1039,16 +1182,16 @@ export class NewtaskComponent implements OnInit {
   }
 
   toggleCheckAll(value: boolean) {
-    for (let i in this.table_result) {
-      this.table_result[i]["exclude_from_account"] = value;
-    }
+    for (const result of this.tableResults) {
+        result["exclude_from_account"] = value;
+     }
     this._run_exclude_count(false);
   }
 
   excludeCheckChange(placementName: string, exclude_from_account: boolean) {
-    for (let i in this.table_result) {
-      if (this.table_result[i]["placement"] == placementName) {
-        this.table_result[i]["exclude_from_account"] = !exclude_from_account;
+    for (const obj of Object.values(this.tableResults)) {
+      if (obj["placement"] === placementName) {
+        obj["exclude_from_account"] = !exclude_from_account;
       }
     }
     this._run_exclude_count(false);
@@ -1187,7 +1330,7 @@ export class NewtaskComponent implements OnInit {
   }
 
   isPreviewPaginationIndexValid(){
-    const value = Number(this.preview_pagination_index_one_based);
+    const value = Number(this.previewPaginationIndexOneBased);
     return !isNaN(value) && value >= 1;
   }
 
@@ -1346,7 +1489,7 @@ export class NewtaskComponent implements OnInit {
   pagination_next() {
     if (
       this.pagination_start + this.pagination_rpp <
-      this.table_result.length
+      this.tableResults.length
     ) {
       this.pagination_start += this.pagination_rpp;
       this.addNameColumnIfDuplicatedRows();
@@ -1381,11 +1524,11 @@ export class NewtaskComponent implements OnInit {
       i <
       Math.min(
         this.pagination_start + this.pagination_rpp,
-        this.table_result.length
+        this.tableResults.length
       );
       i++
     ) {
-      const nameValue = this.table_result[i].name;
+      const nameValue = this.tableResults[i]['name'];
       if (
         nameValue === undefined ||
         typeof nameValue !== "string"
@@ -1482,7 +1625,7 @@ export class NewtaskComponent implements OnInit {
   }
 
   downloadCSV() {
-    let data = this.table_result;
+    const data = this.tableResults;
     const header = Object.keys(data[0]);
     let csv = data.map((row) =>
       header.map((fieldName) => JSON.stringify(row[fieldName])).join(",")
@@ -1520,10 +1663,10 @@ export class NewtaskComponent implements OnInit {
       complete: () => (this.loading = false),
     });
 
-    for (let i in this.table_result) {
-      if (this.table_result[i]["placement"] == placementName) {
-        this.table_result[i]["allowlist"] = true;
-        this.table_result[i]["excluded_already"] = false;
+    for (const row of this.tableResults) {
+      if (row["placement"] === placementName) {
+        row["allowlist"] = true;
+        row["excluded_already"] = false;
       }
     }
     this._run_exclude_count(false);
@@ -1552,9 +1695,9 @@ export class NewtaskComponent implements OnInit {
       complete: () => (this.loading = false),
     });
 
-    for (let i in this.table_result) {
-      if (this.table_result[i]["placement"] == placementName) {
-        this.table_result[i]["allowlist"] = false;
+    for (const row of this.tableResults) {
+      if (row["placement"] === placementName) {
+        row["allowlist"] = false;
       }
     }
     this._run_exclude_count(false);
@@ -1563,6 +1706,8 @@ export class NewtaskComponent implements OnInit {
   unsorted(a: any, b: any): number {
     return 0;
   }
+
+
   formatNumber(val: any, pct: boolean = false): any {
     if (typeof val === "number") {
       if (Math.floor(val) == val) {
@@ -1579,6 +1724,7 @@ export class NewtaskComponent implements OnInit {
       return val;
     }
   }
+
   togglePanel() {
     this.filtersOpenState = !this.filtersOpenState;
   }

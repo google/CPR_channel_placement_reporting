@@ -148,7 +148,45 @@
           <div>
             <button mat-button matStepperNext class="secondaryButton">Next</button>
           </div>
-          <div style="display: flex; align-items: center;">
+          <button type="button" class="primaryButton" (click)="togglePanel(); previewPlacements()" value="Preview"
+          matTooltip="Data from server is split into chunks.
+                      Please check the last placement in each chunk have no more data to sum in the following chunk"> Async Preview Results </button>
+        </div>
+        <br>
+          <ng-container *ngIf="previewTableResults.length > 0">
+            <h3>Last preview tasks</h3>
+            <br />
+            <br />
+            <span> Refresh Table Status
+                  <button mat-button (click)="refreshPreviewTasksTable()">
+                      <mat-icon>refresh</mat-icon>
+                  </button>
+            </span>
+            <table class="styled-table newtask-width">
+              <thead>
+                <tr>
+                  <ng-container *ngFor="let header of previewTableResultsColumnHeaders">
+                    <th >{{ header }}</th>
+                  </ng-container>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let data of previewTableResults">
+                  <ng-container *ngFor="let previewTask of data | keyvalue: unsorted; let i = index">
+                    <td>
+                      <span *ngIf="previewTableResultsColumnHeaders[i] == 'Id'">
+                          <a href="#" (click)="getResultsForSpecificPreviewTask(previewTask.value); $event.preventDefault()">
+                                {{ previewTask.value }}
+                          </a>
+                      </span>
+                      <span *ngIf="previewTableResultsColumnHeaders[i] != 'Id'">{{ previewTask.value }}</span>
+                    </td>
+                  </ng-container>
+                </tr>
+              </tbody>
+            </table>
+                    <br>
+           <div style="display: flex; align-items: center;">
             <div style="margin-right: 5px;">
                  <label for="previewPage" style="margin-right: 5px;"
                         matTooltip="Data from server is split into chunks.">
@@ -158,7 +196,7 @@
                 id="previewPage"
                 type="number"
                 min="1"
-                [(ngModel)]="preview_pagination_index_one_based"
+                [(ngModel)]="previewPaginationIndexOneBased"
                 placeholder="Enter number above 0"
                 [value]="1"
                 [ngClass]="{'error': !isPreviewPaginationIndexValid()}"
@@ -171,9 +209,9 @@
           matTooltip="Data from server is split into chunks.
                       Please check the last placement in each chunk have no more data to sum in the following chunk"> Preview Results </button>
         </div>
-        </div>
         <br>
         <div></div>
+      </ng-container>
       </mat-step>
       <mat-step>
         <ng-template matStepLabel>Save and Schedule</ng-template>
@@ -223,7 +261,7 @@
 <p>
   <!---->
 </p>
-<div *ngIf="table_result.length > 0">
+<div *ngIf="tableResults.length > 0">
   <div class="button-container">
     <div class="label-input-block">
       <button type="button" [className]="exclude_count == 0 ? 'disabledButton' : 'secondaryButton'" (click)="runManualExcludeForm()" value="Preview"> Manually Exclude ({{ exclude_count }}) </button>
@@ -232,7 +270,7 @@
       <mat-form-field appearance="fill">
         <mat-label>Toggle column visibilities:</mat-label>
         <mat-select [(ngModel)]="toggle_column_selected_headers" multiple>
-          <mat-option *ngFor="let header of toggle_column_all_headers" [value]="header">
+          <mat-option *ngFor="let header of toggleColumnAllHeaders" [value]="header">
             {{ header }}
           </mat-option>
         </mat-select>
@@ -252,14 +290,14 @@
         </a>
       </div>
       <div class="label-input-block">
-        <span *ngIf="pagination_start + pagination_rpp <= table_result.length">
-          {{ pagination_start + 1 }} to {{ pagination_start + pagination_rpp }} of {{ table_result.length }}
+        <span *ngIf="pagination_start + pagination_rpp <= tableResults.length">
+          {{ pagination_start + 1 }} to {{ pagination_start + pagination_rpp }} of {{ tableResults.length }}
         </span>
         <span *ngIf="
-            pagination_start + pagination_rpp > table_result.length &&
-            table_result.length > 0
+            pagination_start + pagination_rpp > tableResults.length &&
+            tableResults.length > 0
           ">
-          {{ pagination_start + 1 }} to {{ table_result.length }} of {{ table_result.length }}
+          {{ pagination_start + 1 }} to {{ tableResults.length }} of {{ tableResults.length }}
         </span>
       </div>
       <div class="label-input-block">
@@ -279,13 +317,13 @@
     </form>
   </div>
 </div>
-<span *ngIf="table_result.length > 0"> From:&nbsp;{{ this.date_from }} &nbsp;&nbsp;&nbsp;To:&nbsp;{{ this.date_to }}
+<span *ngIf="tableResults.length > 0"> From:&nbsp;{{ this.date_from }} &nbsp;&nbsp;&nbsp;To:&nbsp;{{ this.date_to }}
 </span>
 <br />
 <br />
-<input *ngIf="table_result.length > 0" type="checkbox" [(ngModel)]="isCheckAll" (ngModelChange)="toggleCheckAll(isCheckAll)" />
-<span *ngIf="table_result.length > 0">Un/check all</span>
-<table *ngIf="table_result.length > 0" class="styled-table newtask-width">
+<input *ngIf="tableResults.length > 0" type="checkbox" [(ngModel)]="isCheckAll" (ngModelChange)="toggleCheckAll(isCheckAll)" />
+<span *ngIf="tableResults.length > 0">Un/check all</span>
+<table *ngIf="tableResults.length > 0" class="styled-table newtask-width">
   <thead>
     <tr>
       <th class="hrlink">
@@ -297,7 +335,7 @@
       <th class="hrlink">
         <a (click)="sort_table('allowlist')">Allowlist</a>
       </th>
-      <ng-container *ngFor="let header of column_headers">
+      <ng-container *ngFor="let header of columnHeaders">
         <th *ngIf="toggle_column_selected_headers.includes(header) && !hidden_columns.includes(header)" class="hrlink">
           <a (click)="sort_table('{{header}}')">{{ header }}</a>
         </th>
@@ -306,87 +344,87 @@
   </thead>
   <tbody>
     <tr *ngFor="
-        let data of table_result
+        let data of tableResults
           | slice: pagination_start : pagination_start + pagination_rpp;
         let i = index
       " [className]="
         row_class(
-          data.excluded_already,
-          data.exclude_from_account,
-          data.allowlist
+          data['excluded_already'],
+          data['exclude_from_account'],
+          data['allowlist']
         )
       ">
       <td>
-        <input [value]="data.placement" type="checkbox" (change)="
-            !data.excluded_already && !data.allowlist
-              ? excludeCheckChange(data.placement, data.exclude_from_account)
+        <input [value]="data['placement']" type="checkbox" (change)="
+            !data['excluded_already'] && !data['allowlist']
+              ? excludeCheckChange(data['placement'], data['exclude_from_account'])
               : null
           " [checked]="
-            data.exclude_from_account &&
-            !data.excluded_already &&
-            !data.allowlist
-          " [disabled]="data.excluded_already || data.allowlist" />
+            data['exclude_from_account'] &&
+            !data['excluded_already'] &&
+            !data['allowlist']
+          " [disabled]="data['excluded_already'] || data['allowlist']" />
       </td>
-      <td *ngIf="data.excluded_already">
+      <td *ngIf="data['excluded_already']">
         <mat-icon matTooltip="Excluded">block</mat-icon>
       </td>
-      <td *ngIf="!data.excluded_already">
+      <td *ngIf="!data['excluded_already']">
         <mat-icon matTooltip="Active" class="green_icon">check_circle</mat-icon>
       </td>
       <td>
-        <span *ngIf="!data.allowlist">
-          <a class="grey_icon" (click)="addToAllowlist(data.placement_type, data.placement, data.customer_id)" target="_self" matTooltip="Add placement to allowlist so it is never excluded">
+        <span *ngIf="!data['allowlist']">
+          <a class="grey_icon" (click)="addToAllowlist(data['placement_type'], data['placement'], data['customer_id'])" target="_self" matTooltip="Add placement to allowlist so it is never excluded">
             <mat-icon>add_circle_outline</mat-icon>
           </a>
         </span>
-        <span *ngIf="data.allowlist">
-          <a (click)="removeFromAllowlist(data.placement_type, data.placement, data.customer_id)" target="_self" matTooltip="Remove placement from allowlist so it can be excluded">
+        <span *ngIf="data['allowlist']">
+          <a (click)="removeFromAllowlist(data['placement_type'], data['placement'], data['customer_id'])" target="_self" matTooltip="Remove placement from allowlist so it can be excluded">
             <mat-icon class="gold_icon">stars</mat-icon>
           </a>
         </span>
       </td>
       <ng-container *ngFor="let item of data | keyvalue: unsorted; let i = index">
-        <td *ngIf="toggle_column_selected_headers.includes(column_headers[i]) && !hidden_columns.includes(column_headers[i])">
+        <td *ngIf="toggle_column_selected_headers.includes(columnHeaders[i]) && !hidden_columns.includes(columnHeaders[i])">
           <span *ngIf="
-              column_headers[i] == 'Placement Type' &&
+              columnHeaders[i] == 'Placement Type' &&
               item.value == 'YOUTUBE_CHANNEL'
             ">
             <mat-icon matTooltip="YouTube Channel">video_library</mat-icon>
           </span>
           <span *ngIf="
-              column_headers[i] == 'Placement Type' &&
+              columnHeaders[i] == 'Placement Type' &&
               item.value == 'YOUTUBE_VIDEO'
             ">
             <mat-icon matTooltip="YouTube Video">video_label</mat-icon>
           </span>
           <span *ngIf="
-              column_headers[i] == 'Placement Type' && item.value == 'WEBSITE'
+              columnHeaders[i] == 'Placement Type' && item.value == 'WEBSITE'
             ">
             <mat-icon matTooltip="Website">computers</mat-icon>
           </span>
           <span *ngIf="
-              column_headers[i] == 'Placement Type' &&
+              columnHeaders[i] == 'Placement Type' &&
               item.value == 'MOBILE_APPLICATION'
             ">
             <mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon>
           </span>
           <span *ngIf="
-              column_headers[i] == 'Placement Type' &&
+              columnHeaders[i] == 'Placement Type' &&
               item.value == 'MOBILE_APP_CATEGORY'
             ">
             <mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon>
           </span>
-          <span *ngIf="column_headers[i] == 'Name'">
+          <span *ngIf="columnHeaders[i] == 'Name'">
             <a href="https://{{ data['url'] }}" target="_blank">{{ item.value
             }}</a>
           </span>
-          <span *ngIf="value_columns.includes(column_headers[i])">{{ formatNumber(item.value) | number: "1.2-2"
+          <span *ngIf="value_columns.includes(columnHeaders[i])">{{ formatNumber(item.value) | number: "1.2-2"
           }}</span>
-          <span *ngIf="column_headers[i] == 'Reason'" matTooltip="{{ data['Extra Info'] | json }}">{{ item.value }}</span>
+          <span *ngIf="columnHeaders[i] == 'Reason'" matTooltip="{{ data['Extra Info'] | json }}">{{ item.value }}</span>
           <span *ngIf="
-              !value_columns.includes(column_headers[i]) &&
+              !value_columns.includes(columnHeaders[i]) &&
               !['Placement Type', 'Name', 'Extra Info', 'Reason'].includes(
-                column_headers[i]
+                columnHeaders[i]
               )
             ">{{ item.value }}</span>
         </td>
