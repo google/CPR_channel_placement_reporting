@@ -82,7 +82,7 @@ export class TasksComponent implements OnInit {
     (await this.service.get_tasks_list())
       .subscribe({
         next: (response: ReturnPromise) => this._fill_table_success(response),
-        error: (err) => this._fill_table_error(),
+        error: (err: Error) => this._fill_table_error(),
         complete: () => console.log("Completed")
       });
   }
@@ -127,7 +127,7 @@ export class TasksComponent implements OnInit {
     (await this.service.run_task_from_task_id(JSON.stringify(task_id_json)))
       .subscribe({
         next: (response: ReturnPromise) => this._run_task_from_file_success(response),
-        error: (err) => this._run_task_from_file_error(),
+        error: (err: Error) => this._run_task_from_file_error(),
         complete: () => console.log("Completed")
       });
   }
@@ -149,12 +149,12 @@ export class TasksComponent implements OnInit {
     }
     if (this.associated_count) {
       this.openSnackBar(
-        `For VIDEO campaigns and exclusion level AD_GROUP / CAMPAIGN placements 
+        `For VIDEO campaigns and exclusion level AD_GROUP / CAMPAIGN placements
         are added to a negative exclusion list instead being excluded.
-        Please manually add relevant campaign(s) to this list (list name 
+        Please manually add relevant campaign(s) to this list (list name
         contains campaign_id).
 
-        ${this.associated_count} placement(s) were added to negative exclusion 
+        ${this.associated_count} placement(s) were added to negative exclusion
         list`,'Dismiss', 'info-snackbar');
     }
     if (! this.exclude_count && ! this.associated_count ) {
@@ -191,7 +191,7 @@ export class TasksComponent implements OnInit {
     (await this.service.delete_task(JSON.stringify(task_id_json)))
       .subscribe({
         next: (response: ReturnPromise) => this._delete_task_success(response),
-        error: (err) => this._delete_task_error(),
+        error: (err: Error) => this._delete_task_error(),
         complete: () => console.log("Completed")
       });
   }
@@ -286,7 +286,7 @@ export class TasksComponent implements OnInit {
   removeTaskFromSelection(task_id: string) {
     this.selected_tasks.delete(task_id)
   }
-  toggleCheckAll(event: any) {    
+  toggleCheckAll(event: any) {
     const checked = event.checked;
     this.isTasksTableCheckAll = checked;
     this.task_table_data = this.task_table_data.map(item => ({...item, isSelected: checked}));

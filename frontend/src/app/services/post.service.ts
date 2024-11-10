@@ -32,28 +32,36 @@ export class PostService {
     //Used for local testing only
     if(window.location.href.includes('localhost:4200'))
     {
-      this.baseUrl = 'http://127.0.0.1:5000';
+      this.baseUrl = '/';
     }
   }
+
+
+private apiPost<T>(url: string, params: string) {
+  const headers = new HttpHeaders();
+  headers.set('Content-Type', 'application/json; charset=utf-8');
+  const cacheBuster = Date.now();
+  return this.httpClient.post<ReturnPromise>(`${this.baseUrl}/api/${url}?cb=${cacheBuster}`, params, {headers});
+}
+
+  async refresh_preview_tasks_table() {
+      return this.apiPost("getPreviewTasksTable", "");
+  }
+
+  async get_preview_result_for_specific_preview_task(form_data_json: string) {
+      return this.apiPost("getResultsForSpecificPreviewTask", form_data_json);
+  }
+
   async preview_form(form_data_json: string) {
-    const headers = new HttpHeaders();
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-    let cacheBuster = Date.now();
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/previewPlacements?cb=" + cacheBuster, form_data_json, {headers: headers});
+    return this.apiPost("asyncPreviewPlacements", form_data_json);
   }
 
   async run_manual_excluder(form_data_json: string) {
-    const headers = new HttpHeaders();
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-    let cacheBuster = Date.now();
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/runManualExcluder?cb=" + cacheBuster, form_data_json, {headers: headers});
+    return this.apiPost("runManualExcluder", form_data_json);
   }
 
   async file_upload(file_data: string) {
-    const headers = new HttpHeaders();
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-    headers.set('Access-Control-Allow-Origin','*');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/fileUpload", file_data, {headers: headers});
+    return this.apiPost("fileUpload", file_data);
   }
 
   async get_config() {
@@ -61,15 +69,11 @@ export class PostService {
   }
 
   async set_config(config_data: string) {
-    const headers = new HttpHeaders();
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/setConfig", config_data, {headers: headers});
+    return this.apiPost("setConfig", config_data);
   }
 
   async save_task(task_data: string) {
-    const headers = new HttpHeaders();
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/saveTask", task_data, {headers: headers});
+    return this.apiPost("saveTask", task_data);
   }
 
   async get_tasks_list() {
@@ -77,27 +81,19 @@ export class PostService {
   }
 
   async delete_task(task_id: string) {
-    const headers = new HttpHeaders();
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/deleteTask", task_id, {headers: headers});
+    return this.apiPost("deleteTask", task_id);
   }
 
   async run_task_from_task_id(task_id: string) {
-    const headers = new HttpHeaders();
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/runTaskFromTaskId", task_id, {headers: headers});
+    return this.apiPost("runTaskFromTaskId", task_id);
   }
 
   async get_task(task_id: string) {
-    const headers = new HttpHeaders();
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/getTask", task_id, {headers: headers});
+    return this.apiPost("getTask", task_id);
   }
 
   async finalise_auth(code: string) {
-    const headers = new HttpHeaders();
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/finishAuth", code, {headers: headers});
+    return this.apiPost("finishAuth", code);
   }
 
   async set_reauth() {
@@ -117,21 +113,14 @@ export class PostService {
   }
 
   async refresh_mcc_list() {
-    const headers = new HttpHeaders();
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/updateMccIds" , "" , {headers: headers});
+    return this.apiPost("updateMccIds", "");
   }
 
   async add_to_allowlist(channel_id: string) {
-    const headers = new HttpHeaders();
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/addToAllowlist", channel_id, {headers: headers});
+    return this.apiPost("addToAllowlist", channel_id);
   }
 
   async remove_from_allowlist(channel_id: string) {
-    const headers = new HttpHeaders();
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-    return this.httpClient.post<ReturnPromise>(this.baseUrl + "/api/removeFromAllowlist", channel_id, {headers: headers});
+    return this.apiPost("removeFromAllowlist", channel_id);
   }
-
 }
