@@ -26,14 +26,8 @@ export interface ReturnPromise {
 })
 export class PostService {
 
-  private baseUrl = '';
 
   constructor(private httpClient: HttpClient) {
-    //Used for local testing only
-    if(window.location.href.includes('localhost:4200'))
-    {
-      this.baseUrl = '/';
-    }
   }
 
 
@@ -41,31 +35,31 @@ private apiPost<T>(url: string, params: string) {
   const headers = new HttpHeaders();
   headers.set('Content-Type', 'application/json; charset=utf-8');
   const cacheBuster = Date.now();
-  return this.httpClient.post<ReturnPromise>(`${this.baseUrl}/api/${url}?cb=${cacheBuster}`, params, {headers});
+  return this.httpClient.post<ReturnPromise>(`/api/${url}?cb=${cacheBuster}`, params, {headers});
 }
-
-  async refresh_preview_tasks_table() {
-      return this.apiPost("getPreviewTasksTable", "");
-  }
 
   async get_preview_result_for_specific_preview_task(form_data_json: string) {
       return this.apiPost("getResultsForSpecificPreviewTask", form_data_json);
   }
 
+  async get_preview_tasks_table() {
+      return this.apiPost("getPreviewTasksTable", "");
+  }
+
   async preview_form(form_data_json: string) {
-    return this.apiPost("asyncPreviewPlacements", form_data_json);
+      return this.apiPost("asyncPreviewPlacements", form_data_json);
   }
 
   async run_manual_excluder(form_data_json: string) {
-    return this.apiPost("runManualExcluder", form_data_json);
+      return this.apiPost("runManualExcluder", form_data_json);
   }
 
   async file_upload(file_data: string) {
-    return this.apiPost("fileUpload", file_data);
+      return this.apiPost("fileUpload", file_data);
   }
 
   async get_config() {
-    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getConfig");
+    return this.httpClient.get<ReturnPromise>( "/api/getConfig");
   }
 
   async set_config(config_data: string) {
@@ -77,7 +71,7 @@ private apiPost<T>(url: string, params: string) {
   }
 
   async get_tasks_list() {
-    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getTasksList");
+    return this.httpClient.get<ReturnPromise>( "/api/getTasksList");
   }
 
   async delete_task(task_id: string) {
@@ -97,19 +91,19 @@ private apiPost<T>(url: string, params: string) {
   }
 
   async set_reauth() {
-    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/setReauth");
+    return this.httpClient.get<ReturnPromise>( "/api/setReauth");
   }
 
     async migrate_old_tasks() {
-    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/migrateOldTasks");
+    return this.httpClient.get<ReturnPromise>( "/api/migrateOldTasks");
   }
 
   async get_customer_list() {
-    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getCustomerIds");
+    return this.httpClient.get<ReturnPromise>( "/api/getCustomerIds");
   }
 
   async get_mcc_list() {
-    return this.httpClient.get<ReturnPromise>(this.baseUrl + "/api/getMccIds");
+    return this.httpClient.get<ReturnPromise>("/api/getMccIds");
   }
 
   async refresh_mcc_list() {

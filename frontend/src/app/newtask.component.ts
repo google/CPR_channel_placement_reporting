@@ -627,18 +627,13 @@ export class NewtaskComponent implements OnInit {
 async refreshPreviewTasksTable() {
     this.loading = true;
     try {
-        const observable = await this.service.refresh_preview_tasks_table();
+        const observable = await this.service.get_preview_tasks_table();
         this.subs = observable.subscribe({
             next: (response: ReturnPromise) => {
-                const jsonResponse = JSON.parse(JSON.stringify(response));
-                if (!jsonResponse.data) {
-                    this.handleServerMalformedResponse();
-                } else {
-                    this.fillPreviewTasksTable(response);
-                }
+                this.fillPreviewTasksTable(response);
             },
             error: (err) => this.handleErrorGenerically(err),
-            complete: () => console.log("callServerRefreshPreviewTasksTable Completed")
+            complete: () => console.log("refreshPreviewTasksTable Completed")
         });
     } catch (err: unknown) {
       this.handleErrorGenericallyAfterAssertion(err);
@@ -663,14 +658,6 @@ private safeToString(e: unknown): string {
   return String(e);
 }
 
-private handleServerMalformedResponse() {
-    this.loading = false;
-    this.openSnackBar(
-        "Server error, please investigate the logs",
-        "Dismiss",
-        "error-snackbar"
-    );
-}
 
 private handleErrorGenerically(err: ErrorEvent) {
     this.loading = false;
@@ -691,18 +678,13 @@ async getResultsForSpecificPreviewTask(previewTaskId: unknown): Promise<void> {
     try {
         const observable = await this.service.get_preview_result_for_specific_preview_task(
                 JSON.stringify({
-            previewTaskId: String(previewTaskId),
-            previewPaginationIndexOneBased: String(this.previewPaginationIndexOneBased),
+            preview_task_id: String(previewTaskId),
+            preview_pagination_index_one_based: Number(this.previewPaginationIndexOneBased)
         }));
 
         this.subs = observable.subscribe({
             next: (response: ReturnPromise) => {
-                const jsonResponse = JSON.parse(JSON.stringify(response));
-                if (!jsonResponse.data) {
-                    this.handleServerMalformedResponse();
-                } else {
-                    this.callAutoServiceSuccess(response);
-                }
+                this.callAutoServiceSuccess(response);
             },
             error: (err) => this.handleErrorGenerically(err),
             complete: () => console.log("callServerGetPreviewTaskResult Completed")
@@ -761,7 +743,14 @@ async callAsyncPreview(formRawValue: string) {
   this.loading = true;
   try {
     this.subs = (await this.service.preview_form(formRawValue)).subscribe({
-      next: (response: ReturnPromise) => this.callAsyncPreviewSuccess(response),
+      next: (response: ReturnPromise) => {
+          this.openSnackBar(
+              "Async Preview submitted." +
+              "Please refresh the preview table in a few minutes",
+              "Dismiss",
+              "success-snackbar"
+              );
+      },
       error: (err) => this.handleErrorGenerically(err),
       complete: () => console.log("Completed"),
     });
@@ -774,13 +763,9 @@ async callAsyncPreview(formRawValue: string) {
 
 private fillPreviewTasksTable(response: ReturnPromise) {
     const jsonResponse = JSON.parse(JSON.stringify(response));
-    if (!jsonResponse.data) {
-            this.handleServerMalformedResponse();
-      return;
-    }
-    this.previewTableResults = jsonResponse.data.rows;
+    this.previewTableResults = jsonResponse.rows;
     if (this.previewTableResults.length > 0) {
-      this.previewTableResultsColumnHeaders = jsonResponse.data.headers;
+      this.previewTableResultsColumnHeaders = jsonResponse.headers;
     } else {
       this.handleEmptyTable(
         "Successful run, but no data matches criteria",
@@ -789,42 +774,7 @@ private fillPreviewTasksTable(response: ReturnPromise) {
     }
   }
 
-  private callAsyncPreviewSuccess(response: ReturnPromise) {
-    const jsonResponse = JSON.parse(JSON.stringify(response));
-    if (!jsonResponse.data) {
-        this.handleServerMalformedResponse();
-      return;
-    }
-    const dates = jsonResponse["dates"];
-    this.date_from = dates["date_from"];
-    this.date_to = dates["date_to"];
-    const flattened_data = this.fromServerToUiTable(jsonResponse.data);
-    this.tableResults = flattened_data.rows;
-    if (this.tableResults.length > 0) {
-      this.columnHeaders = flattened_data.headers;
-      this.toggleColumnAllHeaders = this.columnHeaders.filter(
-        item => {
-          const lowerCaseItem = item.toLowerCase();
-          return !this.hidden_columns.some(
-            hiddenItem => hiddenItem.toLowerCase() === lowerCaseItem);
-        });
-      this.toggleColumnAllHeaders.sort((a, b) =>
-        a.toLowerCase() > b.toLowerCase() ? 1 : -1
-      );
-      this.sort_table("default");
-      this.no_data = false;
-      this.addNameColumnIfDuplicatedRows();
-    } else {
-      this.handleEmptyTable(
-        "Successful run, but no data matches criteria",
-        "success-snackbar"
-      );
-    }
-    this.loading = false;
-  }
-
-
-  callAutoServiceSuccess(response: ReturnPromise) {
+private callAutoServiceSuccess(response: ReturnPromise) {
     const jsonResponse = JSON.parse(JSON.stringify(response));
     if (!jsonResponse.data) {
       this.handleEmptyTable(

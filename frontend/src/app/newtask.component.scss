@@ -19,3 +19,24 @@
   border: 2px solid red; /* Red border for the error state */
   background-color: #ffe6e6; /* Optional: light red background */
 }
+
+/* General table styling */
+.bordered-table {
+  width: 100%;
+  border-collapse: collapse; /* Ensures borders don't double up */
+}
+
+/* Borders for all cells */
+.bordered-table th,
+.bordered-table td {
+  border: 1px solid lightgray; /* Light-gray borders */
+  padding: 8px; /* Padding for readability */
+}
+
+/* Header styling */
+.bordered-table th {
+  background-color: #f9f9f9; /* Light background for headers */
+  color: black; /* Black text color for headers */
+  font-weight: bold; /* Bold text for headers */
+  text-align: center; /* Center-align headers */
+}
