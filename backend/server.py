@@ -13,6 +13,7 @@
 # limitations under the License.
 """Main entrypoint for the application."""
 
+# pylint: disable=C0330, g-bad-import-order, g-multiple-import
 from __future__ import annotations
 
 import asyncio
@@ -20,9 +21,9 @@ import concurrent.futures
 import configparser
 import json
 import os
+
 import flask
-from googleads_housekeeper import bootstrap
-from googleads_housekeeper import views
+from googleads_housekeeper import bootstrap, views
 from googleads_housekeeper.domain import commands
 from googleads_housekeeper.domain.core import execution
 
@@ -35,13 +36,15 @@ DEPLOYMENT_TYPE = os.getenv('ADS_HOUSEKEEPER_DEPLOYMENT_TYPE', 'Dev')
 config = configparser.ConfigParser()
 config.read('../gcp/settings.ini')
 project_name = config.get('config', 'name', fallback='cpr_v2')
-bus = (bootstrap.Bootstrapper(type=DEPLOYMENT_TYPE, topic_prefix=project_name)
-       .bootstrap_app())
+bus = bootstrap.Bootstrapper(
+  type=DEPLOYMENT_TYPE, topic_prefix=project_name
+).bootstrap_app()
 
 executor = concurrent.futures.ThreadPoolExecutor()
 
 if DEPLOYMENT_TYPE == 'Google Cloud':
   from google.appengine.api import wrap_wsgi_app
+
   app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
 
 
@@ -200,7 +203,7 @@ def preview_placements():
 def async_preview_placements():
   data = flask.request.get_json(force=True)
   executor.submit(asyncio.run, run_async_preview_task(data))
-  return _build_response(msg='Async Preview Task Sent', status=202)
+  return _build_response(msg=json.dumps({'data': 'Async Preview Task Sent'}))
 
 
 async def run_async_preview_task(data: dict[str, str | float]) -> None:
@@ -234,9 +237,36 @@ async def run_async_preview_task(data: dict[str, str | float]) -> None:
     bus.handle(cmd)
   else:
     config = config[0]
-    cmd = commands.PreviewPlacements(**data, save_to_db=config.get('save_to_db',
-                                                                   True))
+    cmd = commands.PreviewPlacements(
+      **data, save_to_db=config.get('save_to_db', True)
+    )
     bus.handle(cmd)
+
+
+@app.route('/api/getPreviewTasksTable', methods=['POST'])
+def get_preview_tasks_table() -> flask.Response:
+  """Fetches a preview-tasks table and returns it as a JSON response.
+
+  This API endpoint retrieves a list of preview task results from the system,
+  processes it into a structured format containing headers and rows, and
+  returns the data as a JSON response.
+
+  Returns:
+      Response: A Flask response object containing JSON with the following
+      structure:
+          {
+              "headers": [str, ...],  # List of column headers extracted from
+               the first task object.
+              "rows": [dict, ...]    # List of tasks, each represented as a
+              dictionary.
+          }
+  """
+  cmd = commands.GetPreviewTasksTable()
+  table = bus.handle(cmd)
+  headers = list(table[0].to_dict().keys()) if table else []
+  rows = [item.to_serializable_dict() for item in table]
+  response_data = {'headers': headers, 'rows': rows}
+  return _build_response(json.dumps(response_data))
 
 
 @app.route('/api/getResultsForSpecificPreviewTask', methods=['POST'])
@@ -309,7 +339,7 @@ def set_config():
 def add_to_allowlisting():
   data = flask.request.get_json(force=True)
   cmd = commands.AddToAllowlisting(**data)
-  result = bus.handle(cmd)
+  bus.handle(cmd)
   return _build_response(json.dumps('success'))
 
 
@@ -317,7 +347,7 @@ def add_to_allowlisting():
 def remove_from_allowlisting():
   data = flask.request.get_json(force=True)
   cmd = commands.RemoveFromAllowlisting(**data)
-  result = bus.handle(cmd)
+  bus.handle(cmd)
   return _build_response(json.dumps('success'))
 
 
@@ -365,8 +395,9 @@ def get_task():
 def migrate_old_tasks():
   cmd = commands.MigrateFromOldTasks()
   migrated = bus.handle(cmd)
-  return _build_response(json.dumps(f'Migrated {migrated} old tasks',
-                                    default=str))
+  return _build_response(
+    json.dumps(f'Migrated {migrated} old tasks', default=str)
+  )
 
 
 @app.route('/api/getConfig', methods=['GET'])
