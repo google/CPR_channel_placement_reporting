@@ -745,7 +745,7 @@ async callAsyncPreview(formRawValue: string) {
     this.subs = (await this.service.preview_form(formRawValue)).subscribe({
       next: (response: ReturnPromise) => {
           this.openSnackBar(
-              "Async Preview submitted." +
+              "Async Preview submitted. " +
               "Please refresh the preview table in a few minutes",
               "Dismiss",
               "success-snackbar"
