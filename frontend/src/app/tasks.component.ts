@@ -164,7 +164,7 @@ export class TasksComponent implements OnInit {
 
   async _run_task_from_file_error() {
     this.loading = false;
-    this.openSnackBar("Permission error: Check you have Authenticated in settings and that you have the correct permissions to the account and your Customer ID/MCC IDs are correct. If you have just changed your permissions in Google Ads, go back to Settings and click 'Save / Reauthenticate' to update permissions and try again", "Dismiss", "error-snackbar");
+    this.openSnackBar("Permission error: Check you have Authenticated in settings and that you have the correct permissions to the account and your Customer ID/MCC IDs are correct.", "Dismiss", "error-snackbar");
   }
 
   async deleteBatch(){
