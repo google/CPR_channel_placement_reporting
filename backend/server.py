@@ -228,6 +228,11 @@ async def run_async_preview_task(data: dict[str, str | float]) -> None:
       - The function is designed for use in scenarios where asynchronous
         execution is required, such as background tasks in a web application.
   """
+  # Can only use a uow which was created in this worker thread.
+  # pylint: disable=redefined-outer-name
+  bus = bootstrap.Bootstrapper(
+    type=DEPLOYMENT_TYPE, topic_prefix=project_name
+  ).bootstrap_app()
   config = views.config(bus.uow)
   if not config:
     ads_client = bus.dependencies.get('ads_api_client').client
@@ -263,8 +268,8 @@ def get_preview_tasks_table() -> flask.Response:
   """
   cmd = commands.GetPreviewTasksTable()
   table = bus.handle(cmd)
-  headers = list(table[0].to_dict().keys()) if table else []
-  rows = [item.to_serializable_dict() for item in table]
+  headers = list(table[0].keys()) if table else []
+  rows = [item for item in table]
   response_data = {'headers': headers, 'rows': rows}
   return _build_response(json.dumps(response_data))
 
