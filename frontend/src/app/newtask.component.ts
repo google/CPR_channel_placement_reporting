@@ -1675,6 +1675,16 @@ private callAutoServiceSuccess(response: ReturnPromise) {
     }
   }
 
+  isIdClickable(row: { [key: string]: string }, columnHeaders: string[],
+       idIndex: number): boolean {
+    const statusIndex = columnHeaders.indexOf('status');
+    if (statusIndex === -1) {
+      return false;
+    }
+    const status = row[columnHeaders[statusIndex]];
+    return columnHeaders[idIndex] === 'id' && status === 'DONE';
+  }
+
   togglePanel() {
     this.filtersOpenState = !this.filtersOpenState;
   }

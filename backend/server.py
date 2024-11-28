@@ -20,7 +20,10 @@ import asyncio
 import concurrent.futures
 import configparser
 import json
+import logging
 import os
+import threading
+import traceback
 
 import flask
 from googleads_housekeeper import bootstrap, views
@@ -67,11 +70,14 @@ def catch_all(path):
 @app.route('/api/asyncPreviewPlacements', methods=['POST'])
 def async_preview_placements():
   data = flask.request.get_json(force=True)
-  executor.submit(asyncio.run, run_async_preview_task(data))
+  executor.submit(asyncio.run, run_async_preview_task(data, config))
   return _build_response(msg=json.dumps({'data': 'Async Preview Task Sent'}))
 
 
-async def run_async_preview_task(data: dict[str, str | float]) -> None:
+# pylint: disable=redefined-outer-name
+async def run_async_preview_task(
+  data: dict[str, str | float], config: configparser.ConfigParser
+) -> None:
   """Executes an asynchronous preview task using the provided data.
 
   This function performs a long-running asynchronous operation, processing
@@ -79,38 +85,47 @@ async def run_async_preview_task(data: dict[str, str | float]) -> None:
   and unit of work.
 
   Args:
-      data: A dictionary containing the input parameters or payload
-          required for the preview task.
+    data:
+      A dictionary containing the input parameters or payload
+      required for the preview task.
+
+    config: A Config parser.
 
   Raises:
-      ValueError: If the `data` dictionary is invalid or missing required
-      fields.
-      RuntimeError: If there is an issue initializing the configuration or
-          interacting with the unit of work.
+    ValueError: If the `data` dictionary is invalid or missing required
+    fields.
+    RuntimeError: If there is an issue initializing the configuration or
+      interacting with the unit of work.
 
   Notes:
-      - Ensure that this function is invoked within a running event loop.
-      - The function is designed for use in scenarios where asynchronous
-        execution is required, such as background tasks in a web application.
+    - Ensure that this function is invoked within a running event loop.
+    - The function is designed for use in scenarios where asynchronous
+      execution is required, such as background tasks in a web application.
   """
-  # Can only use a uow which was created in this worker thread.
-  # pylint: disable=redefined-outer-name
-  bus = bootstrap.Bootstrapper(
-    type=DEPLOYMENT_TYPE, topic_prefix=project_name
-  ).bootstrap_app()
-  config = views.config(bus.uow)
-  if not config:
-    ads_client = bus.dependencies.get('ads_api_client').client
-    if not (mcc_id := ads_client.login_customer_id):
-      mcc_id = ads_client.linked_customer_id
-    cmd = commands.SaveConfig(mcc_id=mcc_id, email_address='', id=None)
-    bus.handle(cmd)
-  else:
-    config = config[0]
-    cmd = commands.PreviewPlacements(
-      **data, save_to_db=config.get('save_to_db', True)
+  try:
+    # Can only use a uow which was created in this worker thread.
+    # pylint: disable=redefined-outer-name
+    bus.uow = bootstrap.Bootstrapper(
+      type=DEPLOYMENT_TYPE, topic_prefix=project_name
+    ).create_new_uow()
+    if not config:
+      ads_client = bus.dependencies.get('ads_api_client').client
+      if not (mcc_id := ads_client.login_customer_id):
+        mcc_id = ads_client.linked_customer_id
+      cmd = commands.SaveConfig(mcc_id=mcc_id, email_address='', id=None)
+      bus.handle(cmd)
+    else:
+      cmd = commands.PreviewPlacements(**data, save_to_db=True)
+      bus.handle(cmd)
+  except Exception as e:
+    logging.warning(
+      'Exception occurred in thread %s: %s',
+      threading.current_thread().name, e
     )
-    bus.handle(cmd)
+    logging.error('Stack trace:')
+    stack_trace = traceback.format_exc()
+    logging.error('Formatted stack trace:\n%s', stack_trace)
+    raise
 
 
 @app.route('/api/getPreviewTasksTable', methods=['POST'])
