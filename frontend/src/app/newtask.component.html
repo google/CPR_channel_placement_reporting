@@ -221,20 +221,23 @@
                 </thead>
                 <tbody>
                   <tr *ngFor="let row of previewTableResults">
-                    <ng-container *ngFor="let previewTask of row | keyvalue: unsorted; let i = index">
-                      <td>
-                        <span>
-                          <a *ngIf="previewTableResultsColumnHeaders[i] === 'id' && (row | keyvalue: unsorted)[i + 1]?.value === 'DONE'"
-                             href="#"
-                             (click)="getResultsForSpecificPreviewTask(previewTask.value); $event.preventDefault()">
-                            {{ previewTask.value }}
-                          </a>
-                          <span *ngIf="previewTableResultsColumnHeaders[i] !== 'id' || (row | keyvalue: unsorted)[i + 1]?.value !== 'DONE'">
-                            {{ previewTask.value }}
-                          </span>
+                  <ng-container *ngFor="let previewTask of row | keyvalue: unsorted; let i = index">
+                    <td>
+                      <span *ngIf="previewTableResultsColumnHeaders[i] === 'id'">
+                        <a *ngIf="isIdClickable(row, previewTableResultsColumnHeaders, i)"
+                           href="#"
+                           (click)="getResultsForSpecificPreviewTask(previewTask.value); $event.preventDefault()">
+                          {{ previewTask.value }}
+                        </a>
+                        <span *ngIf="!isIdClickable(row, previewTableResultsColumnHeaders, i)">
+                          {{ previewTask.value }}
                         </span>
-                      </td>
-                    </ng-container>
+                      </span>
+                      <span *ngIf="previewTableResultsColumnHeaders[i] !== 'id'">
+                        {{ previewTask.value }}
+                      </span>
+                    </td>
+                  </ng-container>
                   </tr>
                 </tbody>
               </table>
