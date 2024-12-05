@@ -124,6 +124,8 @@ export class NewtaskComponent implements OnInit {
   excluded_only = false;
   filtersOpenState: boolean = true;
 
+  chosenOfflineTask = "";
+
   date_from = "";
   date_to = "";
 
@@ -681,9 +683,9 @@ async getResultsForSpecificPreviewTask(previewTaskId: unknown): Promise<void> {
             preview_task_id: String(previewTaskId),
             preview_pagination_index_one_based: Number(this.previewPaginationIndexOneBased)
         }));
-
         this.subs = observable.subscribe({
             next: (response: ReturnPromise) => {
+                this.chosenOfflineTask = previewTaskId;
                 this.callAutoServiceSuccess(response);
             },
             error: (err) => this.handleErrorGenerically(err),
