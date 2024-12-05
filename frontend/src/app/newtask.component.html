@@ -294,6 +294,8 @@
   <!---->
 </p>
 <div *ngIf="tableResults.length > 0">
+
+  <h2>Placements for offline task: {{ chosenOfflineTask }}</h2>
   <div class="button-container">
     <div class="label-input-block">
       <button type="button" [className]="exclude_count == 0 ? 'disabledButton' : 'secondaryButton'" (click)="runManualExcludeForm()" value="Preview"> Manually Exclude ({{ exclude_count }}) </button>
