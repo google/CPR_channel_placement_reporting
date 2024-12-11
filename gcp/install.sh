@@ -285,6 +285,21 @@ generate_youtube_api_key() {
   youtube_api_key=`curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://apikeys.googleapis.com/v2/$key_name/keyString | grep keyString | cut -d '"' -f4`
 }
 
+extract_latest_commit() {
+  local file_name="lasted_install_commit_number.txt"
+  local latest_commit=$(git log -1)
+
+  # Check if git log returned anything
+  if [[ -z "$latest_commit" ]]; then
+    echo "No git commit details found."
+    return 1
+  fi
+
+  # Write the commit details to the file
+  echo "$latest_commit" > "$file_name"
+  echo "The latest commit details have been written to $file_name."
+}
+
 deploy_all() {
   check_billing_enabled
   check_ads_config
@@ -297,6 +312,7 @@ deploy_all() {
   deploy_cloud_functions
   create_firestore
   create_oauth_for_iap
+  extract_latest_commit
   print_welcome_message
 }
 
