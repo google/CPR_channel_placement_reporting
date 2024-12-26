@@ -149,101 +149,9 @@
             <button mat-button matStepperNext class="secondaryButton">Next</button>
           </div>
           <button type="button" class="primaryButton" (click)="togglePanel(); previewPlacements()" value="Preview"
-          matTooltip="Adds task to the Submitted Async Tasks table"> Add an Offline Preview Task</button>
+          matTooltip="Adds task to the Submitted Async Tasks table"> Preview</button>
         </div>
         <br>
-                      <ng-container>
-                                <br />
-                                <br />
-                                <h2>Submitted Offline Tasks:</h2>
-                                <span> Refresh Table Status
-                                      <button mat-button (click)="refreshPreviewTasksTable()">
-                                          <mat-icon>refresh</mat-icon>
-                                      </button>
-                                </span>
-  <br>
-           <div style="display: flex; align-items: center;">
-            <div style="margin-right: 5px;">
-                 <label for="previewPage" style="margin-right: 5px;"
-                        matTooltip="Data from server is split into chunks.">
-                    Click on an id and get chunk # from server:
-                 </label>
-              <input
-                id="previewPage"
-                type="number"
-                min="1"
-                [(ngModel)]="previewPaginationIndexOneBased"
-                placeholder="Enter number above 0"
-                [value]="1"
-                [ngClass]="{'error': !isPreviewPaginationIndexValid()}"
-                [ngModelOptions]="{standalone: true}"
-                style="width: 50px; padding: 5px;"
-                required
-              />
-            </div>
-        </div>
-        <br>
-        <div>
-
-        </div>
-                        <div *ngIf="!previewTableResults || previewTableResults.length === 0; else dataTable">
-              <!-- Static table for no data -->
-                 <table class="styled-table bordered-table">
-                  <thead>
-                    <tr>
-                      <th>id</th>
-                      <th>status</th>
-                      <th>creation_time</th>
-                      <th>preview_cmd</th>
-                      <th>results</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-            <ng-template #dataTable>
-              <table class="styled-table bordered-table">
-                <thead>
-                  <tr>
-                    <ng-container *ngFor="let header of previewTableResultsColumnHeaders">
-                      <th>{{ header }}</th>
-                    </ng-container>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let row of previewTableResults">
-                  <ng-container *ngFor="let previewTask of row | keyvalue: unsorted; let i = index">
-                    <td>
-                      <span *ngIf="previewTableResultsColumnHeaders[i] === 'id'">
-                        <a *ngIf="isIdClickable(row, previewTableResultsColumnHeaders, i)"
-                           href="#"
-                           (click)="getResultsForSpecificPreviewTask(previewTask.value); $event.preventDefault()">
-                          {{ previewTask.value }}
-                        </a>
-                        <span *ngIf="!isIdClickable(row, previewTableResultsColumnHeaders, i)">
-                          {{ previewTask.value }}
-                        </span>
-                      </span>
-                      <span *ngIf="previewTableResultsColumnHeaders[i] !== 'id'">
-                        {{ previewTask.value }}
-                      </span>
-                    </td>
-                  </ng-container>
-                  </tr>
-                </tbody>
-              </table>
-            </ng-template>
-
-              </ng-container>
       </mat-step>
       <mat-step>
         <ng-template matStepLabel>Save and Schedule</ng-template>
@@ -294,8 +202,6 @@
   <!---->
 </p>
 <div *ngIf="tableResults.length > 0">
-
-  <h2>Placements for offline task: {{ chosenOfflineTask }}</h2>
   <div class="button-container">
     <div class="label-input-block">
       <button type="button" [className]="exclude_count == 0 ? 'disabledButton' : 'secondaryButton'" (click)="runManualExcludeForm()" value="Preview"> Manually Exclude ({{ exclude_count }}) </button>
@@ -304,7 +210,7 @@
       <mat-form-field appearance="fill">
         <mat-label>Toggle column visibilities:</mat-label>
         <mat-select [(ngModel)]="toggle_column_selected_headers" multiple>
-          <mat-option *ngFor="let header of toggleColumnAllHeaders" [value]="header">
+          <mat-option *ngFor="let header of  toggleColumnAllHeaders" [value]="header">
             {{ header }}
           </mat-option>
         </mat-select>
