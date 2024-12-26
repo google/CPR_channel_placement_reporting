@@ -1,9 +1,5 @@
 version: "3"
 
-networks:
-  cpr:
-    driver: bridge
-
 services:
   backend:
     build:
@@ -14,7 +10,7 @@ services:
       - postgres
       - redis
     environment:
-      - YOUTUBE_DATA_API_KEY=${YOUTUBE_DATA_API_KEY}
+      - GOOGLE_API_KEY=${YOUTUBE_DATA_API_KEY}
       - GOOGLE_ADS_PATH_TO_CONFIG=/google-ads.yaml
       - DB_HOST=cpr_db
       - DB_PORT=5432
@@ -24,16 +20,15 @@ services:
       - REDIS_HOST=redis
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
-      - GOOGLE_ADS_API_VERSION=v14
+      - GOOGLE_ADS_API_VERSION=v16
     ports:
-      - "5001:5000"
+      - "5000:5000"
     healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:5001"]
+        test: ["CMD", "curl", "-f", "http://localhost:5000"]
         interval: 30s
         timeout: 10s
         retries: 5
-    networks:
-      - cpr
+    network_mode: "host"
     volumes:
       - "${GOOGLE_ADS_YAML:-$HOME/google-ads.yaml}:/google-ads.yaml"
     restart: unless-stopped
@@ -43,13 +38,10 @@ services:
     image: cpr-scheduler
     container_name: cpr_scheduler
     environment:
-      - API_HOST=cpr_backend:5000
+      - API_HOST=http://cpr_backend:5000
     depends_on:
       - backend
-    links:
-      - backend
-    networks:
-      - cpr
+    network_mode: "host"
     restart: unless-stopped
   postgres:
     image: postgres:9.6
@@ -61,13 +53,13 @@ services:
       - "54321:5432"
     volumes:
       - cpr_data:/var/lib/postgresql/data
-    networks:
-      - cpr
+    network_mode: "host"
     restart: unless-stopped
   redis:
     image: redis:alpine
     ports:
       - "63791:6379"
+    network_mode: "host"
 
 volumes:
   cpr_data: {}
