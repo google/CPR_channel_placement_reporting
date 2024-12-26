@@ -9,7 +9,7 @@ if [ ! -f $CRON_FILE ]; then
 fi
 set -f
 while true; do
-	curl -s -H "Accept: application/json" ${API_HOST:-cpr_backend}/api/getTasksList \
+	curl -s -H "Accept: application/json" ${API_HOST:-cpr_backend}/api/tasks \
 		-o task_list.json
 	> crontab.txt
 	jq -c '.[]' task_list.json | while read i; do
@@ -31,7 +31,7 @@ while true; do
 				cron="* * /$hours * *"
 			fi
 		fi
-		echo "$cron" "curl $API_HOST/api/runTaskFromScheduler/$task_id" >> crontab.txt
+		echo "$cron" "curl -X POST $API_HOST/api/tasks/$task_id:run" >> crontab.txt
 	done
 	cp -f crontab.txt $CRON_FILE
 	sleep 60
