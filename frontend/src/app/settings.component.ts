@@ -147,16 +147,6 @@
     });
    }
 
-   async reauth() {
-    this.loading=true
-    this.subs = (await ((this.service.set_reauth())))
-    .subscribe({
-      next: (response: ReturnPromise) => this._redirect(response),
-      error: (err: any) => this.openSnackBar("Error updating settings", "Dismiss", "error-snackbar"),
-      complete: () => this.loading=false
-    });
-   }
-
    _redirect(response: ReturnPromise) {
     let url = response.toString();
     if(url.includes("http"))

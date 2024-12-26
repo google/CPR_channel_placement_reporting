@@ -79,7 +79,7 @@ export class TasksComponent implements OnInit {
 
   async updateTable() {
     this.loading=true;
-    (await this.service.get_tasks_list())
+    (await this.service.get_tasks())
       .subscribe({
         next: (response: ReturnPromise) => this._fill_table_success(response),
         error: (err: Error) => this._fill_table_error(),
@@ -123,8 +123,8 @@ export class TasksComponent implements OnInit {
 
   async _continue_run_task(task_id:string) {
     this.loading = true;
-    let task_id_json = { 'id': task_id , 'type': "MANUAL"};
-    (await this.service.run_task_from_task_id(JSON.stringify(task_id_json)))
+    const task_run_parameters = {'type': "MANUAL"};
+    (await this.service.run_task(task_id, JSON.stringify(task_run_parameters)))
       .subscribe({
         next: (response: ReturnPromise) => this._run_task_from_file_success(response),
         error: (err: Error) => this._run_task_from_file_error(),
@@ -187,8 +187,7 @@ export class TasksComponent implements OnInit {
 
   async _continue_task_delete(task_id:string) {
     this.loading = true;
-    let task_id_json = { 'task_id': task_id };
-    (await this.service.delete_task(JSON.stringify(task_id_json)))
+    (await this.service.delete_task(task_id))
       .subscribe({
         next: (response: ReturnPromise) => this._delete_task_success(response),
         error: (err: Error) => this._delete_task_error(),
