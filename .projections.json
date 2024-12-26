@@ -1,0 +1,5 @@
+{
+  "backend/server.py": {"type": "backend"},
+  "frontend/src/app/*.ts": {"type": "ts"},
+  "frontend/src/app/*.html": {"type": "html"}
+}
