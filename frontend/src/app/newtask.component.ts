@@ -90,13 +90,13 @@ export class NewtaskComponent implements OnInit {
   exclude_count = 0;
   associated_count = 0;
   subs: any;
-  isChecked: boolean = false;
+  isChecked = false;
   save_button = "Save Task";
   task_id: string = "";
   task_name: string = "";
   taskOutput: any[] = [];
-  email_alerts_hidden: boolean = true;
-  manual_cid: boolean = false;
+  email_alerts_hidden = true;
+  manual_cid = false;
   cid_choice: string = "Enter manually";
   revSort: string = "";
 
@@ -114,22 +114,22 @@ export class NewtaskComponent implements OnInit {
   gads_filter_error = false;
   memory_error = false;
   gads_filter_lock = true;
-  data_youtube_video: boolean = true;
-  data_youtube_channel: boolean = true;
-  data_display: boolean = true;
-  data_mobile: boolean = true;
+  data_youtube_video = false;
+  data_youtube_channel = true;
+  data_display = true;
+  data_mobile = true;
 
   pagination_start = 0;
   pagination_rpp = 10;
   excluded_only = false;
-  filtersOpenState: boolean = true;
+  filtersOpenState = true;
 
   chosenOfflineTask = "";
 
   date_from = "";
   date_to = "";
 
-  isCheckAll: boolean = false;
+  isCheckAll = false;
 
   horizontalPosition: MatSnackBarHorizontalPosition = "center";
   verticalPosition: MatSnackBarVerticalPosition = "top";
@@ -530,7 +530,7 @@ export class NewtaskComponent implements OnInit {
     (await this.service.get_customer_list()).subscribe({
       next: (response: ReturnPromise) =>
         this._customer_list_populated(response),
-      error: (err) => this._call_service_error(err),
+      error: (err) => this.callPreviewError(err),
       complete: () => console.log("Completed"),
     });
   }
@@ -547,12 +547,9 @@ export class NewtaskComponent implements OnInit {
 
   async _populate_task_load(task_id: string) {
     this.loading = true;
-    let task_id_json = {
-      task_id: task_id,
-    };
-    (await this.service.get_task(JSON.stringify(task_id_json))).subscribe({
+    (await this.service.get_task(task_id)).subscribe({
       next: (response: ReturnPromise) => this._populate_task_fields(response),
-      error: (err) => this._call_service_error(err),
+      error: (err) => this.callPreviewError(err),
       complete: () => console.log("Completed"),
     });
   }
@@ -731,15 +728,62 @@ async getResultsForSpecificPreviewTask(previewTaskId: unknown): Promise<void> {
           .subscribe((res) => {
             if (res) {
               this.loading = true;
-              this.callAsyncPreview(JSON.stringify(formRawValue));
+              this.callPreview(JSON.stringify(formRawValue));
             }
           });
       } else {
         this.loading = true;
-        this.callAsyncPreview(JSON.stringify(formRawValue));
+        this.callPreview(JSON.stringify(formRawValue));
       }
     }
   }
+
+  async callPreview(formRawValue: string) {
+    this.loading = true;
+    this.subs = (await this.service.preview_form(formRawValue)).subscribe({
+      next: (response: ReturnPromise) =>
+        this.callPreviewSuccess(response),
+      error: (err) => this.callPreviewError(err),
+      complete: () => console.log("Completed"),
+    });
+  }
+  private callPreviewSuccess(response: ReturnPromise) {
+    const jsonResponse = JSON.parse(JSON.stringify(response));
+    if (JSON.stringify(jsonResponse.data) === "{}") {
+      this.handleEmptyTable(
+        "No results returned from Ads API.",
+        "error-snackbar"
+      );
+      return;
+    }
+    const dates = jsonResponse["dates"];
+    this.date_from = dates["date_from"];
+    this.date_to = dates["date_to"];
+    const flatened_data = this.fromServerToUiTable(jsonResponse.data);
+    this.tableResults = flatened_data.rows;
+    if (this.tableResults.length > 0) {
+      this.columnHeaders = flatened_data.headers;
+      this.toggleColumnAllHeaders = this.columnHeaders.filter(
+        item => {
+          const lowerCaseItem = item.toLowerCase();
+          return !this.hidden_columns.some(
+            hiddenItem => hiddenItem.toLowerCase() === lowerCaseItem);
+        });
+      this.toggleColumnAllHeaders.sort((a, b) =>
+        a.toLowerCase() > b.toLowerCase() ? 1 : -1
+      );
+      this.sort_table("default");
+      this.no_data = false;
+      this.addNameColumnIfDuplicatedRows();
+    } else {
+      this.handleEmptyTable(
+        "Successful run, but no data matches criteria",
+        "success-snackbar"
+      );
+    }
+    this.loading = false;
+  }
+
 
 async callAsyncPreview(formRawValue: string) {
   this.loading = true;
@@ -822,8 +866,8 @@ private callAutoServiceSuccess(response: ReturnPromise) {
       if (originalDataRow.extra_info === undefined) {
         transformedRow = { ...originalDataRow };
       } else {
-        const firstKey = Object.keys(originalDataRow.extra_info)[0];
-        const firstChild = originalDataRow.extra_info[firstKey];
+        const firstKey = originalDataRow.placement_type;
+        const firstChild = originalDataRow.extra_info;
         if (firstChild) {
           transformedRow = {
             ...originalDataRow,
@@ -835,15 +879,15 @@ private callAutoServiceSuccess(response: ReturnPromise) {
                     .every(w => !key.toLowerCase().includes(w))
                 )
                 .map(([key, value]) =>
-                firstKey.includes('youtube')
+                firstKey.includes('YOUTUBE')
                 ? [`YT ${key}`, value]
-                : firstKey.includes('website')
+                : firstKey.includes('WEBSITE')
                 ? [`Website ${key}`, value]
                 : [key, value] // Default: no modification
                 )
             ),
           };
-          delete transformedRow["extra_info"][firstKey];
+          delete transformedRow["extra_info"];
         } else {
           transformedRow = { ...originalDataRow };
         }
@@ -941,7 +985,7 @@ private callAutoServiceSuccess(response: ReturnPromise) {
     (await this.service.run_manual_excluder(formRawValue)).subscribe({
       next: (response: ReturnPromise) =>
         this._call_manual_service_success(response),
-      error: (err) => this._call_service_error(err),
+      error: (err) => this.callPreviewError(err),
       complete: () => console.log("Completed"),
     });
   }
@@ -976,7 +1020,7 @@ private callAutoServiceSuccess(response: ReturnPromise) {
     this.loading = false;
   }
 
-  _call_service_error(err: ErrorEvent) {
+  callPreviewError(err: ErrorEvent) {
     this.loading = false;
     this.openSnackBar(
       `Error - ${err.error}`,
