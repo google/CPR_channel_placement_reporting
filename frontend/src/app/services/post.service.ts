@@ -38,6 +38,17 @@ private apiPost<T>(url: string, params: string) {
   return this.httpClient.post<ReturnPromise>(`/api/${url}?cb=${cacheBuster}`, params, {headers});
 }
 
+private apiDelete<T>(url: string, params: string) {
+  const headers = new HttpHeaders();
+  headers.set('Content-Type', 'application/json; charset=utf-8');
+  const cacheBuster = Date.now();
+  const httpOptions = {
+    headers,
+    body: params
+  };
+  return this.httpClient.delete<ReturnPromise>(`/api/${url}?cb=${cacheBuster}`, httpOptions);
+}
+
   async get_preview_result_for_specific_preview_task(form_data_json: string) {
       return this.apiPost("getResultsForSpecificPreviewTask", form_data_json);
   }
@@ -47,51 +58,43 @@ private apiPost<T>(url: string, params: string) {
   }
 
   async preview_form(form_data_json: string) {
+      return this.apiPost("placements/preview", form_data_json);
+  }
+
+  async async_preview_form(form_data_json: string) {
       return this.apiPost("asyncPreviewPlacements", form_data_json);
   }
 
   async run_manual_excluder(form_data_json: string) {
-      return this.apiPost("runManualExcluder", form_data_json);
-  }
-
-  async file_upload(file_data: string) {
-      return this.apiPost("fileUpload", file_data);
+      return this.apiPost("placemens/exclude", form_data_json);
   }
 
   async get_config() {
-    return this.httpClient.get<ReturnPromise>( "/api/getConfig");
+    return this.httpClient.get<ReturnPromise>( "/api/configs");
   }
 
   async set_config(config_data: string) {
-    return this.apiPost("setConfig", config_data);
+    return this.apiPost("configs", config_data);
   }
 
   async save_task(task_data: string) {
-    return this.apiPost("saveTask", task_data);
+    return this.apiPost("tasks", task_data);
   }
 
-  async get_tasks_list() {
-    return this.httpClient.get<ReturnPromise>( "/api/getTasksList");
+  async get_tasks() {
+    return this.httpClient.get<ReturnPromise>( "/api/tasks");
   }
 
   async delete_task(task_id: string) {
-    return this.apiPost("deleteTask", task_id);
+    return this.apiDelete(`tasks/${task_id}`, '');
   }
 
-  async run_task_from_task_id(task_id: string) {
-    return this.apiPost("runTaskFromTaskId", task_id);
+  async run_task(task_id: string, task_data: string) {
+    return this.apiPost(`tasks/${task_id}:run`, task_data);
   }
 
   async get_task(task_id: string) {
-    return this.apiPost("getTask", task_id);
-  }
-
-  async finalise_auth(code: string) {
-    return this.apiPost("finishAuth", code);
-  }
-
-  async set_reauth() {
-    return this.httpClient.get<ReturnPromise>( "/api/setReauth");
+    return this.httpClient.get<ReturnPromise>(`/api/tasks/${task_id}`);
   }
 
     async migrate_old_tasks() {
@@ -99,22 +102,22 @@ private apiPost<T>(url: string, params: string) {
   }
 
   async get_customer_list() {
-    return this.httpClient.get<ReturnPromise>( "/api/getCustomerIds");
+    return this.httpClient.get<ReturnPromise>( "/api/accounts/customers");
   }
 
   async get_mcc_list() {
-    return this.httpClient.get<ReturnPromise>("/api/getMccIds");
+    return this.httpClient.get<ReturnPromise>("/api/accounts/mcc");
   }
 
   async refresh_mcc_list() {
-    return this.apiPost("updateMccIds", "");
+    return this.apiPost("accounts/mcc", "");
   }
 
   async add_to_allowlist(channel_id: string) {
-    return this.apiPost("addToAllowlist", channel_id);
+    return this.apiPost("placements/allowlist", channel_id);
   }
 
   async remove_from_allowlist(channel_id: string) {
-    return this.apiPost("removeFromAllowlist", channel_id);
+    return this.apiDelete( "placements/allowlist", channel_id);
   }
 }
