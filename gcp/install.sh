@@ -23,11 +23,13 @@ SETTING_FILE="${SCRIPT_PATH}/settings.ini"
 PROJECT_ID=$(gcloud config get-value project 2> /dev/null)
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID | grep projectNumber | sed "s/.* '//;s/'//g")
 PROJECT_ALIAS=$(git config -f $SETTING_FILE config.name)
+TOPIC_PREFIX="$PROJECT_ALIAS"
 GCS_BASE_PATH=gs://$PROJECT_ID/$PROJECT_ALIAS
 CF_REGION=$(git config -f $SETTING_FILE functions.region)
 APPENGINE_SERVICE_NAME=$(git config -f $SETTING_FILE appengine.service)
 APPENGINE_REGION=$(git config -f $SETTING_FILE appengine.region)
 DB_NAME=$(git config -f $SETTING_FILE firestore.name)
+DATABASE_URI="$DB_NAME"
 DB_REGION=$(git config -f $SETTING_FILE firestore.region)
 USER_EMAIL=$(gcloud config get-value account 2> /dev/null)
 SERVICE_ACCOUNT=$PROJECT_ID@appspot.gserviceaccount.com
@@ -153,16 +155,20 @@ enable_api() {
 deploy_app() {
   echo -e "${COLOR}Deploying app to GAE...${NC}"
   cd $SCRIPT_PATH/../backend
-  sed -i'.bak' -e "s|service: default|service: $APPENGINE_SERVICE_NAME|" app.yaml
-  sed -i'.bak' -e "s|.*GOOGLE_ADS_PATH_TO_CONFIG:.*|  GOOGLE_ADS_PATH_TO_CONFIG: $GCS_BASE_PATH/google-ads.yaml|" app.yaml
-  sed -i'.bak' -e "s|.*YOUTUBE_DATA_API_KEY:.*|  YOUTUBE_DATA_API_KEY: $youtube_api_key|" app.yaml
+  APPLICATION_NAME=app_$APPENGINE_SERVICE_NAME.yaml
+  cat app.yaml | \
+    sed "s|service: default|service: $APPENGINE_SERVICE_NAME|" | \
+    sed "s|.*GOOGLE_ADS_PATH_TO_CONFIG:.*|  GOOGLE_ADS_PATH_TO_CONFIG: $GCS_BASE_PATH/google-ads.yaml|" | \
+    sed "s|.*GOOGLE_API_KEY:.*|  GOOGLE_API_KEY: $YOUTUBE_API_KEY|" | \
+    sed "s|.*DATABASE_URI:.*|  DATABASE_URI: $DATABASE_URI|" | \
+    sed "s|.*TOPIC_PREFIX:.*|  TOPIC_PREFIX: $TOPIC_PREFIX|"  > $APPLICATION_NAME
   gcloud app describe
   APP_EXISTS=$?
   if [[ $APP_EXISTS -ne 0 ]]; then
     gcloud app create --region $APPENGINE_REGION
   fi
   update_permissions
-  gcloud app deploy -q
+  gcloud app deploy -q $APPLICATION_NAME
   cd $SCRIPT_PATH
 }
 
@@ -256,6 +262,10 @@ create_oauth_for_iap() {
   gcloud iap web add-iam-policy-binding --resource-type=app-engine --member="user:$USER_EMAIL" --role='roles/iap.httpsResourceAccessor'
 }
 
+grant_access() {
+  gcloud iap web add-iam-policy-binding --resource-type=app-engine --member="user:$USER_EMAIL" --role='roles/iap.httpsResourceAccessor'
+}
+
 deploy_files () {
   echo 'Deploying files to GCS'
   if ! gsutil ls gs://$PROJECT_ID > /dev/null 2> /dev/null; then
@@ -282,22 +292,13 @@ generate_youtube_api_key() {
   curl -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" \
     https://apikeys.googleapis.com/v2/projects/$PROJECT_NUMBER/locations/global/keys -X POST -d '{"displayName" : "CPR YouTube Data API Key", "restrictions": {"api_targets": [{"service": "youtube.googleapis.com"}]}}'
   key_name=`curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://apikeys.googleapis.com/v2/projects/$PROJECT_NUMBER/locations/global/keys | grep -B1 "CPR YouTube Data API Key" | head -n 1 | cut -d '"' -f4`
-  youtube_api_key=`curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://apikeys.googleapis.com/v2/$key_name/keyString | grep keyString | cut -d '"' -f4`
+  YOUTUBE_API_KEY=`curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://apikeys.googleapis.com/v2/$key_name/keyString | grep keyString | cut -d '"' -f4`
 }
 
-extract_latest_commit() {
-  local file_name="lasted_install_commit_number.txt"
-  local latest_commit=$(git log -1)
+light_deploy() {
+  create_firestore
+  deploy_app
 
-  # Check if git log returned anything
-  if [[ -z "$latest_commit" ]]; then
-    echo "No git commit details found."
-    return 1
-  fi
-
-  # Write the commit details to the file
-  echo "$latest_commit" > "$file_name"
-  echo "The latest commit details have been written to $file_name."
 }
 
 deploy_all() {
@@ -312,7 +313,6 @@ deploy_all() {
   deploy_cloud_functions
   create_firestore
   create_oauth_for_iap
-  extract_latest_commit
   print_welcome_message
 }
 
