@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ads-placement-guardian"
+dependencies = [
+  "googleads-housekeeper[gcp]==0.1.0.dev106",
+  "appengine-python-standard==1.1.6",
+  "gunicorn",
+  "flask",
+  "flask-cors",
+  "redis",
+  "smart_open[gcs]",
+  "garf-youtube-data-api",
+  "legacy-cgi",
+]
+requires-python = ">=3.8"
+description = "description"
+readme = "README.md"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python"
+]
+dynamic=["version"]
+
+
+[tool.setuptools.dynamic]
+version = {attr = "ads_placement_guardian.__version__"}
+
+[tool.setuptools.package-data]
+"*"= ["*.js", "*.css", "*.html", "*.ico", "*.png"]
+
+[options.extras_require]
+test =  [
+  "pytest",
+  "pytest-cov"
+]

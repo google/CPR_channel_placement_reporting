@@ -13,37 +13,32 @@
 # limitations under the License.
 """Main entrypoint for the application."""
 
-# pylint: disable=C0330, g-bad-import-order, g-multiple-import
+# pylint: disable=C0330, g-bad-import-order, g-multiple-import, g-import-not-at-top, missing-function-doctring
+
 from __future__ import annotations
 
-import asyncio
-import concurrent.futures
-import configparser
 import json
-import logging
 import os
-import threading
-import traceback
 
 import flask
+import googleads_housekeeper
 from googleads_housekeeper import bootstrap, views
 from googleads_housekeeper.domain import commands
-from googleads_housekeeper.domain.core import execution
+
+import ads_placement_guardian
 
 app = flask.Flask(__name__)
 
-STATIC_DIR = os.getenv('STATIC_DIR') or 'static'
+STATIC_DIR = os.getenv('STATIC_DIR', 'static')
 
 DEPLOYMENT_TYPE = os.getenv('ADS_HOUSEKEEPER_DEPLOYMENT_TYPE', 'Dev')
 
-config = configparser.ConfigParser()
-config.read('../gcp/settings.ini')
-project_name = config.get('config', 'name', fallback='cpr_v2')
 bus = bootstrap.Bootstrapper(
-  type=DEPLOYMENT_TYPE, topic_prefix=project_name
+  type=DEPLOYMENT_TYPE,
+  topic_prefix=os.getenv('TOPIC_PREFIX'),
+  database_uri=os.getenv('DATABASE_URI'),
 ).bootstrap_app()
 
-executor = concurrent.futures.ThreadPoolExecutor()
 
 if DEPLOYMENT_TYPE == 'Google Cloud':
   from google.appengine.api import wrap_wsgi_app
@@ -53,8 +48,8 @@ if DEPLOYMENT_TYPE == 'Google Cloud':
 
 @app.before_request
 def check_youtube_data_api_key():
-  if not os.getenv('YOUTUBE_DATA_API_KEY'):
-    raise RuntimeError('YOUTUBE_DATA_API_KEY is not set')
+  if not os.getenv('GOOGLE_API_KEY'):
+    raise RuntimeError('GOOGLE_API_KEY is not set')
 
 
 @app.route('/', defaults={'path': ''})
@@ -67,6 +62,7 @@ def catch_all(path):
   return flask.send_from_directory(STATIC_DIR, path, max_age=max_age)
 
 
+<<<<<<< HEAD:backend/server.py
 def send_error_email(error: str, body: str, task_name: str = None):
     send_CPR_email(
         subject=f"CPR error. Customer-id: {body.customer_id}",
@@ -208,6 +204,11 @@ def async_preview_placements():
   executor.submit(asyncio.run, run_async_preview_task(data, config))
   return _build_response(msg=json.dumps({'data': 'Async Preview Task Sent'}))
 
+# Tasks
+@app.route('/api/tasks', methods=['GET'])
+def get_tasks():
+  result = views.tasks(bus.uow)
+  return _build_response(json.dumps(result, default=str))
 
 # pylint: disable=redefined-outer-name
 async def run_async_preview_task(
@@ -329,6 +330,126 @@ def run_task_from_scheduler(task_id):
 
 
 @app.route('/api/saveTask', methods=['POST'])
+||||||| parent of 4fe8ca7 (Update backend):backend/server.py
+# pylint: disable=redefined-outer-name
+async def run_async_preview_task(
+  data: dict[str, str | float], config: configparser.ConfigParser
+) -> None:
+  """Executes an asynchronous preview task using the provided data.
+
+  This function performs a long-running asynchronous operation, processing
+  the `data` dictionary in the context of the application's configuration
+  and unit of work.
+
+  Args:
+    data:
+      A dictionary containing the input parameters or payload
+      required for the preview task.
+
+    config: A Config parser.
+
+  Raises:
+    ValueError: If the `data` dictionary is invalid or missing required
+    fields.
+    RuntimeError: If there is an issue initializing the configuration or
+      interacting with the unit of work.
+
+  Notes:
+    - Ensure that this function is invoked within a running event loop.
+    - The function is designed for use in scenarios where asynchronous
+      execution is required, such as background tasks in a web application.
+  """
+  try:
+    # Can only use a uow which was created in this worker thread.
+    # pylint: disable=redefined-outer-name
+    bus.uow = bootstrap.Bootstrapper(
+      type=DEPLOYMENT_TYPE, topic_prefix=project_name
+    ).create_new_uow()
+    if not config:
+      ads_client = bus.dependencies.get('ads_api_client').client
+      if not (mcc_id := ads_client.login_customer_id):
+        mcc_id = ads_client.linked_customer_id
+      cmd = commands.SaveConfig(mcc_id=mcc_id, email_address='', id=None)
+      bus.handle(cmd)
+    else:
+      cmd = commands.PreviewPlacements(**data, save_to_db=True)
+      bus.handle(cmd)
+  except Exception as e:
+    logging.warning(
+      'Exception occurred in thread %s: %s',
+      threading.current_thread().name, e
+    )
+    logging.error('Stack trace:')
+    stack_trace = traceback.format_exc()
+    logging.error('Formatted stack trace:\n%s', stack_trace)
+    raise
+
+
+@app.route('/api/getPreviewTasksTable', methods=['POST'])
+def get_preview_tasks_table() -> flask.Response:
+  """Fetches a preview-tasks table and returns it as a JSON response.
+
+  This API endpoint retrieves a list of preview task results from the system,
+  processes it into a structured format containing headers and rows, and
+  returns the data as a JSON response.
+
+  Returns:
+      Response: A Flask response object containing JSON with the following
+      structure:
+          {
+              "headers": [str, ...],  # List of column headers extracted from
+               the first task object.
+              "rows": [dict, ...]    # List of tasks, each represented as a
+              dictionary.
+          }
+  """
+  cmd = commands.GetPreviewTasksTable()
+  table = bus.handle(cmd)
+  headers = list(table[0].keys()) if table else []
+  rows = [item for item in table]
+  response_data = {'headers': headers, 'rows': rows}
+  return _build_response(json.dumps(response_data))
+
+
+@app.route('/api/getResultsForSpecificPreviewTask', methods=['POST'])
+def get_results_for_specific_preview_task():
+  data = flask.request.get_json(force=True)
+  cmd = commands.GetResultsForSpecificPreviewTask(**data)
+  result = bus.handle(cmd)
+  return _build_response(json.dumps(result))
+
+
+@app.route('/api/runManualExcluder', methods=['POST', 'GET'])
+def run_manual_excluder():
+  data = flask.request.get_json(force=True)
+  cmd = commands.RunManualExclusion(**data)
+  result = bus.handle(cmd)
+  resp = _build_response(json.dumps(result))
+  return resp
+
+
+@app.route('/api/runTaskFromTaskId', methods=['POST'])
+def run_task_from_task_id():
+  [config] = views.config(bus.uow)
+  data = flask.request.get_json(force=True)
+  data.update({'save_to_db': config.get('save_to_db', True)})
+  cmd = commands.RunTask(**data)
+  result, message_payload = bus.handle(cmd)
+  if message_payload.total_placement_excluded:
+    bus.dependencies.get('notification_service').send(message_payload)
+  return _build_response(json.dumps(result))
+
+
+@app.route('/api/runTaskFromScheduler/<task_id>', methods=['GET'])
+def run_task_from_scheduler(task_id):
+  cmd = commands.RunTask(id=task_id, type=execution.ExecutionTypeEnum.SCHEDULED)
+  result, message_payload = bus.handle(cmd)
+  if message_payload.total_placement_excluded:
+    bus.dependencies.get('notification_service').send(message_payload)
+  return _build_response(json.dumps(result))
+
+
+@app.route('/api/saveTask', methods=['POST'])
 def save_task():
   data = flask.request.get_json(force=True)
   cmd = commands.SaveTask(**data)
@@ -336,57 +457,15 @@ def save_task():
   return _build_response(json.dumps(str(task_id)))
 
 
-@app.route('/api/deleteTask', methods=['POST'])
-def delete_task():
-  data = flask.request.get_json(force=True)
-  cmd = commands.DeleteTask(**data)
-  bus.handle(cmd)
-  return _build_response(json.dumps(str(cmd.task_id)))
-
-
-@app.route('/api/setConfig', methods=['POST'])
-def set_config():
-  data = flask.request.get_json(force=True)
-  if existing_config := views.config(bus.uow):
-    cmd = commands.SaveConfig(id=existing_config[0].get('id'), **data)
-  else:
-    cmd = commands.SaveConfig(**data)
-  bus.handle(cmd)
-  return _build_response(json.dumps('success'))
-
-
-@app.route('/api/addToAllowlist', methods=['POST'])
-def add_to_allowlisting():
-  data = flask.request.get_json(force=True)
-  cmd = commands.AddToAllowlisting(**data)
-  bus.handle(cmd)
-  return _build_response(json.dumps('success'))
-
-
-@app.route('/api/removeFromAllowlist', methods=['POST'])
-def remove_from_allowlisting():
-  data = flask.request.get_json(force=True)
-  cmd = commands.RemoveFromAllowlisting(**data)
-  bus.handle(cmd)
-  return _build_response(json.dumps('success'))
-
-
-# Views
-@app.route('/api/getTasksList', methods=['GET'])
-def get_tasks_list():
-  result = views.tasks(bus.uow)
-  return _build_response(json.dumps(result, default=str))
-
-
-@app.route('/api/task/<task_id>', methods=['GET'])
-def get_task_id(task_id):
+@app.route('/api/tasks/<task_id>', methods=['GET'])
+def get_task(task_id):
   result = views.task(task_id, bus.uow)
   if not result:
     return 'not found', 404
   return _build_response(json.dumps(result, default=str))
 
 
-@app.route('/api/task/<task_id>/executions', methods=['GET'])
+@app.route('/api/tasks/<task_id>/executions', methods=['GET'])
 def get_task_executions(task_id):
   result = views.executions(task_id, bus.uow)
   if not result:
@@ -394,21 +473,94 @@ def get_task_executions(task_id):
   return _build_response(json.dumps(result, default=str))
 
 
-@app.route('/api/task/<task_id>/executions/<execution_id>', methods=['GET'])
-def get_task_execution_id(task_id, execution_id):
+@app.route('/api/tasks/<task_id>/executions/<execution_id>', methods=['GET'])
+def get_task_execution(task_id, execution_id):
   result = views.execution_details(task_id, execution_id, bus.uow)
   if not result:
     return 'not found', 404
   return _build_response(json.dumps(result, default=str))
 
 
-@app.route('/api/getTask', methods=['POST'])
-def get_task():
+@app.route('/api/tasks/<task_id>', methods=['POST'])
+def update_task(task_id):
   data = flask.request.get_json(force=True)
-  result = views.task(data['task_id'], bus.uow)
-  if not result:
-    return 'not found', 404
-  return _build_response(json.dumps(result, default=str))
+  cmd = commands.SaveTask(task_id=task_id, **data)
+  task_id = bus.handle(cmd)
+  return _build_response(json.dumps(str(task_id)))
+
+
+@app.route('/api/tasks/<task_id>', methods=['DELETE'])
+def delete_task(task_id):
+  bus.handle(commands.DeleteTask(task_id))
+  return _build_response(json.dumps(str(task_id)))
+
+
+@app.route('/api/tasks/<task_id>:run', methods=['POST'])
+def run_task(task_id):
+  [config] = views.config(bus.uow)
+  data = flask.request.get_json(force=True)
+  data.update({'save_to_db': config.get('save_to_db', True)})
+  cmd = commands.RunTask(id=task_id, **data)
+  result, message_payload = bus.handle(cmd)
+  if message_payload.total_placement_excluded:
+    bus.dependencies.get('notification_service').send(message_payload)
+  return _build_response(json.dumps(result))
+
+
+# Placements
+@app.route('/api/placements/preview', methods=['POST'])
+def preview_placements():
+  """Sends API request for getting placements satisfying the condition."""
+  if not (config := views.config(bus.uow)):
+    ads_client = bus.dependencies.get('ads_api_client').client
+    if not (mcc_id := ads_client.login_customer_id):
+      mcc_id = ads_client.linked_customer_id
+    cmd = commands.SaveConfig(mcc_id=mcc_id, email_address='', id=None)
+    bus.handle(cmd)
+    config = {'mcc_id': mcc_id, 'email_address': ''}
+  else:
+    config = config[0]
+  data = flask.request.get_json(force=True)
+  cmd = commands.PreviewPlacements(
+    **data,
+    save_to_db=config.get('save_to_db', True),
+    always_fetch_youtube_preview_mode=config.get(
+      'always_fetch_youtube_preview_mode', False
+    ),
+  )
+  result = bus.handle(cmd)
+  return _build_response(msg=json.dumps(result))
+
+
+@app.route('/api/placements/exclude', methods=['POST'])
+def run_manual_excluder():
+  data = flask.request.get_json(force=True)
+  cmd = commands.RunManualExclusion(**data)
+  result = bus.handle(cmd)
+  return _build_response(json.dumps(result))
+
+
+@app.route('/api/placements/allowlist', methods=['GET'])
+def get_allowlisted_placements():
+  if result := views.allowlisted_placements(bus.uow):
+    return _build_response(json.dumps(result, default=str))
+  return 'no allowlisted placements', 200
+
+
+@app.route('/api/placements/allowlist', methods=['POST'])
+def add_to_allowlisting():
+  data = flask.request.get_json(force=True)
+  cmd = commands.AddToAllowlisting(**data)
+  bus.handle(cmd)
+  return _build_response(json.dumps('success'))
+
+
+@app.route('/api/placements/allowlist', methods=['DELETE'])
+def remove_from_allowlisting():
+  data = flask.request.get_json(force=True)
+  cmd = commands.RemoveFromAllowlisting(**data)
+  bus.handle(cmd)
+  return _build_response(json.dumps('success'))
 
 
 @app.route('/api/migrateOldTasks', methods=['GET'])
@@ -420,10 +572,11 @@ def migrate_old_tasks():
   )
 
 
-@app.route('/api/getConfig', methods=['GET'])
+# Config
+@app.route('/api/configs', methods=['GET'])
 def get_config():
-  result = views.config(bus.uow)
-  if not result:
+  """Returns application config."""
+  if not (result := views.config(bus.uow)):
     ads_client = bus.dependencies.get('ads_api_client').client
     if not (mcc_id := ads_client.login_customer_id):
       mcc_id = ads_client.linked_customer_id
@@ -435,7 +588,21 @@ def get_config():
   return _build_response(json.dumps(result))
 
 
-@app.route('/api/getMccIds', methods=['GET'])
+@app.route('/api/configs', methods=['POST'])
+def set_config():
+  data = flask.request.get_json(force=True)
+  if existing_config := views.config(bus.uow):
+    config_data = existing_config[0]
+    config_data.update(data)
+    cmd = commands.SaveConfig(**config_data)
+  else:
+    cmd = commands.SaveConfig(**data)
+  bus.handle(cmd)
+  return _build_response(json.dumps('success'))
+
+
+# Accounts
+@app.route('/api/accounts/mcc', methods=['GET'])
 def get_all_mcc_ids():
   if not (mcc_ids := views.mcc_ids(bus.uow)):
     root_mcc_id = _get_mcc_from_ads_client()
@@ -444,15 +611,15 @@ def get_all_mcc_ids():
   return _build_response(json.dumps(mcc_ids))
 
 
-@app.route('/api/updateMccIds', methods=['POST'])
+@app.route('/api/accounts/mcc', methods=['POST'])
 def update_mcc_ids():
   root_mcc_id = _get_mcc_from_ads_client()
-  cmd = commands.GetMccIds(root_mcc_id)
+  cmd = commands.GetMccIds(str(root_mcc_id))
   mcc_ids = bus.handle(cmd)
   return _build_response(json.dumps(mcc_ids))
 
 
-@app.route('/api/getCustomerIds', methods=['GET'])
+@app.route('/api/accounts/customers', methods=['GET'])
 def get_customer_ids():
   if not (config := views.config(bus.uow)):
     mcc_id = _get_mcc_from_ads_client()
@@ -465,8 +632,9 @@ def get_customer_ids():
   return _build_response(json.dumps(result))
 
 
-@app.route('/api/updateCustomerIds', methods=['POST'])
+@app.route('/api/accounts/customers', methods=['POST'])
 def update_customer_ids():
+  """Updates available account ids based on root MCC."""
   if not flask.request.values:
     mcc_ids = [account.get('id') for account in views.mcc_ids(bus.uow)]
   else:
@@ -484,11 +652,20 @@ def update_customer_ids():
   return _build_response(json.dumps(results))
 
 
-@app.route('/api/getAllowlistedPlacements', methods=['GET'])
-def get_allowlisted_placements():
-  if result := views.allowlisted_placements(bus.uow):
-    return _build_response(json.dumps(result, default=str))
-  return 'no allowlisted placements', 200
+@app.route('/api/version', methods=['GET'])
+def get_version():
+  return _build_response(json.dumps(ads_placement_guardian.__version__))
+
+
+@app.route('/api/info', methods=['GET'])
+def get_application_info():
+  info = {
+    'version': ads_placement_guardian.__version__,
+    'backend_version': googleads_housekeeper.__version__,
+    'topic': os.getenv('TOPIC_PREFIX'),
+    'db': os.getenv('DATABASE_URI'),
+  }
+  return _build_response(json.dumps(info))
 
 
 def _build_response(msg='', status=200, mimetype='application/json'):
