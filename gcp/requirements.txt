@@ -1,1 +1,1 @@
-ads_placement_guardian==0.1.1.post1
+ads_placement_guardian
