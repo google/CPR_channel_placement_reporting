@@ -17,11 +17,20 @@ build_dev:
 regenerate_hashes:
 	@${PYTHON} `which pip-compile` --generate-hashes -r backend/requirements.in
 
+compile:
+	@uv pip compile backend/requirements.in --universal --output-file backend/requirements.txt
+
 gcp_install:
-	@${SHELL} gcp/install.sh
+	CPR_DEV_INSTALL=0 ${SHELL} gcp/install.sh deploy_app
+
+gcp_install_dev:
+	CPR_DEV_INSTALL=1 ${SHELL} gcp/install.sh deploy_app
 
 gcp_update:
-	@${SHELL} gcp/update.sh
+	@export CPR_DEV_INSTALL=0 && ${SHELL} gcp/update.sh
+
+gcp_update_dev:
+	@export CPR_DEV_INSTALL=1 && ${SHELL} gcp/update.sh
 
 gcp_install_full: | regenerate_hashes gcp_install
 gcp_update_full: | regenerate_hashes gcp_update

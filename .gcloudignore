@@ -17,3 +17,16 @@
 __pycache__/
 # Ignored by the build system
 /setup.cfg
+gcp/cloud_functions
+node_modules/
+frontend
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.projections.json
+tests/
+docs/
+.env
+dist/
+*.db
+scheduler/

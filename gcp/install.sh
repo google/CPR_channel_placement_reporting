@@ -154,20 +154,28 @@ enable_api() {
 
 deploy_app() {
   echo -e "${COLOR}Deploying app to GAE...${NC}"
-  cd $SCRIPT_PATH/../backend
-  APPLICATION_NAME=app_$APPENGINE_SERVICE_NAME.yaml
-  cat app.yaml | \
+  if [ $CPR_DEV_INSTALL == 1 ]; then
+    echo -e "${COLOR}Deploying development version...${NC}"
+    build_frontend
+    cd $SCRIPT_PATH/../backend
+    TEMPLATE_APPLICATION=$SCRIPT_PATH/../backend/app.yaml
+  else
+    TEMPLATE_APPLICATION=$SCRIPT_PATH/../gcp/app.yaml
+  fi
+  APPLICATION_NAME=$SCRIPT_PATH/../gcp/app_$APPENGINE_SERVICE_NAME.yaml
+  cat $TEMPLATE_APPLICATION | \
     sed "s|service: default|service: $APPENGINE_SERVICE_NAME|" | \
     sed "s|.*GOOGLE_ADS_PATH_TO_CONFIG:.*|  GOOGLE_ADS_PATH_TO_CONFIG: $GCS_BASE_PATH/google-ads.yaml|" | \
     sed "s|.*GOOGLE_API_KEY:.*|  GOOGLE_API_KEY: $YOUTUBE_API_KEY|" | \
     sed "s|.*DATABASE_URI:.*|  DATABASE_URI: $DATABASE_URI|" | \
     sed "s|.*TOPIC_PREFIX:.*|  TOPIC_PREFIX: $TOPIC_PREFIX|"  > $APPLICATION_NAME
+  cd $SCRIPT_PATH/../gcp/
   gcloud app describe
   APP_EXISTS=$?
   if [[ $APP_EXISTS -ne 0 ]]; then
     gcloud app create --region $APPENGINE_REGION
   fi
-  update_permissions
+  # update_permissions
   gcloud app deploy -q $APPLICATION_NAME
   cd $SCRIPT_PATH
 }
@@ -183,11 +191,9 @@ build_frontend() {
   export NG_CLI_ANALYTICS=ci
   npm install --no-audit
   npm run build
-  cd ..
-  cd backend/static
-  mkdir img
-  cd ..
-  cp img/gtechlogo.png static/img/gtechlogo.png
+  cd $SCRIPT_PATH/../backend/ads_placement_guardian/static
+  mkdir $SCRIPT_PATH/../backend/ads_placement_guardian/static/img
+  cp $SCRIPT_PATH/../backend/ads_placement_guardian/img/gtechlogo.png $SCRIPT_PATH/../backend/ads_placement_guardian/static/img/gtechlogo.png
 }
 
 create_firestore() {
