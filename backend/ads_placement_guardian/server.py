@@ -22,6 +22,7 @@ import os
 
 import flask
 import googleads_housekeeper
+from gaarf.cli import utils as gaarf_utils
 from googleads_housekeeper import bootstrap, views
 from googleads_housekeeper.domain import commands
 
@@ -34,11 +35,13 @@ STATIC_DIR = os.getenv('STATIC_DIR', 'static')
 DEPLOYMENT_TYPE = os.getenv('ADS_HOUSEKEEPER_DEPLOYMENT_TYPE', 'Dev')
 
 bus = bootstrap.Bootstrapper(
-  type=DEPLOYMENT_TYPE,
+  deployment_type=DEPLOYMENT_TYPE,
   topic_prefix=os.getenv('TOPIC_PREFIX'),
   database_uri=os.getenv('DATABASE_URI'),
 ).bootstrap_app()
 
+
+gaarf_utils.init_logging(name='cpr', loglevel='INFO')
 
 if DEPLOYMENT_TYPE == 'Google Cloud':
   from google.appengine.api import wrap_wsgi_app
@@ -501,6 +504,15 @@ def run_task(task_id):
   data = flask.request.get_json(force=True)
   data.update({'save_to_db': config.get('save_to_db', True)})
   cmd = commands.RunTask(id=task_id, **data)
+  result, message_payload = bus.handle(cmd)
+  if message_payload.total_placement_excluded:
+    bus.dependencies.get('notification_service').send(message_payload)
+  return _build_response(json.dumps(result))
+
+
+@app.route('/api/tasks/<task_id>/scheduled_run', methods=['GET'])
+def run_task_from_schedule(task_id):
+  cmd = commands.RunTask(id=task_id, type='SCHEDULED')
   result, message_payload = bus.handle(cmd)
   if message_payload.total_placement_excluded:
     bus.dependencies.get('notification_service').send(message_payload)
