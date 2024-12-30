@@ -1,5 +1,8 @@
 {
-  "backend/server.py": {"type": "backend"},
+  "gcp/settings.ini": {"type": "settings"},
+  "gcp/install.sh": {"type": "install"},
+  "gcp/cloud_functions/*/main.py": {"type": "cf"},
+  "backend/ads_placement_guardian/server.py": {"type": "backend"},
   "frontend/src/app/*.ts": {"type": "ts"},
   "frontend/src/app/*.html": {"type": "html"}
 }

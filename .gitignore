@@ -9,3 +9,7 @@ frontend/package-lock.json
 frontend/package.json
 frontend/package-lock.json
 frontend/package.json
+*.db
+*.egg-info
+dist
+static
