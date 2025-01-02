@@ -66,7 +66,7 @@ private apiDelete<T>(url: string, params: string) {
   }
 
   async run_manual_excluder(form_data_json: string) {
-      return this.apiPost("placemens/exclude", form_data_json);
+      return this.apiPost("placements/exclude", form_data_json);
   }
 
   async get_config() {
