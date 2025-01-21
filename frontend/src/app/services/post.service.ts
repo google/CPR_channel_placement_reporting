@@ -14,63 +14,66 @@
  * limitations under the License.
  */
 
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from "@angular/core";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 
 export interface ReturnPromise {
-  response: string
+  response: string;
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class PostService {
+  constructor(private httpClient: HttpClient) {}
 
-
-  constructor(private httpClient: HttpClient) {
+  private apiPost<T>(url: string, params: string) {
+    const headers = new HttpHeaders();
+    headers.set("Content-Type", "application/json; charset=utf-8");
+    const cacheBuster = Date.now();
+    return this.httpClient.post<ReturnPromise>(
+      `/api/${url}?cb=${cacheBuster}`,
+      params,
+      { headers }
+    );
   }
 
-
-private apiPost<T>(url: string, params: string) {
-  const headers = new HttpHeaders();
-  headers.set('Content-Type', 'application/json; charset=utf-8');
-  const cacheBuster = Date.now();
-  return this.httpClient.post<ReturnPromise>(`/api/${url}?cb=${cacheBuster}`, params, {headers});
-}
-
-private apiDelete<T>(url: string, params: string) {
-  const headers = new HttpHeaders();
-  headers.set('Content-Type', 'application/json; charset=utf-8');
-  const cacheBuster = Date.now();
-  const httpOptions = {
-    headers,
-    body: params
-  };
-  return this.httpClient.delete<ReturnPromise>(`/api/${url}?cb=${cacheBuster}`, httpOptions);
-}
+  private apiDelete<T>(url: string, params: string) {
+    const headers = new HttpHeaders();
+    headers.set("Content-Type", "application/json; charset=utf-8");
+    const cacheBuster = Date.now();
+    const httpOptions = {
+      headers,
+      body: params,
+    };
+    return this.httpClient.delete<ReturnPromise>(
+      `/api/${url}?cb=${cacheBuster}`,
+      httpOptions
+    );
+  }
 
   async get_preview_result_for_specific_preview_task(form_data_json: string) {
-      return this.apiPost("getResultsForSpecificPreviewTask", form_data_json);
+    return this.apiPost("getResultsForSpecificPreviewTask", form_data_json);
   }
 
   async get_preview_tasks_table() {
-      return this.apiPost("getPreviewTasksTable", "");
+    return this.apiPost("getPreviewTasksTable", "");
   }
 
   async preview_form(form_data_json: string) {
-      return this.apiPost("placements/preview", form_data_json);
+    return this.apiPost("placements/preview", form_data_json);
   }
 
   async async_preview_form(form_data_json: string) {
-      return this.apiPost("asyncPreviewPlacements", form_data_json);
+    return this.apiPost("asyncPreviewPlacements", form_data_json);
   }
 
   async run_manual_excluder(form_data_json: string) {
-      return this.apiPost("placements/exclude", form_data_json);
+    return this.apiPost("placements/exclude", form_data_json);
   }
 
   async get_config() {
-    return this.httpClient.get<ReturnPromise>( "/api/configs");
+    return this.httpClient.get<ReturnPromise>("/api/configs");
   }
 
   async set_config(config_data: string) {
@@ -82,11 +85,11 @@ private apiDelete<T>(url: string, params: string) {
   }
 
   async get_tasks() {
-    return this.httpClient.get<ReturnPromise>( "/api/tasks");
+    return this.httpClient.get<ReturnPromise>("/api/tasks");
   }
 
   async delete_task(task_id: string) {
-    return this.apiDelete(`tasks/${task_id}`, '');
+    return this.apiDelete(`tasks/${task_id}`, "");
   }
 
   async run_task(task_id: string, task_data: string) {
@@ -97,12 +100,12 @@ private apiDelete<T>(url: string, params: string) {
     return this.httpClient.get<ReturnPromise>(`/api/tasks/${task_id}`);
   }
 
-    async migrate_old_tasks() {
-    return this.httpClient.get<ReturnPromise>( "/api/migrateOldTasks");
+  async migrate_old_tasks() {
+    return this.httpClient.get<ReturnPromise>("/api/migrateOldTasks");
   }
 
   async get_customer_list() {
-    return this.httpClient.get<ReturnPromise>( "/api/accounts/customers");
+    return this.httpClient.get<ReturnPromise>("/api/accounts/customers");
   }
 
   async get_mcc_list() {
@@ -118,6 +121,10 @@ private apiDelete<T>(url: string, params: string) {
   }
 
   async remove_from_allowlist(channel_id: string) {
-    return this.apiDelete( "placements/allowlist", channel_id);
+    return this.apiDelete("placements/allowlist", channel_id);
+  }
+
+  async getBackendInfo() {
+    return this.httpClient.get<ReturnPromise>("/api/info");
   }
 }

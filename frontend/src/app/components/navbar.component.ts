@@ -14,18 +14,33 @@
  * limitations under the License.
  */
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from "@angular/core";
+import { PostService, ReturnPromise } from "./../services/post.service";
 
 @Component({
-  selector: 'app-navbar',
-  templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.scss']
+  selector: "app-navbar",
+  templateUrl: "./navbar.component.html",
+  styleUrls: ["./navbar.component.scss"],
 })
 export class NavbarComponent implements OnInit {
-  nowString : string = "";
+  nowString = "";
+  observeMode = true;
 
-  constructor() { }
-  ngOnInit(): void {    
+  constructor(private service: PostService) {}
+  ngOnInit(): void {
+    this.getMode();
   }
 
+  async getMode() {
+    (await this.service.getBackendInfo()).subscribe({
+      next: (response: ReturnPromise) => this.parseMode(response)
+    });
+  }
+  async parseMode(response: ReturnPromise) {
+    Object.entries(response).find(([k, v]) => {
+      if (k === "is_observe_mode") {
+        this.observeMode = v;
+      }
+    });
+  }
 }
