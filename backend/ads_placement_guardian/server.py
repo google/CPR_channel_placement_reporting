@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 
 import flask
@@ -41,7 +42,9 @@ bus = bootstrap.Bootstrapper(
 ).bootstrap_app()
 
 
-gaarf_utils.init_logging(name='cpr', loglevel='INFO')
+logger = gaarf_utils.init_logging(name='cpr', loglevel='INFO')
+logging.getLogger('google.ads.googleads.client').setLevel(logging.WARNING)
+
 
 if DEPLOYMENT_TYPE == 'Google Cloud':
   from google.appengine.api import wrap_wsgi_app
@@ -120,22 +123,38 @@ def delete_task(task_id):
 
 @app.route('/api/tasks/<task_id>:run', methods=['POST'])
 def run_task(task_id):
+  """Runs task based on provided task_id."""
   [config] = views.config(bus.uow)
   data = flask.request.get_json(force=True)
   data.update({'save_to_db': config.get('save_to_db', True)})
   cmd = commands.RunTask(id=task_id, **data)
   result, message_payload = bus.handle(cmd)
+  logger.info('Command <%s> is executed with results: %s', cmd, result)
   if message_payload.total_placement_excluded:
-    bus.dependencies.get('notification_service').send(message_payload)
+    notification_service = bus.dependencies.get('notification_service')
+    notification_service.send(message_payload)
+    logger.info(
+      'Task <%s> sent a notification to notification service: %s',
+      task_id,
+      notification_service.__class__.__name__,
+    )
   return _build_response(json.dumps(result))
 
 
 @app.route('/api/tasks/<task_id>/scheduled_run', methods=['GET'])
 def run_task_from_schedule(task_id):
+  """Runs scheduled task."""
   cmd = commands.RunTask(id=task_id, type='SCHEDULED')
   result, message_payload = bus.handle(cmd)
+  logger.info('Command <%s> is executed with results: %s', cmd, result)
   if message_payload.total_placement_excluded:
-    bus.dependencies.get('notification_service').send(message_payload)
+    notification_service = bus.dependencies.get('notification_service')
+    notification_service.send(message_payload)
+    logger.info(
+      'Task <%s> sent a notification to notification service: %s',
+      task_id,
+      notification_service.__class__.__name__,
+    )
   return _build_response(json.dumps(result))
 
 
@@ -160,7 +179,11 @@ def preview_placements():
       'always_fetch_youtube_preview_mode', False
     ),
   )
+  logger.info('Running command: %s', cmd)
   result = bus.handle(cmd)
+  logger.info(
+    'Running task %s returned %d placements', cmd, len(result.get('data'))
+  )
   return _build_response(msg=json.dumps(result))
 
 
@@ -169,6 +192,7 @@ def run_manual_excluder():
   data = flask.request.get_json(force=True)
   cmd = commands.RunManualExclusion(**data)
   result = bus.handle(cmd)
+  logger.info('Running command: %s returned  %s', cmd, result)
   return _build_response(json.dumps(result))
 
 
@@ -296,6 +320,7 @@ def get_application_info():
     'backend_version': googleads_housekeeper.__version__,
     'topic': os.getenv('TOPIC_PREFIX'),
     'db': os.getenv('DATABASE_URI'),
+    'is_observe_mode': bus.is_observe_mode,
   }
   return _build_response(json.dumps(info))
 
