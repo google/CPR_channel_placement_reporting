@@ -23,7 +23,7 @@
         </select>
       </div>
       <button mat-button (click)="refresh_mcc_ids()">
-         <mat-icon>refresh</mat-icon>
+        <mat-icon>refresh</mat-icon>
       </button>
       <div>
         <div class="label-input-block yt-label">
@@ -37,29 +37,33 @@
             name="emailAddress"
           />
         </div>
-        <br/>
-          <div class="label-input-block centre-form">
-            <input
-              type="checkbox"
-              id="saveToDB"
-              name="saveToDB"
-              formControlName="saveToDB"
-          />
-          <label for="saveToDB">Save parsed placement data to DB</label>
-      </div>
+        <br />
         <div class="label-input-block centre-form">
           <input
-              type="checkbox"
-              id="alwaysFetchYoutubePreviewMode"
-              name="alwaysFetchYoutubePreviewMode"
-              formControlName="alwaysFetchYoutubePreviewMode"
+            type="checkbox"
+            id="saveToDB"
+            name="saveToDB"
+            formControlName="saveToDB"
+          />
+          <label for="saveToDB">Save parsed placement data to DB</label>
+        </div>
+        <div class="label-input-block centre-form">
+          <input
+            type="checkbox"
+            id="alwaysFetchYoutubePreviewMode"
+            name="alwaysFetchYoutubePreviewMode"
+            formControlName="alwaysFetchYoutubePreviewMode"
           />
           <label for="callYtForPreview">Call YT API for preview button</label>
-      </div>
+        </div>
       </div>
       <div class="label-input-block centre-form">
         <div class="label-input-block">
-          <button type="button" class="secondaryButton" (click)="migrate_old_tasks()">
+          <button
+            type="button"
+            class="secondaryButton"
+            (click)="migrate_old_tasks()"
+          >
             Migrate Old Tasks
           </button>
         </div>

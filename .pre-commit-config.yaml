@@ -16,3 +16,10 @@ repos:
     - id: ruff
       args: [ --fix, --select, I]
     - id: ruff-format
+- repo: local
+  hooks:
+  - id: prettier
+    name: prettier
+    entry: npx prettier --write  frontend/src/app/
+    language: system
+    pass_filenames: false

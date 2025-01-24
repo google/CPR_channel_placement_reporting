@@ -10,7 +10,8 @@
   >
   <a mat-button routerLink="/newtask" routerLinkActive="active">New Task</a>
   <span class="toolbar-spacer"></span>
-  <span *ngIf="observeMode"
+  <span
+    *ngIf="observeMode"
     class="warningColor"
     align="center"
     matTooltip="No actual exclusions to be performed"

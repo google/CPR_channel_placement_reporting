@@ -1,26 +1,26 @@
 main.container {
-    padding: 30px 15px 0;
-  }
-  .footer {
-    width: 100%;
-    height: 60px;
-    line-height: 60px;
-  }
-  .footer > .container {
-    text-align: center;
-  }
+  padding: 30px 15px 0;
+}
+.footer {
+  width: 100%;
+  height: 60px;
+  line-height: 60px;
+}
+.footer > .container {
+  text-align: center;
+}
 
-  .label-input-block {
-    display: flex;
-    align-items: center;
-  
-    &.top-centre-form {
-      flex-direction: row;
-    }
+.label-input-block {
+  display: flex;
+  align-items: center;
+
+  &.top-centre-form {
+    flex-direction: row;
   }
-  
-  .dropdown-container {
-    display: flex;
-    align-items: center;
-    margin-right: 10px; // Adjust as needed
-  }
+}
+
+.dropdown-container {
+  display: flex;
+  align-items: center;
+  margin-right: 10px; // Adjust as needed
+}

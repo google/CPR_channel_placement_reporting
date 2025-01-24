@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-loading',
   templateUrl: './loading.component.html',
-  styleUrls: ['./loading.component.scss']
+  styleUrls: ['./loading.component.scss'],
 })
 export class LoadingComponent implements OnInit {
-
   @Input('showSpinner') showSpinner!: boolean;
 
   color = '#009879';
@@ -31,14 +30,9 @@ export class LoadingComponent implements OnInit {
   value = 50;
   isLoading: boolean = false;
 
-  constructor(){}
-
-  ngOnInit(): void {
-  }
+  ngOnInit(): void {}
 
   ngOnChanges(): void {
     this.isLoading = this.showSpinner;
   }
-  
-
 }

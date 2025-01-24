@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import { Component, OnInit } from "@angular/core";
-import { PostService, ReturnPromise } from "./../services/post.service";
+import { Component, OnInit } from '@angular/core';
+import { PostService, ReturnPromise } from './../services/post.service';
 
 @Component({
-  selector: "app-navbar",
-  templateUrl: "./navbar.component.html",
-  styleUrls: ["./navbar.component.scss"],
+  selector: 'app-navbar',
+  templateUrl: './navbar.component.html',
+  styleUrls: ['./navbar.component.scss'],
 })
 export class NavbarComponent implements OnInit {
-  nowString = "";
+  nowString = '';
   observeMode = true;
 
   constructor(private service: PostService) {}
@@ -33,12 +33,12 @@ export class NavbarComponent implements OnInit {
 
   async getMode() {
     (await this.service.getBackendInfo()).subscribe({
-      next: (response: ReturnPromise) => this.parseMode(response)
+      next: (response: ReturnPromise) => this.parseMode(response),
     });
   }
   async parseMode(response: ReturnPromise) {
     Object.entries(response).find(([k, v]) => {
-      if (k === "is_observe_mode") {
+      if (k === 'is_observe_mode') {
         this.observeMode = v;
       }
     });

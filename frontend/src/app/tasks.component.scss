@@ -7,7 +7,8 @@
 .red-icon {
   color: red;
 }
-::ng-deep .cdk-overlay-container, .cdk-global-overlay-wrapper {
+::ng-deep .cdk-overlay-container,
+.cdk-global-overlay-wrapper {
   white-space: pre-line;
 }
 

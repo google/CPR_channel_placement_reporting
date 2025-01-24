@@ -1,6 +1,5 @@
-
 .toolbar-spacer {
-    flex: 1 1 auto;
+  flex: 1 1 auto;
 }
 
 .target-selector {
@@ -13,14 +12,16 @@ mat-toolbar {
   color: white;
 }
 
-a, a:visited {
+a,
+a:visited {
   text-decoration: none;
   font-size: 14px;
   color: white;
   padding: 5px 10px;
 }
 
-a:hover, .selected {
+a:hover,
+.selected {
   font-size: 14px;
   background: #009879;
 }

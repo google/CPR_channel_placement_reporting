@@ -1,7 +1,8 @@
 <div class="centre-form">
   <form [formGroup]="gadsForm">
     <div class="heading">
-      <span *ngIf="task_id != undefined && this.task_id != ''">Task Name / {{ this.task_name }}
+      <span *ngIf="task_id != undefined && this.task_id != ''"
+        >Task Name / {{ this.task_name }}
         <div class="label-input-block">
           <a (click)="duplicateTask()" matTooltip="Make a copy">
             <mat-icon>file_copy</mat-icon>
@@ -11,9 +12,17 @@
       <span *ngIf="task_id == undefined || this.task_id == ''">New Task</span>
     </div>
     <mat-stepper #stepper>
-      <mat-step [stepControl]="gadsForm" [errorMessage]="stepperErrorMessage" [hasError]="stepperErrorMessage !== ''">
+      <mat-step
+        [stepControl]="gadsForm"
+        [errorMessage]="stepperErrorMessage"
+        [hasError]="stepperErrorMessage !== ''"
+      >
         <div class="label-input-block top-centre-form">
-          <mat-form-field name="gadsCustomerId" formControlName="gadsCustomerId" id="gadsCustomerId">
+          <mat-form-field
+            name="gadsCustomerId"
+            formControlName="gadsCustomerId"
+            id="gadsCustomerId"
+          >
             <mat-label>Select accounts</mat-label>
             <mat-select [formControl]="selectedCidList" multiple>
               <mat-option *ngFor="let cid of customer_list" [value]="cid.id">
@@ -26,42 +35,102 @@
         <div class="label-input-block top-centre-form">
           <mat-form-field>
             <mat-label>Timeframe ended X Days Ago</mat-label>
-            <input type="number" name="fromDaysAgo" formControlName="fromDaysAgo" id="fromDaysAgo"
-                   matTooltip="E.g 1 means ended yesterday" matInput />
+            <input
+              type="number"
+              name="fromDaysAgo"
+              formControlName="fromDaysAgo"
+              id="fromDaysAgo"
+              matTooltip="E.g 1 means ended yesterday"
+              matInput
+            />
           </mat-form-field>
         </div>
         <div class="label-input-block top-centre-form">
           <mat-form-field>
-            <mat-label  >Timeframe length</mat-label>
-            <input type="number" name="lookbackDays" formControlName="lookbackDays" id="lookbackDays"
-                   matTooltip="E.g 7 means: 7 day timeframe length" matInput />
+            <mat-label>Timeframe length</mat-label>
+            <input
+              type="number"
+              name="lookbackDays"
+              formControlName="lookbackDays"
+              id="lookbackDays"
+              matTooltip="E.g 7 means: 7 day timeframe length"
+              matInput
+            />
           </mat-form-field>
         </div>
         <div class="label-input-block top-centre-form">
           <mat-form-field>
             <mat-label>Specify exclusion level</mat-label>
-            <mat-select [formControl]="selectedExclusionLevelFormControl" (selectionChange)="onExclusionLevelChange($event.value)"
-              matTooltip="E.g 'Account' means: metrics and exclusions are per account">
-              <mat-option *ngFor="let item of exclusionLevelArray" [value]="item[0]">
+            <mat-select
+              [formControl]="selectedExclusionLevelFormControl"
+              (selectionChange)="onExclusionLevelChange($event.value)"
+              matTooltip="E.g 'Account' means: metrics and exclusions are per account"
+            >
+              <mat-option
+                *ngFor="let item of exclusionLevelArray"
+                [value]="item[0]"
+              >
                 {{ item[1] }}
               </mat-option>
             </mat-select>
           </mat-form-field>
         </div>
         <div>
-          <button mat-button matStepperNext class="secondaryButton">Next</button>
+          <button mat-button matStepperNext class="secondaryButton">
+            Next
+          </button>
         </div>
       </mat-step>
       <mat-step>
         <mat-label>Choose types of placements</mat-label>
         <br />
         <div>
-          <div [className]="
+          <div
+            [className]="
               gads_data_error
                 ? 'label-input-block largeErrorElement'
                 : 'label-input-block'
-            "> YouTube Video <mat-slide-toggle name="gadsDataYouTubeVideo" [(ngModel)]="data_youtube_video" formControlName="gadsDataYouTubeVideo" (change)="onToggleChange('gadsDataYouTubeVideo','YouTube Video')" id="gadsDataYouTubeVideo"></mat-slide-toggle> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;YouTube Channel <mat-slide-toggle name="gadsDataYouTubeChannel" [(ngModel)]="data_youtube_channel" formControlName="gadsDataYouTubeChannel" (change)="onToggleChange('gadsDataYouTubeChannel','YouTube Channel')" id="gadsDataYouTubeChannel"></mat-slide-toggle> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Website Display <mat-slide-toggle name="gadsDataDisplay" [(ngModel)]="data_display" formControlName="gadsDataDisplay" (change)="onToggleChange('gadsDataDisplay','Website Content')" id="gadsDataDisplay"></mat-slide-toggle> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Mobile <mat-slide-toggle name="gadsDataMobile" [(ngModel)]="data_mobile" formControlName="gadsDataMobile" (change)="onToggleChange('gadsDataMobile','Mobile')" id="gadsDataMobile"></mat-slide-toggle>
-            <span class="error_text" *ngIf="gads_data_error">You must select at least one data type to retrieve</span>
+            "
+          >
+            YouTube Video
+            <mat-slide-toggle
+              name="gadsDataYouTubeVideo"
+              [(ngModel)]="data_youtube_video"
+              formControlName="gadsDataYouTubeVideo"
+              (change)="onToggleChange('gadsDataYouTubeVideo', 'YouTube Video')"
+              id="gadsDataYouTubeVideo"
+            ></mat-slide-toggle>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;YouTube
+            Channel
+            <mat-slide-toggle
+              name="gadsDataYouTubeChannel"
+              [(ngModel)]="data_youtube_channel"
+              formControlName="gadsDataYouTubeChannel"
+              (change)="
+                onToggleChange('gadsDataYouTubeChannel', 'YouTube Channel')
+              "
+              id="gadsDataYouTubeChannel"
+            ></mat-slide-toggle>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Website
+            Display
+            <mat-slide-toggle
+              name="gadsDataDisplay"
+              [(ngModel)]="data_display"
+              formControlName="gadsDataDisplay"
+              (change)="onToggleChange('gadsDataDisplay', 'Website Content')"
+              id="gadsDataDisplay"
+            ></mat-slide-toggle>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Mobile
+            <mat-slide-toggle
+              name="gadsDataMobile"
+              [(ngModel)]="data_mobile"
+              formControlName="gadsDataMobile"
+              (change)="onToggleChange('gadsDataMobile', 'Mobile')"
+              id="gadsDataMobile"
+            ></mat-slide-toggle>
+            <span class="error_text" *ngIf="gads_data_error"
+              >You must select at least one data type to retrieve</span
+            >
           </div>
         </div>
         <br />
@@ -70,7 +139,8 @@
           <mat-expansion-panel [expanded]="filtersOpenState">
             <mat-expansion-panel-header>
               <mat-panel-title> Filters</mat-panel-title>
-              <mat-panel-description>{{ finalGadsFilter
+              <mat-panel-description>{{
+                finalGadsFilter
               }}</mat-panel-description>
             </mat-expansion-panel-header>
             <ng-template matStepLabel>Select filters</ng-template>
@@ -79,7 +149,11 @@
                 <mat-label>Metrics & Dimensions</mat-label>
                 <mat-select [formControl]="selectedField">
                   <ng-container *ngFor="let group of allMetricArray">
-                    <mat-optgroup *ngIf="!group.disabled" [label]="group.name" [disabled]="group.disabled">
+                    <mat-optgroup
+                      *ngIf="!group.disabled"
+                      [label]="group.name"
+                      [disabled]="group.disabled"
+                    >
                       <ng-container *ngFor="let field of group.fields">
                         <mat-option [value]="field.value" *ngIf="!field.hidden">
                           {{ field.view }}
@@ -91,51 +165,128 @@
               </mat-form-field>
             </div>
             <div class="label-input-block top-centre-form">
-              <mat-form-field name="gadsOperator" formControlName="gadsOperator" id="gadsOperator">
+              <mat-form-field
+                name="gadsOperator"
+                formControlName="gadsOperator"
+                id="gadsOperator"
+              >
                 <mat-label>Operator</mat-label>
-                <mat-select [formControl]="selectedOperator" (focus)="clearHintsAndErrors('allFilterErrors')" (blur)="validateOperatorAndThenValue()">
-                  <mat-option *ngFor="let item of gadsOperatorsArray" [value]="item[0]">
+                <mat-select
+                  [formControl]="selectedOperator"
+                  (focus)="clearHintsAndErrors('allFilterErrors')"
+                  (blur)="validateOperatorAndThenValue()"
+                >
+                  <mat-option
+                    *ngFor="let item of gadsOperatorsArray"
+                    [value]="item[0]"
+                  >
                     {{ item[1] }}
                   </mat-option>
                 </mat-select>
-                <span class="error_text" *ngIf="filter_operator_error">{{ filter_operator_error_msg
+                <span class="error_text" *ngIf="filter_operator_error">{{
+                  filter_operator_error_msg
                 }}</span>
               </mat-form-field>
             </div>
             <div class="label-input-block top-centre-form">
               <mat-form-field>
                 <mat-label>Value</mat-label>
-                <input [formControl]="selectedValue" matInput (focus)="clearHintsAndErrors('selectedValue')" (blur)="validateValue()" />
-                <span class="error_text" *ngIf="filter_value_error">{{ filter_value_error_msg
+                <input
+                  [formControl]="selectedValue"
+                  matInput
+                  (focus)="clearHintsAndErrors('selectedValue')"
+                  (blur)="validateValue()"
+                />
+                <span class="error_text" *ngIf="filter_value_error">{{
+                  filter_value_error_msg
                 }}</span>
               </mat-form-field>
             </div>
             <div class="label-input-block">
-              <button type="button" id="gadsAddToFilters" class="focusButton" (click)="gadsAddFilter()" [disabled]="!conditionEnabled"> + Add </button>
+              <button
+                type="button"
+                id="gadsAddToFilters"
+                class="focusButton"
+                (click)="gadsAddFilter()"
+                [disabled]="!conditionEnabled"
+              >
+                + Add
+              </button>
             </div>
             <div class="label-input-block">
-              <button type="button" id="gadsAddAnd" class="focusButton" (click)="gadsAddOrAnd('AND')" [disabled]="!orAndEnabled"> AND </button>
+              <button
+                type="button"
+                id="gadsAddAnd"
+                class="focusButton"
+                (click)="gadsAddOrAnd('AND')"
+                [disabled]="!orAndEnabled"
+              >
+                AND
+              </button>
             </div>
             <div class="label-input-block">
-              <button type="button" id="gadsAddOr" class="focusButton" (click)="gadsAddOrAnd('OR')" [disabled]="!orAndEnabled"> OR </button>
+              <button
+                type="button"
+                id="gadsAddOr"
+                class="focusButton"
+                (click)="gadsAddOrAnd('OR')"
+                [disabled]="!orAndEnabled"
+              >
+                OR
+              </button>
             </div>
-            <p class="error_text" *ngIf="filter_extra_instructions" style="font-size: 14px;">{{ filter_extra_instructions
-            }}</p>
+            <p
+              class="error_text"
+              *ngIf="filter_extra_instructions"
+              style="font-size: 14px"
+            >
+              {{ filter_extra_instructions }}
+            </p>
             <div>
-              <div class="label-input-block"> &nbsp; &nbsp; &nbsp; <mat-icon class="bigicon">subdirectory_arrow_right</mat-icon> &nbsp; <input [className]="
+              <div class="label-input-block">
+                &nbsp; &nbsp; &nbsp;
+                <mat-icon class="bigicon">subdirectory_arrow_right</mat-icon>
+                &nbsp;
+                <input
+                  [className]="
                     gads_filter_error
                       ? 'errorElement extrawide'
                       : 'inputElement extrawide'
-                  " type="text" [(ngModel)]="finalGadsFilter" formControlName="gadsFinalFilters" name="gadsFinalFilters" value="{{ finalGadsFilter }}" [readonly]="gads_filter_lock" />
+                  "
+                  type="text"
+                  [(ngModel)]="finalGadsFilter"
+                  formControlName="gadsFinalFilters"
+                  name="gadsFinalFilters"
+                  value="{{ finalGadsFilter }}"
+                  [readonly]="gads_filter_lock"
+                />
                 <br />
-                <span class="error_text" *ngIf="gads_filter_error">Errors in format. Do not end with OR or AND</span>
+                <span class="error_text" *ngIf="gads_filter_error"
+                  >Errors in format. Do not end with OR or AND</span
+                >
               </div>
               <div class="label-input-block">
-                <button type="button" id="unlockFilter" class="bigicon" (click)="unlockFilter()" matTooltip="Unlock/lock filter for free text">
-                  <mat-icon class="red_icon" *ngIf="gads_filter_lock">lock</mat-icon>
-                  <mat-icon class="green_icon" *ngIf="!gads_filter_lock">lock_open</mat-icon>
+                <button
+                  type="button"
+                  id="unlockFilter"
+                  class="bigicon"
+                  (click)="unlockFilter()"
+                  matTooltip="Unlock/lock filter for free text"
+                >
+                  <mat-icon class="red_icon" *ngIf="gads_filter_lock"
+                    >lock</mat-icon
+                  >
+                  <mat-icon class="green_icon" *ngIf="!gads_filter_lock"
+                    >lock_open</mat-icon
+                  >
                 </button>
-                <button type="button" id="clearGadsFilter" class="deleteButton" (click)="clearFilter()" matTooltip="Clear current GAds filters">
+                <button
+                  type="button"
+                  id="clearGadsFilter"
+                  class="deleteButton"
+                  (click)="clearFilter()"
+                  matTooltip="Clear current GAds filters"
+                >
                   <mat-icon>delete_forever</mat-icon>
                 </button>
               </div>
@@ -144,21 +295,41 @@
         </mat-accordion>
         <br />
         <br />
-        <div class="button-container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <div
+          class="button-container"
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+          "
+        >
           <div>
-            <button mat-button matStepperNext class="secondaryButton">Next</button>
+            <button mat-button matStepperNext class="secondaryButton">
+              Next
+            </button>
           </div>
-          <button type="button" class="primaryButton" (click)="togglePanel(); previewPlacements()" value="Preview"
-          matTooltip="Adds task to the Submitted Async Tasks table"> Preview</button>
+          <button
+            type="button"
+            class="primaryButton"
+            (click)="togglePanel(); previewPlacements()"
+            value="Preview"
+            matTooltip="Get top placements satisfying the rule"
+          >
+            Preview
+          </button>
         </div>
-        <br>
+        <br />
       </mat-step>
       <mat-step>
         <ng-template matStepLabel>Save and Schedule</ng-template>
         <div class="label-input-block top-centre-form">
           <mat-form-field>
             <mat-label>Schedule task</mat-label>
-            <mat-select [formControl]="selectedSchedule" (selectionChange)="scheduleChange()">
+            <mat-select
+              [formControl]="selectedSchedule"
+              (selectionChange)="scheduleChange()"
+            >
               <mat-option *ngFor="let item of scheduleArray" [value]="item[0]">
                 {{ item[1] }}
               </mat-option>
@@ -168,8 +339,14 @@
         <div class="label-input-block" [hidden]="email_alerts_hidden">
           <mat-form-field>
             <mat-label>Exclude or Notify?</mat-label>
-            <mat-select [formControl]="selectedTaskOutput" id="taskOutputDropDown">
-              <mat-option *ngFor="let item of taskOutputArray" [value]="item[0]">
+            <mat-select
+              [formControl]="selectedTaskOutput"
+              id="taskOutputDropDown"
+            >
+              <mat-option
+                *ngFor="let item of taskOutputArray"
+                [value]="item[0]"
+              >
                 {{ item[1] }}
               </mat-option>
             </mat-select>
@@ -178,8 +355,13 @@
         <div>
           <mat-form-field class="example-full-width">
             <mat-label>Task Name</mat-label>
-            <textarea matInput formControlName="taskName" name="taskName" placeholder="Enter task description, i.e. CPC > 10 and CTR < 0.01">
-							</textarea>
+            <textarea
+              matInput
+              formControlName="taskName"
+              name="taskName"
+              placeholder="Enter task description, i.e. CPC > 10 and CTR < 0.01"
+            >
+            </textarea>
           </mat-form-field>
         </div>
         <div>
@@ -204,13 +386,23 @@
 <div *ngIf="tableResults.length > 0">
   <div class="button-container">
     <div class="label-input-block">
-      <button type="button" [className]="exclude_count == 0 ? 'disabledButton' : 'secondaryButton'" (click)="runManualExcludeForm()" value="Preview"> Manually Exclude ({{ exclude_count }}) </button>
+      <button
+        type="button"
+        [className]="exclude_count == 0 ? 'disabledButton' : 'secondaryButton'"
+        (click)="runManualExcludeForm()"
+        value="Preview"
+      >
+        Manually Exclude ({{ exclude_count }})
+      </button>
     </div>
     <div class="toggle-column-select">
       <mat-form-field appearance="fill">
         <mat-label>Toggle column visibilities:</mat-label>
         <mat-select [(ngModel)]="toggle_column_selected_headers" multiple>
-          <mat-option *ngFor="let header of  toggleColumnAllHeaders" [value]="header">
+          <mat-option
+            *ngFor="let header of toggleColumnAllHeaders"
+            [value]="header"
+          >
             {{ header }}
           </mat-option>
         </mat-select>
@@ -219,7 +411,8 @@
   </div>
   <div class="pagination-left">
     <span class="error_text" *ngIf="memory_error">
-      <mat-icon>warning</mat-icon> Your report is only partial due to memory of your instance being reached
+      <mat-icon>warning</mat-icon> Your report is only partial due to memory of
+      your instance being reached
     </span>
   </div>
   <div class="pagination">
@@ -231,37 +424,56 @@
       </div>
       <div class="label-input-block">
         <span *ngIf="pagination_start + pagination_rpp <= tableResults.length">
-          {{ pagination_start + 1 }} to {{ pagination_start + pagination_rpp }} of {{ tableResults.length }}
+          {{ pagination_start + 1 }} to
+          {{ pagination_start + pagination_rpp }} of {{ tableResults.length }}
         </span>
-        <span *ngIf="
+        <span
+          *ngIf="
             pagination_start + pagination_rpp > tableResults.length &&
             tableResults.length > 0
-          ">
-          {{ pagination_start + 1 }} to {{ tableResults.length }} of {{ tableResults.length }}
+          "
+        >
+          {{ pagination_start + 1 }} to {{ tableResults.length }} of
+          {{ tableResults.length }}
         </span>
       </div>
       <div class="label-input-block">
         <button type="button" class="pageButton" (click)="pagination_prev()">
-          << </button>
+          <<
+        </button>
       </div>
       <div class="label-input-block">
-        <select name="paginationValue" formControlName="paginationValue" (change)="paginationChange()" class="pageElement" id="paginationValue">
+        <select
+          name="paginationValue"
+          formControlName="paginationValue"
+          (change)="paginationChange()"
+          class="pageElement"
+          id="paginationValue"
+        >
           <option *ngFor="let item of pagination_values" [value]="item[0]">
             {{ item[0] }}
           </option>
         </select>
       </div>
       <div class="label-input-block">
-        <button type="button" class="pageButton" (click)="pagination_next()"> >></button>
+        <button type="button" class="pageButton" (click)="pagination_next()">
+          >>
+        </button>
       </div>
     </form>
   </div>
 </div>
-<span *ngIf="tableResults.length > 0"> From:&nbsp;{{ this.date_from }} &nbsp;&nbsp;&nbsp;To:&nbsp;{{ this.date_to }}
+<span *ngIf="tableResults.length > 0">
+  From:&nbsp;{{ this.date_from }} &nbsp;&nbsp;&nbsp;To:&nbsp;{{ this.date_to }}
 </span>
 <br />
 <br />
-<input *ngIf="tableResults.length > 0" type="checkbox" [(ngModel)]="isCheckAll" (ngModelChange)="toggleCheckAll(isCheckAll)" />
+<input
+  *ngIf="tableResults.length > 0"
+  type="checkbox"
+  [(ngModel)]="isCheckAll"
+  (ngModelChange)="toggleCheckAll(isCheckAll)"
+/>
 <span *ngIf="tableResults.length > 0">Un/check all</span>
 <table *ngIf="tableResults.length > 0" class="styled-table newtask-width">
   <thead>
@@ -276,34 +488,52 @@
         <a (click)="sort_table('allowlist')">Allowlist</a>
       </th>
       <ng-container *ngFor="let header of columnHeaders">
-        <th *ngIf="toggle_column_selected_headers.includes(header) && !hidden_columns.includes(header)" class="hrlink">
+        <th
+          *ngIf="
+            toggle_column_selected_headers.includes(header) &&
+            !hidden_columns.includes(header)
+          "
+          class="hrlink"
+        >
           <a (click)="sort_table('{{header}}')">{{ header }}</a>
         </th>
       </ng-container>
     </tr>
   </thead>
   <tbody>
-    <tr *ngFor="
+    <tr
+      *ngFor="
         let data of tableResults
           | slice: pagination_start : pagination_start + pagination_rpp;
         let i = index
-      " [className]="
+      "
+      [className]="
         row_class(
           data['excluded_already'],
           data['exclude_from_account'],
           data['allowlist']
         )
-      ">
+      "
+    >
       <td>
-        <input [value]="data['placement']" type="checkbox" (change)="
+        <input
+          [value]="data['placement']"
+          type="checkbox"
+          (change)="
             !data['excluded_already'] && !data['allowlist']
-              ? excludeCheckChange(data['placement'], data['exclude_from_account'])
+              ? excludeCheckChange(
+                  data['placement'],
+                  data['exclude_from_account']
+                )
               : null
-          " [checked]="
+          "
+          [checked]="
             data['exclude_from_account'] &&
             !data['excluded_already'] &&
             !data['allowlist']
-          " [disabled]="data['excluded_already'] || data['allowlist']" />
+          "
+          [disabled]="data['excluded_already'] || data['allowlist']"
+        />
       </td>
       <td *ngIf="data['excluded_already']">
         <mat-icon matTooltip="Excluded">block</mat-icon>
@@ -313,64 +543,117 @@
       </td>
       <td>
         <span *ngIf="!data['allowlist']">
-          <a class="grey_icon" (click)="addToAllowlist(data['placement_type'], data['placement'], data['customer_id'])" target="_self" matTooltip="Add placement to allowlist so it is never excluded">
+          <a
+            class="grey_icon"
+            (click)="
+              addToAllowlist(
+                data['placement_type'],
+                data['placement'],
+                data['customer_id']
+              )
+            "
+            target="_self"
+            matTooltip="Add placement to allowlist so it is never excluded"
+          >
             <mat-icon>add_circle_outline</mat-icon>
           </a>
         </span>
         <span *ngIf="data['allowlist']">
-          <a (click)="removeFromAllowlist(data['placement_type'], data['placement'], data['customer_id'])" target="_self" matTooltip="Remove placement from allowlist so it can be excluded">
+          <a
+            (click)="
+              removeFromAllowlist(
+                data['placement_type'],
+                data['placement'],
+                data['customer_id']
+              )
+            "
+            target="_self"
+            matTooltip="Remove placement from allowlist so it can be excluded"
+          >
             <mat-icon class="gold_icon">stars</mat-icon>
           </a>
         </span>
       </td>
-      <ng-container *ngFor="let item of data | keyvalue: unsorted; let i = index">
-        <td *ngIf="toggle_column_selected_headers.includes(columnHeaders[i]) && !hidden_columns.includes(columnHeaders[i])">
-          <span *ngIf="
+      <ng-container
+        *ngFor="let item of data | keyvalue: unsorted; let i = index"
+      >
+        <td
+          *ngIf="
+            toggle_column_selected_headers.includes(columnHeaders[i]) &&
+            !hidden_columns.includes(columnHeaders[i])
+          "
+        >
+          <span
+            *ngIf="
               columnHeaders[i] == 'Placement Type' &&
               item.value == 'YOUTUBE_CHANNEL'
-            ">
+            "
+          >
             <mat-icon matTooltip="YouTube Channel">video_library</mat-icon>
           </span>
-          <span *ngIf="
+          <span
+            *ngIf="
               columnHeaders[i] == 'Placement Type' &&
               item.value == 'YOUTUBE_VIDEO'
-            ">
+            "
+          >
             <mat-icon matTooltip="YouTube Video">video_label</mat-icon>
           </span>
-          <span *ngIf="
+          <span
+            *ngIf="
               columnHeaders[i] == 'Placement Type' && item.value == 'WEBSITE'
-            ">
+            "
+          >
             <mat-icon matTooltip="Website">computers</mat-icon>
           </span>
-          <span *ngIf="
+          <span
+            *ngIf="
               columnHeaders[i] == 'Placement Type' &&
               item.value == 'MOBILE_APPLICATION'
-            ">
-            <mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon>
+            "
+          >
+            <mat-icon matTooltip="Mobile App Category"
+              >mobile_friendly</mat-icon
+            >
           </span>
-          <span *ngIf="
+          <span
+            *ngIf="
               columnHeaders[i] == 'Placement Type' &&
               item.value == 'MOBILE_APP_CATEGORY'
-            ">
-            <mat-icon matTooltip="Mobile App Category">mobile_friendly</mat-icon>
+            "
+          >
+            <mat-icon matTooltip="Mobile App Category"
+              >mobile_friendly</mat-icon
+            >
           </span>
           <span *ngIf="columnHeaders[i] == 'Name'">
-            <a href="https://{{ data['url'] }}" target="_blank">{{ item.value
+            <a href="https://{{ data['url'] }}" target="_blank">{{
+              item.value
             }}</a>
           </span>
-          <span *ngIf="value_columns.includes(columnHeaders[i])">{{ formatNumber(item.value) | number: "1.2-2"
+          <span *ngIf="value_columns.includes(columnHeaders[i])">{{
+            formatNumber(item.value) | number: '1.2-2'
           }}</span>
-          <span *ngIf="columnHeaders[i] == 'Reason'" matTooltip="{{ data['Extra Info'] | json }}">{{ item.value }}</span>
-          <span *ngIf="
+          <span
+            *ngIf="columnHeaders[i] == 'Reason'"
+            matTooltip="{{ data['Extra Info'] | json }}"
+            >{{ item.value }}</span
+          >
+          <span
+            *ngIf="
               !value_columns.includes(columnHeaders[i]) &&
               !['Placement Type', 'Name', 'Extra Info', 'Reason'].includes(
                 columnHeaders[i]
               )
-            ">{{ item.value }}</span>
+            "
+            >{{ item.value }}</span
+          >
         </td>
       </ng-container>
     </tr>
   </tbody>
 </table>
-<div *ngIf="no_data" class="empty-table"> No data matches your Google Ads filters! </div>
+<div *ngIf="no_data" class="empty-table">
+  No data matches your Google Ads filters!
+</div>
 <app-loading [showSpinner]="loading"></app-loading>
