@@ -319,6 +319,24 @@
             Preview
           </button>
         </div>
+        <div
+          class="preview-container"
+          style="
+            display: flex;
+            justify-content: flex-end;
+            align-items: right;
+            width: 100%;
+          "
+        >
+          <div class="label-input-block">
+            <input
+              type="number"
+              [formControl]="previewLimit"
+              matInput
+              matTooltip="Number of placements to fetch for preview (0 means all placements)"
+            />
+          </div>
+        </div>
         <br />
       </mat-step>
       <mat-step>
