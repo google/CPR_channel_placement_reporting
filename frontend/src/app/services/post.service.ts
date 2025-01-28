@@ -52,20 +52,8 @@ export class PostService {
     );
   }
 
-  async get_preview_result_for_specific_preview_task(form_data_json: string) {
-    return this.apiPost('getResultsForSpecificPreviewTask', form_data_json);
-  }
-
-  async get_preview_tasks_table() {
-    return this.apiPost('getPreviewTasksTable', '');
-  }
-
   async preview_form(form_data_json: string) {
     return this.apiPost('placements/preview', form_data_json);
-  }
-
-  async async_preview_form(form_data_json: string) {
-    return this.apiPost('asyncPreviewPlacements', form_data_json);
   }
 
   async run_manual_excluder(form_data_json: string) {

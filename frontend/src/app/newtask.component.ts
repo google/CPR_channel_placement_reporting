@@ -79,7 +79,6 @@ export class NewtaskComponent implements OnInit {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tableResults: Array<Record<string, any>> = [];
-  previewTableResults: Array<Record<string, string>> = [];
 
   customer_list: any[] = [];
   finalGadsFilter = '';
@@ -625,80 +624,17 @@ export class NewtaskComponent implements OnInit {
     });
   }
 
-  async refreshPreviewTasksTable() {
-    this.loading = true;
-    try {
-      const observable = await this.service.get_preview_tasks_table();
-      this.subs = observable.subscribe({
-        next: (response: ReturnPromise) => {
-          this.fillPreviewTasksTable(response);
-        },
-        error: (err) => this.handleErrorGenerically(err),
-        complete: () => console.log('refreshPreviewTasksTable Completed'),
-      });
-    } catch (err: unknown) {
-      this.handleErrorGenericallyAfterAssertion(err);
-    } finally {
-      this.loading = false;
-    }
-  }
-
   private handleErrorGenericallyAfterAssertion(e: unknown) {
     if (!(e instanceof ErrorEvent)) {
-      const message = `Non-error object: ${this.safeToString(e)}`;
-      throw new Error(message);
+      throw new Error(`Non-error object: ${e}`);
     }
     this.handleErrorGenerically(e);
-  }
-
-  private safeToString(e: unknown): string {
-    if (
-      e &&
-      typeof e === 'object' &&
-      'toString' in e &&
-      typeof e.toString === 'function'
-    ) {
-      return e.toString();
-    }
-    return String(e);
   }
 
   private handleErrorGenerically(err: ErrorEvent) {
     this.loading = false;
     const errorMessage = err.message;
     this.openSnackBar(`Error - ${errorMessage}`, 'Dismiss', 'error-snackbar');
-  }
-
-  async getResultsForSpecificPreviewTask(
-    previewTaskId: unknown,
-  ): Promise<void> {
-    if (typeof previewTaskId !== 'string') {
-      throw new Error("Invalid type: 'value' must be a string.");
-    }
-    this.loading = true;
-    try {
-      const observable =
-        await this.service.get_preview_result_for_specific_preview_task(
-          JSON.stringify({
-            preview_task_id: String(previewTaskId),
-            preview_pagination_index_one_based: Number(
-              this.previewPaginationIndexOneBased,
-            ),
-          }),
-        );
-      this.subs = observable.subscribe({
-        next: (response: ReturnPromise) => {
-          this.chosenOfflineTask = previewTaskId;
-          this.callAutoServiceSuccess(response);
-        },
-        error: (err) => this.handleErrorGenerically(err),
-        complete: () => console.log('callServerGetPreviewTaskResult Completed'),
-      });
-    } catch (err: unknown) {
-      this.handleErrorGenericallyAfterAssertion(err);
-    } finally {
-      this.loading = false;
-    }
   }
 
   previewPlacements() {
