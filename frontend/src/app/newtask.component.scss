@@ -40,3 +40,7 @@
   font-weight: bold; /* Bold text for headers */
   text-align: center; /* Center-align headers */
 }
+.limit {
+  border: 2px solid red; /* Red border for the error state */
+  background-color: #ffe6e6; /* Optional: light red background */
+}
