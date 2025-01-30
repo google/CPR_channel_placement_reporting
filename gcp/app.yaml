@@ -26,6 +26,7 @@ automatic_scaling:
 instance_class: F4
 env_variables:
   ADS_HOUSEKEEPER_DEPLOYMENT_TYPE: "Google Cloud"
+  ADS_HOUSEKEEPER_MODE: "Exclusions"
   GOOGLE_API_KEY:
   GOOGLE_ADS_PATH_TO_CONFIG:
   DATABASE_URI:
