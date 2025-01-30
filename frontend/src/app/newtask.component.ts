@@ -725,41 +725,6 @@ export class NewtaskComponent implements OnInit {
     this.loading = false;
   }
 
-  async callAsyncPreview(formRawValue: string) {
-    this.loading = true;
-    try {
-      this.subs = (await this.service.preview_form(formRawValue)).subscribe({
-        next: (response: ReturnPromise) => {
-          this.openSnackBar(
-            'Async Preview submitted. ' +
-              'Please refresh the preview table in a few minutes',
-            'Dismiss',
-            'success-snackbar',
-          );
-        },
-        error: (err) => this.handleErrorGenerically(err),
-        complete: () => console.log('Completed'),
-      });
-    } catch (err: unknown) {
-      this.handleErrorGenericallyAfterAssertion(err);
-    } finally {
-      this.loading = false;
-    }
-  }
-
-  private fillPreviewTasksTable(response: ReturnPromise) {
-    const jsonResponse = JSON.parse(JSON.stringify(response));
-    this.previewTableResults = jsonResponse.rows;
-    if (this.previewTableResults.length > 0) {
-      this.previewTableResultsColumnHeaders = jsonResponse.headers;
-    } else {
-      this.handleEmptyTable(
-        'Successful run, but no data matches criteria',
-        'success-snackbar',
-      );
-    }
-  }
-
   private callAutoServiceSuccess(response: ReturnPromise) {
     const jsonResponse = JSON.parse(JSON.stringify(response));
     if (!jsonResponse.data) {

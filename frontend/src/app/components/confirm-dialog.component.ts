@@ -24,7 +24,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 })
 export class ConfirmDialogComponent implements OnInit {
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: unknown,
+    @Inject(MAT_DIALOG_DATA) public data: any,
     public dialogRef: MatDialogRef<ConfirmDialogComponent>,
   ) {}
 
