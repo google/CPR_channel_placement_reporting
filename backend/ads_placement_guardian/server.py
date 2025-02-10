@@ -320,7 +320,7 @@ def get_application_info():
     'backend_version': googleads_housekeeper.__version__,
     'topic': os.getenv('TOPIC_PREFIX'),
     'db': os.getenv('DATABASE_URI'),
-    'is_observe_mode': bus.is_observe_mode,
+    'is_observe_mode': bus.dependencies.get('is_observe_mode'),
   }
   return _build_response(json.dumps(info))
 
